@@ -264,6 +264,10 @@ public class ServerConnection extends FrontendConnection {
 		// 执行回滚
 		session.rollback();
 	}
+	
+	public void lockTables(String sql) {
+		
+	}
 
 	/**
 	 * 撤销执行中的语句

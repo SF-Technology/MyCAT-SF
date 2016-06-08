@@ -62,6 +62,7 @@ public class NonBlockingSession implements Session {
 
 	private final ServerConnection source;
 	private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> target;
+	private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> lockedTarget;
 	// life-cycle: each sql execution
 	private volatile SingleNodeHandler singleNodeHandler;
 	private volatile MultiNodeQueryHandler multiNodeHandler;
@@ -74,6 +75,7 @@ public class NonBlockingSession implements Session {
 		this.source = source;
 		this.target = new ConcurrentHashMap<RouteResultsetNode, BackendConnection>(
 				2, 0.75f);
+		this.lockedTarget = new ConcurrentHashMap<RouteResultsetNode, BackendConnection>();
 		multiNodeCoordinator = new MultiNodeCoordinator(this);
 		commitHandler = new CommitNodeHandler(this);
 	}
@@ -101,6 +103,22 @@ public class NonBlockingSession implements Session {
 	}
 
 	public BackendConnection removeTarget(RouteResultsetNode key) {
+		return target.remove(key);
+	}
+	
+	public Set<RouteResultsetNode> getLockedTargetKeys() {
+		return target.keySet();
+	}
+
+	public BackendConnection getLockedTarget(RouteResultsetNode key) {
+		return target.get(key);
+	}
+
+	public Map<RouteResultsetNode, BackendConnection> getLockedTargetMap() {
+		return this.target;
+	}
+
+	public BackendConnection removeLockedTarget(RouteResultsetNode key) {
 		return target.remove(key);
 	}
 

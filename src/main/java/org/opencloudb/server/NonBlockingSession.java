@@ -107,19 +107,19 @@ public class NonBlockingSession implements Session {
 	}
 	
 	public Set<RouteResultsetNode> getLockedTargetKeys() {
-		return target.keySet();
+		return lockedTarget.keySet();
 	}
 
 	public BackendConnection getLockedTarget(RouteResultsetNode key) {
-		return target.get(key);
+		return lockedTarget.get(key);
 	}
 
 	public Map<RouteResultsetNode, BackendConnection> getLockedTargetMap() {
-		return this.target;
+		return this.lockedTarget;
 	}
 
 	public BackendConnection removeLockedTarget(RouteResultsetNode key) {
-		return target.remove(key);
+		return lockedTarget.remove(key);
 	}
 
 	@Override

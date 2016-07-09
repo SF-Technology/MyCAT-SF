@@ -116,10 +116,10 @@ public class ServerQueryHandler implements FrontendQueryHandler {
             c.loadDataInfileStart(sql);
             break;
         case ServerParse.LOCK:
-        	c.writeErrMessage(ErrorCode.ER_NOT_SUPPORTED_YET, "Unsupported command");
+        	c.lockTable(sql);
         	break;
         case ServerParse.UNLOCK:
-        	c.writeErrMessage(ErrorCode.ER_NOT_SUPPORTED_YET, "Unsupported command");
+        	c.unLockTable(sql);
         	break;
 		default:
 			if(readOnly){

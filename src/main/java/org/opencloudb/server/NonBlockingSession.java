@@ -46,6 +46,8 @@ import org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler;
 import org.opencloudb.mysql.nio.handler.RollbackNodeHandler;
 import org.opencloudb.mysql.nio.handler.RollbackReleaseHandler;
 import org.opencloudb.mysql.nio.handler.SingleNodeHandler;
+import org.opencloudb.mysql.nio.handler.UnLockTablesHandler;
+import org.opencloudb.mysql.nio.handler.LockTablesHandler;
 import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.route.RouteResultset;
@@ -62,7 +64,7 @@ public class NonBlockingSession implements Session {
 
 	private final ServerConnection source;
 	private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> target;
-	private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> lockedTarget;
+	private final ConcurrentHashMap<String, BackendConnection> lockedTarget;
 	// life-cycle: each sql execution
 	private volatile SingleNodeHandler singleNodeHandler;
 	private volatile MultiNodeQueryHandler multiNodeHandler;
@@ -75,7 +77,7 @@ public class NonBlockingSession implements Session {
 		this.source = source;
 		this.target = new ConcurrentHashMap<RouteResultsetNode, BackendConnection>(
 				2, 0.75f);
-		this.lockedTarget = new ConcurrentHashMap<RouteResultsetNode, BackendConnection>();
+		this.lockedTarget = new ConcurrentHashMap<String, BackendConnection>();
 		multiNodeCoordinator = new MultiNodeCoordinator(this);
 		commitHandler = new CommitNodeHandler(this);
 	}
@@ -106,20 +108,8 @@ public class NonBlockingSession implements Session {
 		return target.remove(key);
 	}
 	
-	public Set<RouteResultsetNode> getLockedTargetKeys() {
-		return lockedTarget.keySet();
-	}
-
-	public BackendConnection getLockedTarget(RouteResultsetNode key) {
-		return lockedTarget.get(key);
-	}
-
-	public Map<RouteResultsetNode, BackendConnection> getLockedTargetMap() {
+	public ConcurrentHashMap<String, BackendConnection> getLockedTarget() {
 		return this.lockedTarget;
-	}
-
-	public BackendConnection removeLockedTarget(RouteResultsetNode key) {
-		return lockedTarget.remove(key);
 	}
 
 	@Override
@@ -298,6 +288,16 @@ public class NonBlockingSession implements Session {
 		// " to key "+key.getName()+" on sesion "+this);
 		return target.put(key, conn);
 	}
+	
+	/**
+	 * 绑定lock tables语句使用的后端连接
+	 * @param dataNode
+	 * @param conn
+	 * @return
+	 */
+	public BackendConnection bindLockTableConnection(String dataNode, BackendConnection conn) {
+		return lockedTarget.put(dataNode, conn);
+	}
 
 	public boolean tryExistsCon(final BackendConnection conn,
 			RouteResultsetNode node) {
@@ -404,6 +404,33 @@ public class NonBlockingSession implements Session {
 
 	public String getXaTXID() {
 		return xaTXID;
+	}
+	
+	/**
+	 * 执行lock tables语句方法
+	 * @author songdabin
+	 * @date 2016-7-9
+	 * @param rrs
+	 */
+	public void lockTable(RouteResultset rrs) {
+		LockTablesHandler handler = new LockTablesHandler(this, rrs);
+		try {
+			handler.execute();
+		} catch (Exception e) {
+			LOGGER.warn(new StringBuilder().append(source).append(rrs), e);
+			source.writeErrMessage(ErrorCode.ERR_HANDLE_DATA, e.toString());
+		}
+	}
+
+	/**
+	 * 执行unlock tables语句方法
+	 * @author songdabin
+	 * @date 2016-7-9
+	 * @param rrs
+	 */
+	public void unLockTable(String sql) {
+		UnLockTablesHandler handler = new UnLockTablesHandler(this, this.source.isAutocommit(), sql);
+		handler.execute();
 	}
 
 }

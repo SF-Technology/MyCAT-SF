@@ -1,68 +1,63 @@
 package org.opencloudb.mysql.nio.handler;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
-import org.opencloudb.MycatConfig;
-import org.opencloudb.MycatServer;
 import org.opencloudb.backend.BackendConnection;
-import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.net.mysql.OkPacket;
-import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.server.NonBlockingSession;
+import org.opencloudb.server.parser.ServerParse;
 
-public class LockTablesHandler extends MultiNodeHandler {
-	
-	private static final Logger LOGGER = Logger.getLogger(LockTablesHandler.class);
+public class UnLockTablesHandler extends MultiNodeHandler implements ResponseHandler {
 
-	private final RouteResultset rrs;
-	private final ReentrantLock lock;
+	private static final Logger LOGGER = Logger.getLogger(UnLockTablesHandler.class);
+
+	private final NonBlockingSession session;
 	private final boolean autocommit;
-	
-	public LockTablesHandler(NonBlockingSession session, RouteResultset rrs) {
-		super(session);
-		this.rrs = rrs;
-		this.autocommit = session.getSource().isAutocommit();
-		this.lock = new ReentrantLock();
-	}
-	
-	public void execute() throws Exception {
-		super.reset(this.rrs.getNodes().length);
-		MycatConfig conf = MycatServer.getInstance().getConfig();
-		for (final RouteResultsetNode node : rrs.getNodes()) {
-			BackendConnection conn = session.getTarget(node);
-			if (session.tryExistsCon(conn, node)) {
-				_execute(conn, node);
-			} else {
-				// create new connection
-				PhysicalDBNode dn = conf.getDataNodes().get(node.getName());
-				dn.getConnection(dn.getDatabase(), autocommit, node, this, node);
-			}
+	private final String srcStatement;
 
-		}
+	public UnLockTablesHandler(NonBlockingSession session, boolean autocommit, String sql) {
+		super(session);
+		this.session = session;
+		this.autocommit = autocommit;
+		this.srcStatement = sql;
 	}
-	
-	private void _execute(BackendConnection conn, RouteResultsetNode node) {
-		if (clearIfSessionClosed(session)) {
-			return;
-		}
-		conn.setResponseHandler(this);
-		try {
-			conn.execute(node, session.getSource(), autocommit);
-		} catch (IOException e) {
-			connectionError(e, conn);
+
+	public void execute() {
+		ConcurrentHashMap<String, BackendConnection> lockedConns = session.getLockedTarget();
+		Set<String> dnSet = lockedConns.keySet();
+		this.reset(lockedConns.size());
+		for (String dataNode : dnSet) {
+			RouteResultsetNode node = new RouteResultsetNode(dataNode, ServerParse.UNLOCK, srcStatement);
+			BackendConnection conn = lockedConns.get(dataNode);
+			if (clearIfSessionClosed(session)) {
+				return;
+			}
+			conn.setResponseHandler(this);
+			try {
+				conn.execute(node, session.getSource(), autocommit);
+			} catch (Exception e) {
+				connectionError(e, conn);
+			}
 		}
 	}
 
 	@Override
+	public void connectionError(Throwable e, BackendConnection conn) {
+		super.connectionError(e, conn);
+	}
+
+	@Override
 	public void connectionAcquired(BackendConnection conn) {
-		final RouteResultsetNode node = (RouteResultsetNode) conn.getAttachment();
-		session.bindLockTableConnection(node.getName(), conn);
-		LOGGER.info("bind lock table connection:"+node.getName()+"->"+conn.toString());
-		_execute(conn, node);
+		LOGGER.error("unexpected invocation: connectionAcquired from unlock tables");
+	}
+
+	@Override
+	public void errorResponse(byte[] err, BackendConnection conn) {
+		super.errorResponse(err, conn);
 	}
 
 	@Override
@@ -93,14 +88,6 @@ public class LockTablesHandler extends MultiNodeHandler {
 			}
 		}
 	}
-	
-	protected String byte2Str(byte[] data) {
-		StringBuilder sb = new StringBuilder();
-		for (byte b : data) {
-			sb.append(Byte.toString(b));
-		}
-		return sb.toString();
-	}
 
 	@Override
 	public void fieldEofResponse(byte[] header, List<byte[]> fields, byte[] eof, BackendConnection conn) {
@@ -125,6 +112,12 @@ public class LockTablesHandler extends MultiNodeHandler {
 
 	@Override
 	public void writeQueueAvailable() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void connectionClose(BackendConnection conn, String reason) {
 		// TODO Auto-generated method stub
 
 	}

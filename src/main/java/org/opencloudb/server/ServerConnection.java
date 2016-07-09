@@ -38,6 +38,8 @@ import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.server.response.Heartbeat;
 import org.opencloudb.server.response.Ping;
 import org.opencloudb.server.util.SchemaUtil;
+import org.opencloudb.util.SplitUtil;
+import org.opencloudb.util.StringUtil;
 import org.opencloudb.util.TimeUtil;
 
 /**
@@ -265,7 +267,31 @@ public class ServerConnection extends FrontendConnection {
 		session.rollback();
 	}
 	
-	public void lockTables(String sql) {
+	/**
+	 * 执行lock tables语句方法
+	 * @author songdabin
+	 * @date 2016-7-9
+	 * @param sql
+	 */
+	public void lockTable(String sql) {
+		RouteResultset rrs = routeSQL(sql, ServerParse.LOCK);
+		session.lockTable(rrs);
+	}
+	
+	/**
+	 * 执行unlock tables语句方法
+	 * @author songdabin
+	 * @date 2016-7-9
+	 * @param sql
+	 */
+	public void unLockTable(String sql) {
+		sql = sql.replaceAll("\n", " ").replaceAll("\t", " ");
+		String[] words = SplitUtil.split(sql, ' ', true);
+		if (words.length==2 && ("table".equalsIgnoreCase(words[1]) || "tables".equalsIgnoreCase(words[1]))) {
+			session.unLockTable(sql);
+		} else {
+			writeErrMessage(ErrorCode.ER_UNKNOWN_COM_ERROR, "Unknown command");
+		}
 		
 	}
 

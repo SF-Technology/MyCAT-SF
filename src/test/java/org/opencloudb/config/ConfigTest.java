@@ -33,8 +33,9 @@ public class ConfigTest {
 		
 		String schemaFile = "/config/schema.xml";
 		String ruleFile = "/config/rule.xml";
+		String databaseFile = "/config/database.xml";
 		
-		XMLSchemaLoader schemaLoader = new XMLSchemaLoader(schemaFile, ruleFile);
+		XMLSchemaLoader schemaLoader = new XMLSchemaLoader(schemaFile, databaseFile, ruleFile);
 		XMLConfigLoader configLoader = new XMLConfigLoader(schemaLoader);
 		
 		this.system = configLoader.getSystemConfig();

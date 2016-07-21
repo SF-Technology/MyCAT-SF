@@ -99,6 +99,7 @@ public class RouterUtil {
 		}
 		RouteResultsetNode[] nodes = new RouteResultsetNode[1];
 		nodes[0] = new RouteResultsetNode(dataNode, rrs.getSqlType(), stmt);//rrs.getStatement()
+		nodes[0].setSource(rrs);
 		rrs.setNodes(nodes);
 		rrs.setFinishedRoute(true);
 		if (rrs.getCanRunInReadDB() != null) {
@@ -150,6 +151,7 @@ public class RouterUtil {
 				for(int i=0;i<nodeSize;i++){
 					String name = iterator1.next();
 					nodes[i] = new RouteResultsetNode(name, sqlType, stmt);
+					nodes[i].setSource(rrs);
 				}
 				rrs.setNodes(nodes);
 			}
@@ -157,6 +159,7 @@ public class RouterUtil {
 		}else if(schema.getDataNode()!=null){		//默认节点ddl
 			RouteResultsetNode[] nodes = new RouteResultsetNode[1];
 			nodes[0] = new RouteResultsetNode(schema.getDataNode(), sqlType, stmt);
+			nodes[0].setSource(rrs);
 			rrs.setNodes(nodes);
 			return rrs;
 		}
@@ -600,6 +603,7 @@ public class RouterUtil {
 		RouteResultsetNode node;
 		for (String dataNode : dataNodes) {
 			node = new RouteResultsetNode(dataNode, rrs.getSqlType(), stmt);
+			node.setSource(rrs);
 			if (rrs.getCanRunInReadDB() != null) {
 				node.setCanRunInReadDB(rrs.getCanRunInReadDB());
 			}
@@ -629,6 +633,7 @@ public class RouterUtil {
 
 		RouteResultsetNode[] nodes = new RouteResultsetNode[1];
 		nodes[0] = new RouteResultsetNode(dataNode, rrs.getSqlType(), sql);
+		nodes[0].setSource(rrs);
 		if (rrs.getCanRunInReadDB() != null) {
 			nodes[0].setCanRunInReadDB(rrs.getCanRunInReadDB());
 		}

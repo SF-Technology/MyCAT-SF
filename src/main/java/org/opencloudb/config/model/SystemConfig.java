@@ -122,6 +122,8 @@ public final class SystemConfig {
 	private int useCompression =0;
     //慢SQL的时间阀值
 	private  long SQL_SLOW_TIME = 1000;
+	//处理分布式事务开关，默认为不过滤分布式事务
+	private int handleDistributedTransactions = 0;
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -634,5 +636,11 @@ public final class SystemConfig {
 	}
 
 
+	public int getHandleDistributedTransactions() {
+		return handleDistributedTransactions;
+	}
 
+	public void setHandleDistributedTransactions(int handleDistributedTransactions) {
+		this.handleDistributedTransactions = handleDistributedTransactions;
+	}
 }

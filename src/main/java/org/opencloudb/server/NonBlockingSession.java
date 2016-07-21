@@ -50,6 +50,7 @@ import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
+import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.sqlcmd.SQLCmdConstant;
 
 /**
@@ -139,7 +140,27 @@ public class NonBlockingSession implements Session {
 					this);
 
 			try {
-				multiNodeHandler.execute();
+				try {
+					if(autocommit && (type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) {
+						switch(MycatServer.getInstance().getConfig().getSystem().getHandleDistributedTransactions()) {
+							case 1:
+								source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!");
+								break;
+							case 2:
+								LOGGER.warn("Distributed transaction detected! RRS:" + rrs);
+								multiNodeHandler.execute();
+								break;
+							default:
+								multiNodeHandler.execute();
+						}
+					} else {
+						multiNodeHandler.execute();
+					}
+
+				} catch (Exception e) {
+					LOGGER.warn(new StringBuilder().append(source).append(rrs).toString(), e);
+					source.writeErrMessage(ErrorCode.ERR_HANDLE_DATA, e.toString());
+				}
 			} catch (Exception e) {
 				LOGGER.warn(new StringBuilder().append(source).append(rrs), e);
 				source.writeErrMessage(ErrorCode.ERR_HANDLE_DATA, e.toString());
@@ -159,13 +180,42 @@ public class NonBlockingSession implements Session {
 			commitHandler.commit(con);
 
 		} else {
-
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("multi node commit to send ,total " + initCount);
 			}
-			multiNodeCoordinator.executeBatchNodeCmd(SQLCmdConstant.COMMIT_CMD);
+			if(!isALLGlobal()){
+				switch(MycatServer.getInstance().getConfig().getSystem().getHandleDistributedTransactions()) {
+					case 1:
+						rollback();
+						source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!");
+						break;
+					case 2:
+						multiNodeCoordinator.executeBatchNodeCmd(SQLCmdConstant.COMMIT_CMD);
+						LOGGER.warn("Distributed transaction detected! Targets:" + target);
+						break;
+					default:
+						multiNodeCoordinator.executeBatchNodeCmd(SQLCmdConstant.COMMIT_CMD);
+				}
+			} else {
+				multiNodeCoordinator.executeBatchNodeCmd(SQLCmdConstant.COMMIT_CMD);
+			}
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("multi node commit to send ,total " + initCount);
+			}
 		}
 
+	}
+
+	private boolean isALLGlobal(){
+		for(RouteResultsetNode routeResultsetNode:target.keySet()){
+			if(routeResultsetNode.getSource()==null){
+				return false;
+			}
+			else if(!routeResultsetNode.getSource().isGlobalTable()){
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void rollback() {

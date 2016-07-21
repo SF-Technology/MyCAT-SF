@@ -50,6 +50,8 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
    private Procedure procedure;
 	private LoadData loadData;
 
+	private RouteResultset source;
+
 	public RouteResultsetNode(String name, int sqlType, String srcStatement) {
 		this.name = name;
 		limitStart=0;
@@ -215,5 +217,13 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 			return 1;
 		}
 		return this.name.compareTo(obj.name);
+	}
+
+	public RouteResultset getSource() {
+		return source;
+	}
+
+	public void setSource(RouteResultset source) {
+		this.source = source;
 	}
 }

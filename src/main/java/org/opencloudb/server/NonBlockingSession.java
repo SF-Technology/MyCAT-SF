@@ -123,12 +123,13 @@ public class NonBlockingSession implements Session {
 							+ source.getSchema());
 			return;
 		}
+		boolean autocommit = source.isAutocommit();
 		final int initCount = target.size();
 		if (nodes.length == 1) {
 			singleNodeHandler = new SingleNodeHandler(rrs, this);
 			try {
 				if (initCount > 1) {
-					checkDistriTransaxAndExecute(rrs, 1);
+					checkDistriTransaxAndExecute(rrs, 1, autocommit);
 				} else {
 					singleNodeHandler.execute();
 				}
@@ -137,7 +138,7 @@ public class NonBlockingSession implements Session {
 				source.writeErrMessage(ErrorCode.ERR_HANDLE_DATA, e.toString());
 			}
 		} else {
-			boolean autocommit = source.isAutocommit();
+
 			SystemConfig sysConfig = MycatServer.getInstance().getConfig()
 					.getSystem();
 			int mutiNodeLimitType = sysConfig.getMutiNodeLimitType();
@@ -146,7 +147,7 @@ public class NonBlockingSession implements Session {
 
 			try {
 				if (((type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) || initCount > 1) {
-					checkDistriTransaxAndExecute(rrs, 2);
+					checkDistriTransaxAndExecute(rrs, 2, autocommit);
 				} else {
 					multiNodeHandler.execute();
 				}
@@ -159,10 +160,13 @@ public class NonBlockingSession implements Session {
 		}
 	}
 
-	private void checkDistriTransaxAndExecute(RouteResultset rrs, int type) throws Exception {
+	private void checkDistriTransaxAndExecute(RouteResultset rrs, int type ,boolean autocommit) throws Exception {
 		switch(MycatServer.getInstance().getConfig().getSystem().getHandleDistributedTransactions()) {
 			case 1:
 				source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!");
+				if(!autocommit){
+					source.setTxInterrupt("Distributed transaction is disabled!");
+				}
 				break;
 			case 2:
 				LOGGER.warn("Distributed transaction detected! RRS:" + rrs);

@@ -13,7 +13,7 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-<!ELEMENT mycat:schema (schema*,dataNode*,dataHost*)>
+<!ELEMENT mycat:schema (schema*)>
 <!ATTLIST mycat:schema xmlns:mycat CDATA #FIXED "http://org.opencloudb/">
 
 <!ELEMENT schema (table*)>
@@ -40,46 +40,3 @@
 <!ATTLIST childTable parentKey NMTOKEN #REQUIRED>
 <!ATTLIST childTable primaryKey NMTOKEN #IMPLIED>
 <!ATTLIST childTable autoIncrement NMTOKEN #IMPLIED>
-
-
-<!ELEMENT dataNode (property*)>
-<!ATTLIST dataNode name CDATA #REQUIRED>
-<!ATTLIST dataNode dataHost CDATA #REQUIRED>
-<!ATTLIST dataNode database CDATA #REQUIRED>
-
-<!ELEMENT dataHost (heartbeat,(connectionInitSql*),(writeHost+))>
-<!ATTLIST dataHost
-  balance CDATA #REQUIRED
-  maxCon CDATA #REQUIRED
-  minCon CDATA #REQUIRED
-  name NMTOKEN #REQUIRED
-  balance CDATA #REQUIRED
-  writeType CDATA #IMPLIED
-  switchType  CDATA #IMPLIED
-  slaveThreshold  CDATA #IMPLIED
-  tempReadHostAvailable CDATA #IMPLIED
-  dbType CDATA #REQUIRED
-  filters CDATA #IMPLIED
-  logTime CDATA #IMPLIED
-  dbDriver CDATA #REQUIRED>
-
-<!ELEMENT writeHost (readHost)*>
-<!ATTLIST writeHost
-  url CDATA #REQUIRED
-  host NMTOKEN #REQUIRED
-  password CDATA #REQUIRED
-  user NMTOKEN #REQUIRED
-  usingDecrypt CDATA #IMPLIED>
-
-<!ELEMENT heartbeat (#PCDATA)>
-<!ELEMENT connectionInitSql (#PCDATA)>
-<!ELEMENT readHost (property*) >
-<!ATTLIST readHost
-  host NMTOKEN #REQUIRED
-  url CDATA #REQUIRED
-  password CDATA #REQUIRED
-  user NMTOKEN #REQUIRED
-  weight CDATA #IMPLIED
-  usingDecrypt CDATA #IMPLIED>
-
-

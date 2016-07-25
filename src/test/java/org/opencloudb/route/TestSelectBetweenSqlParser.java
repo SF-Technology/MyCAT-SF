@@ -27,7 +27,8 @@ public class TestSelectBetweenSqlParser {
 	public TestSelectBetweenSqlParser() {
 		String schemaFile = "/route/schema.xml";
 		String ruleFile = "/route/rule.xml";
-		SchemaLoader schemaLoader = new XMLSchemaLoader(schemaFile, ruleFile);
+		String databaseFile = "/route/database.xml";
+		XMLSchemaLoader schemaLoader = new XMLSchemaLoader(schemaFile, databaseFile, ruleFile);
 		schemaMap = schemaLoader.getSchemas();
 	}
 

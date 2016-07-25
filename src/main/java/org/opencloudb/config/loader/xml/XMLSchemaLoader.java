@@ -55,24 +55,28 @@ public class XMLSchemaLoader implements SchemaLoader {
 	
 	private final static String DEFAULT_DTD = "/schema.dtd";
 	private final static String DEFAULT_XML = "/schema.xml";
-
+	
+	// 自定义database配置文件位置
+	private final static String DEFAULT_DATABASE_DTD = "/database.dtd";
+	private final static String DEFAULT_DATABASE_XML = "/database.xml";
+	
 	private final Map<String, TableRuleConfig> tableRules;
 	private final Map<String, DataHostConfig> dataHosts;
 	private final Map<String, DataNodeConfig> dataNodes;
 	private final Map<String, SchemaConfig> schemas;
 
-	public XMLSchemaLoader(String schemaFile, String ruleFile) {
+	public XMLSchemaLoader(String schemaFile, String databaseFile, String ruleFile) {
 		XMLRuleLoader ruleLoader = new XMLRuleLoader(ruleFile);
 		this.tableRules = ruleLoader.getTableRules();
 		ruleLoader = null;
 		this.dataHosts = new HashMap<String, DataHostConfig>();
 		this.dataNodes = new HashMap<String, DataNodeConfig>();
 		this.schemas = new HashMap<String, SchemaConfig>();
-		this.load(DEFAULT_DTD, schemaFile == null ? DEFAULT_XML : schemaFile);
+		this.load(databaseFile == null ? DEFAULT_DATABASE_XML : databaseFile, schemaFile == null ? DEFAULT_XML : schemaFile);
 	}
 
 	public XMLSchemaLoader() {
-		this(null, null);
+		this(null, null, null);
 	}
 
 	@Override
@@ -95,15 +99,26 @@ public class XMLSchemaLoader implements SchemaLoader {
 		return (Map<String, SchemaConfig>) (schemas.isEmpty() ? Collections.emptyMap() : schemas);
 	}
 
-	private void load(String dtdFile, String xmlFile) {
+	private void load(String databaseFile, String xmlFile) {
 		InputStream dtd = null;
 		InputStream xml = null;
+		// 定义database配置文件输入流
+		InputStream database_dtd = null;
+		InputStream database_xml = null;
 		try {
-			dtd = XMLSchemaLoader.class.getResourceAsStream(dtdFile);
+			dtd = XMLSchemaLoader.class.getResourceAsStream(DEFAULT_DTD);
 			xml = XMLSchemaLoader.class.getResourceAsStream(xmlFile);
 			Element root = ConfigUtil.getDocument(dtd, xml).getDocumentElement();
-			loadDataHosts(root);
-			loadDataNodes(root);
+			
+			// 增加dataNode和dataHost配置文件
+			database_dtd = XMLSchemaLoader.class.getResourceAsStream(DEFAULT_DATABASE_DTD);
+			database_xml = XMLSchemaLoader.class.getResourceAsStream(databaseFile);
+			Element databaseRoot = ConfigUtil.getDocument(database_dtd, database_xml).getDocumentElement();
+						
+//			loadDataHosts(root);
+//			loadDataNodes(root);
+			loadDataHosts(databaseRoot);
+			loadDataNodes(databaseRoot);
 			loadSchemas(root);
 		} catch (ConfigException e) {
 			throw e;

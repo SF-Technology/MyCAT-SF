@@ -99,6 +99,7 @@ public class RouterUtil {
 		}
 		RouteResultsetNode[] nodes = new RouteResultsetNode[1];
 		nodes[0] = new RouteResultsetNode(dataNode, rrs.getSqlType(), stmt);//rrs.getStatement()
+		nodes[0].setSource(rrs);
 		rrs.setNodes(nodes);
 		rrs.setFinishedRoute(true);
 		if (rrs.getCanRunInReadDB() != null) {
@@ -150,6 +151,7 @@ public class RouterUtil {
 				for(int i=0;i<nodeSize;i++){
 					String name = iterator1.next();
 					nodes[i] = new RouteResultsetNode(name, sqlType, stmt);
+					nodes[i].setSource(rrs);
 				}
 				rrs.setNodes(nodes);
 			}
@@ -157,6 +159,7 @@ public class RouterUtil {
 		}else if(schema.getDataNode()!=null){		//默认节点ddl
 			RouteResultsetNode[] nodes = new RouteResultsetNode[1];
 			nodes[0] = new RouteResultsetNode(schema.getDataNode(), sqlType, stmt);
+			nodes[0].setSource(rrs);
 			rrs.setNodes(nodes);
 			return rrs;
 		}
@@ -460,6 +463,51 @@ public class RouterUtil {
 		return processedInsert;
 	}
 
+	public static List<String> handleBatchInsert(String origSQL, int valuesIndex){
+		List<String> handledSQLs = new LinkedList<>();
+		String prefix = origSQL.substring(0,valuesIndex + "VALUES".length());
+		String values = origSQL.substring(valuesIndex + "VALUES".length());
+		int flag = 0;
+		StringBuilder currentValue = new StringBuilder();
+		currentValue.append(prefix);
+		for (int i = 0; i < values.length(); i++) {
+			char j = values.charAt(i);
+			if(j=='(' && flag == 0){
+				flag = 1;
+				currentValue.append(j);
+			}else if(j=='\"' && flag == 1){
+				flag = 2;
+				currentValue.append(j);
+			} else if(j=='\'' && flag == 1){
+				flag = 2;
+				currentValue.append(j);
+			} else if(j=='\\' && flag == 2){
+				flag = 3;
+				currentValue.append(j);
+			} else if (flag == 3){
+				flag = 2;
+				currentValue.append(j);
+			}else if(j=='\"' && flag == 2){
+				flag = 1;
+				currentValue.append(j);
+			} else if(j=='\'' && flag == 2){
+				flag = 1;
+				currentValue.append(j);
+			} else if (j==')' && flag == 1){
+				flag = 0;
+				currentValue.append(j);
+				handledSQLs.add(currentValue.toString());
+				currentValue = new StringBuilder();
+				currentValue.append(prefix);
+			} else if(j == ',' && flag == 0){
+				continue;
+			} else {
+				currentValue.append(j);
+			}
+		}
+		return handledSQLs;
+	}
+
 	private static boolean isPKInFields(String origSQL,String primaryKey,int firstLeftBracketIndex,int firstRightBracketIndex){
 		
 		if (primaryKey == null) {
@@ -514,7 +562,10 @@ public class RouterUtil {
 
 		boolean processedInsert=!isPKInFields(origSQL,primaryKey,firstLeftBracketIndex,firstRightBracketIndex);
 		if(processedInsert){
-			processInsert(sc,schema,sqlType,origSQL,tableName,primaryKey,firstLeftBracketIndex+1,origSQL.indexOf('(',firstRightBracketIndex)+1);
+			List<String> insertSQLs = handleBatchInsert(origSQL, valuesIndex);
+			for(String insertSQL:insertSQLs) {
+				processInsert(sc, schema, sqlType, insertSQL, tableName, primaryKey, firstLeftBracketIndex + 1, insertSQL.indexOf('(', firstRightBracketIndex) + 1);
+			}
 		}
 		return processedInsert;
 	}
@@ -552,6 +603,7 @@ public class RouterUtil {
 		RouteResultsetNode node;
 		for (String dataNode : dataNodes) {
 			node = new RouteResultsetNode(dataNode, rrs.getSqlType(), stmt);
+			node.setSource(rrs);
 			if (rrs.getCanRunInReadDB() != null) {
 				node.setCanRunInReadDB(rrs.getCanRunInReadDB());
 			}
@@ -581,6 +633,7 @@ public class RouterUtil {
 
 		RouteResultsetNode[] nodes = new RouteResultsetNode[1];
 		nodes[0] = new RouteResultsetNode(dataNode, rrs.getSqlType(), sql);
+		nodes[0].setSource(rrs);
 		if (rrs.getCanRunInReadDB() != null) {
 			nodes[0].setCanRunInReadDB(rrs.getCanRunInReadDB());
 		}

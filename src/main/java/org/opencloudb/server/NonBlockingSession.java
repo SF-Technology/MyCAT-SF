@@ -50,6 +50,7 @@ import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
+import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.sqlcmd.SQLCmdConstant;
 
 /**
@@ -122,10 +123,15 @@ public class NonBlockingSession implements Session {
 							+ source.getSchema());
 			return;
 		}
+		final int initCount = target.size();
 		if (nodes.length == 1) {
 			singleNodeHandler = new SingleNodeHandler(rrs, this);
 			try {
-				singleNodeHandler.execute();
+				if (initCount > 1) {
+					checkDistriTransaxAndExecute(rrs, 1);
+				} else {
+					singleNodeHandler.execute();
+				}
 			} catch (Exception e) {
 				LOGGER.warn(new StringBuilder().append(source).append(rrs), e);
 				source.writeErrMessage(ErrorCode.ERR_HANDLE_DATA, e.toString());
@@ -139,11 +145,61 @@ public class NonBlockingSession implements Session {
 					this);
 
 			try {
-				multiNodeHandler.execute();
+				if (((type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) || initCount > 1) {
+					checkDistriTransaxAndExecute(rrs, 2);
+				} else {
+					multiNodeHandler.execute();
+				}
+
+
 			} catch (Exception e) {
 				LOGGER.warn(new StringBuilder().append(source).append(rrs), e);
 				source.writeErrMessage(ErrorCode.ERR_HANDLE_DATA, e.toString());
 			}
+		}
+	}
+
+	private void checkDistriTransaxAndExecute(RouteResultset rrs, int type) throws Exception {
+		switch(MycatServer.getInstance().getConfig().getSystem().getHandleDistributedTransactions()) {
+			case 1:
+				source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!");
+				break;
+			case 2:
+				LOGGER.warn("Distributed transaction detected! RRS:" + rrs);
+				if(type == 1){
+					singleNodeHandler.execute();
+				}
+				else{
+					multiNodeHandler.execute();
+				}
+				break;
+			default:
+				if(type == 1){
+					singleNodeHandler.execute();
+				}
+				else{
+					multiNodeHandler.execute();
+				}
+		}
+	}
+
+	private void checkDistriTransaxAndExecute() {
+		if(!isALLGlobal()){
+			switch(MycatServer.getInstance().getConfig().getSystem().getHandleDistributedTransactions()) {
+				case 1:
+//                        rollback();
+					source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!Please rollback!");
+					source.setTxInterrupt("Distributed transaction is disabled!");
+					break;
+				case 2:
+					multiNodeCoordinator.executeBatchNodeCmd(SQLCmdConstant.COMMIT_CMD);
+					LOGGER.warn("Distributed transaction detected! Targets:" + target);
+					break;
+				default:
+					multiNodeCoordinator.executeBatchNodeCmd(SQLCmdConstant.COMMIT_CMD);
+			}
+		} else {
+			multiNodeCoordinator.executeBatchNodeCmd(SQLCmdConstant.COMMIT_CMD);
 		}
 	}
 
@@ -159,13 +215,27 @@ public class NonBlockingSession implements Session {
 			commitHandler.commit(con);
 
 		} else {
-
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("multi node commit to send ,total " + initCount);
 			}
-			multiNodeCoordinator.executeBatchNodeCmd(SQLCmdConstant.COMMIT_CMD);
+			checkDistriTransaxAndExecute();
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("multi node commit to send ,total " + initCount);
+			}
 		}
 
+	}
+
+	private boolean isALLGlobal(){
+		for(RouteResultsetNode routeResultsetNode:target.keySet()){
+			if(routeResultsetNode.getSource()==null){
+				return false;
+			}
+			else if(!routeResultsetNode.getSource().isGlobalTable()){
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void rollback() {

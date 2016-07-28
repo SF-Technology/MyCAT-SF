@@ -1,6 +1,8 @@
 package org.opencloudb.route;
 
-import junit.framework.Assert;
+import java.sql.SQLNonTransientException;
+import java.util.Map;
+
 import org.junit.Test;
 import org.opencloudb.SimpleCachePool;
 import org.opencloudb.cache.LayerCachePool;
@@ -9,9 +11,14 @@ import org.opencloudb.config.loader.xml.XMLSchemaLoader;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.route.factory.RouteStrategyFactory;
+import org.opencloudb.server.parser.ServerParse;
 
-import java.sql.SQLNonTransientException;
-import java.util.Map;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlLockTableStatement;
+import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
+import com.alibaba.druid.sql.parser.Lexer;
+
+import junit.framework.Assert;
 
 public class DruidMysqlSqlParserTest
 {
@@ -71,7 +78,12 @@ public class DruidMysqlSqlParserTest
 
 	}
 
-
-
-
+	@Test
+	public void testLockTableSql() throws SQLNonTransientException{
+		String sql = "lock tables goods write, tab t1 read";
+		SchemaConfig schema = schemaMap.get("TESTDB");
+		RouteResultset rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.LOCK, sql, null, null, cachePool);
+		Assert.assertEquals(3, rrs.getNodes().length);
+	}
+	
 }

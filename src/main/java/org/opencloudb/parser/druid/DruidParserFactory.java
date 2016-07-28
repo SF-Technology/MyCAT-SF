@@ -49,7 +49,7 @@ public class DruidParserFactory
         {
             parser = new DruidAlterTableParser();
         } else if (statement instanceof MySqlLockTableStatement) {
-        	parser = new DruidLockTableStatement();
+        	parser = new DruidLockTableParser();
         } else
         {
             parser = new DefaultDruidParser();

@@ -149,7 +149,14 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 		ServerConnection sc = session.getSource();
 		this.isRunning = true;
 		this.packetId = 0;
-		final BackendConnection conn = session.getTarget(node);
+//		final BackendConnection conn = session.getTarget(node);
+		BackendConnection tConn = session.getTarget(node);
+		if (session.getSource().isLocked()) {
+			if (tConn == null) {
+				tConn = session.getLockedTarget(node); 
+			}
+		}
+		final BackendConnection conn = tConn;
 		//之前是否获取过Connection并且Connection有效
 		if (session.tryExistsCon(conn, node)) {
 			_execute(conn);

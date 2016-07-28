@@ -64,7 +64,7 @@ public class NonBlockingSession implements Session {
 
 	private final ServerConnection source;
 	private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> target;
-	private final ConcurrentHashMap<String, BackendConnection> lockedTarget;
+	private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> lockedTarget;
 	// life-cycle: each sql execution
 	private volatile SingleNodeHandler singleNodeHandler;
 	private volatile MultiNodeQueryHandler multiNodeHandler;
@@ -77,7 +77,7 @@ public class NonBlockingSession implements Session {
 		this.source = source;
 		this.target = new ConcurrentHashMap<RouteResultsetNode, BackendConnection>(
 				2, 0.75f);
-		this.lockedTarget = new ConcurrentHashMap<String, BackendConnection>();
+		this.lockedTarget = new ConcurrentHashMap<RouteResultsetNode, BackendConnection>();
 		multiNodeCoordinator = new MultiNodeCoordinator(this);
 		commitHandler = new CommitNodeHandler(this);
 	}
@@ -108,7 +108,11 @@ public class NonBlockingSession implements Session {
 		return target.remove(key);
 	}
 	
-	public ConcurrentHashMap<String, BackendConnection> getLockedTarget() {
+	public BackendConnection getLockedTarget(RouteResultsetNode key) {
+		return this.lockedTarget.get(key);
+	}
+	
+	public ConcurrentHashMap<RouteResultsetNode, BackendConnection> getLockedTargetMap() {
 		return this.lockedTarget;
 	}
 
@@ -278,6 +282,23 @@ public class NonBlockingSession implements Session {
 		}
 
 	}
+	
+	public void releaseLockedConnection(BackendConnection con) {
+		Iterator<Entry<RouteResultsetNode, BackendConnection>> itor = lockedTarget
+				.entrySet().iterator();
+		while (itor.hasNext()) {
+			BackendConnection theCon = itor.next().getValue();
+			if (theCon == con) {
+				itor.remove();
+				con.release();
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("realse connection " + con);
+				}
+				break;
+			}
+		}
+	}
+	
 
 	/**
 	 * @return previous bound connection
@@ -291,12 +312,12 @@ public class NonBlockingSession implements Session {
 	
 	/**
 	 * 绑定lock tables语句使用的后端连接
-	 * @param dataNode
+	 * @param key
 	 * @param conn
 	 * @return
 	 */
-	public BackendConnection bindLockTableConnection(String dataNode, BackendConnection conn) {
-		return lockedTarget.put(dataNode, conn);
+	public BackendConnection bindLockTableConnection(RouteResultsetNode key, BackendConnection conn) {
+		return lockedTarget.put(key, conn);
 	}
 
 	public boolean tryExistsCon(final BackendConnection conn,
@@ -413,7 +434,17 @@ public class NonBlockingSession implements Session {
 	 * @param rrs
 	 */
 	public void lockTable(RouteResultset rrs) {
+		// 检查路由结果是否为空
+		RouteResultsetNode[] nodes = rrs.getNodes();
+		if (nodes == null || nodes.length == 0 || nodes[0].getName() == null
+				|| nodes[0].getName().equals("")) {
+			source.writeErrMessage(ErrorCode.ER_NO_DB_ERROR,
+					"No dataNode found ,please check tables defined in schema:"
+							+ source.getSchema());
+			return;
+		}
 		LockTablesHandler handler = new LockTablesHandler(this, rrs);
+		source.setLocked(true);
 		try {
 			handler.execute();
 		} catch (Exception e) {

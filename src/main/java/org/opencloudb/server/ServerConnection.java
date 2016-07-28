@@ -25,7 +25,6 @@ package org.opencloudb.server;
 
 import java.io.IOException;
 import java.nio.channels.NetworkChannel;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
@@ -39,7 +38,6 @@ import org.opencloudb.server.response.Heartbeat;
 import org.opencloudb.server.response.Ping;
 import org.opencloudb.server.util.SchemaUtil;
 import org.opencloudb.util.SplitUtil;
-import org.opencloudb.util.StringUtil;
 import org.opencloudb.util.TimeUtil;
 
 /**
@@ -56,6 +54,11 @@ public class ServerConnection extends FrontendConnection {
 	private volatile String txInterrputMsg = "";
 	private long lastInsertId;
 	private NonBlockingSession session;
+	
+	/**
+	 * 标志是否执行了lock tables语句，并处于lock状态
+	 */
+	private volatile boolean isLocked = false;
 
 	public ServerConnection(NetworkChannel channel)
 			throws IOException {
@@ -118,6 +121,14 @@ public class ServerConnection extends FrontendConnection {
 
 	public void setSession2(NonBlockingSession session2) {
 		this.session = session2;
+	}
+
+	public boolean isLocked() {
+		return isLocked;
+	}
+
+	public void setLocked(boolean isLocked) {
+		this.isLocked = isLocked;
 	}
 
 	@Override
@@ -274,8 +285,20 @@ public class ServerConnection extends FrontendConnection {
 	 * @param sql
 	 */
 	public void lockTable(String sql) {
+		// 事务中不允许执行lock table语句
+		if (!autocommit) {
+			writeErrMessage(ErrorCode.ER_YES, "can't lock table in transaction!");
+			return;
+		}
+		// 已经执行了lock table且未执行unlock table之前的连接不能再次执行lock table命令
+		if (isLocked) {
+			writeErrMessage(ErrorCode.ER_YES, "can't lock multi-table");
+			return;
+		}
 		RouteResultset rrs = routeSQL(sql, ServerParse.LOCK);
-		session.lockTable(rrs);
+		if (rrs != null) {
+			session.lockTable(rrs);
+		}
 	}
 	
 	/**
@@ -288,6 +311,7 @@ public class ServerConnection extends FrontendConnection {
 		sql = sql.replaceAll("\n", " ").replaceAll("\t", " ");
 		String[] words = SplitUtil.split(sql, ' ', true);
 		if (words.length==2 && ("table".equalsIgnoreCase(words[1]) || "tables".equalsIgnoreCase(words[1]))) {
+			isLocked = false;
 			session.unLockTable(sql);
 		} else {
 			writeErrMessage(ErrorCode.ER_UNKNOWN_COM_ERROR, "Unknown command");

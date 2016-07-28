@@ -14,6 +14,11 @@ import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.server.NonBlockingSession;
 
+/**
+ * lock tables 语句处理器
+ * @author songdabin
+ * 
+ */
 public class LockTablesHandler extends MultiNodeHandler {
 	
 	private static final Logger LOGGER = Logger.getLogger(LockTablesHandler.class);
@@ -35,6 +40,8 @@ public class LockTablesHandler extends MultiNodeHandler {
 		for (final RouteResultsetNode node : rrs.getNodes()) {
 			BackendConnection conn = session.getTarget(node);
 			if (session.tryExistsCon(conn, node)) {
+				// 若该连接已被绑定到session.target中，则继续添加到session.lockTarget中
+				session.bindLockTableConnection(node, conn);
 				_execute(conn, node);
 			} else {
 				// create new connection
@@ -60,7 +67,9 @@ public class LockTablesHandler extends MultiNodeHandler {
 	@Override
 	public void connectionAcquired(BackendConnection conn) {
 		final RouteResultsetNode node = (RouteResultsetNode) conn.getAttachment();
-		session.bindLockTableConnection(node.getName(), conn);
+		// 将新获取的后端连接分别绑定到session.target和session.lockTarget
+		session.bindLockTableConnection(node, conn);
+		session.bindConnection(node, conn);
 		LOGGER.info("bind lock table connection:"+node.getName()+"->"+conn.toString());
 		_execute(conn, node);
 	}
@@ -70,8 +79,6 @@ public class LockTablesHandler extends MultiNodeHandler {
 		boolean executeResponse = conn.syncAndExcute();
 		if (executeResponse) {
 			if (clearIfSessionClosed(session)) {
-                return;
-            } else if (canClose(conn, false)) {
                 return;
             }
 			boolean isEndPack = decrementCountBy(1);

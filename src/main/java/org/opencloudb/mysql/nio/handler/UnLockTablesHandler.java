@@ -11,6 +11,11 @@ import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.server.NonBlockingSession;
 import org.opencloudb.server.parser.ServerParse;
 
+/**
+ * unlock tables 语句处理器
+ * @author songdabin
+ *
+ */
 public class UnLockTablesHandler extends MultiNodeHandler implements ResponseHandler {
 
 	private static final Logger LOGGER = Logger.getLogger(UnLockTablesHandler.class);
@@ -27,11 +32,21 @@ public class UnLockTablesHandler extends MultiNodeHandler implements ResponseHan
 	}
 
 	public void execute() {
-		ConcurrentHashMap<String, BackendConnection> lockedConns = session.getLockedTarget();
-		Set<String> dnSet = lockedConns.keySet();
+		ConcurrentHashMap<RouteResultsetNode, BackendConnection> lockedConns = session.getLockedTargetMap();
+		Set<RouteResultsetNode> dnSet = lockedConns.keySet();
 		this.reset(lockedConns.size());
-		for (String dataNode : dnSet) {
-			RouteResultsetNode node = new RouteResultsetNode(dataNode, ServerParse.UNLOCK, srcStatement);
+		// 客户端直接发送unlock tables命令，由于之前未发送lock tables语句，无法获取后端绑定的连接，此时直接返回OK包
+		if (lockedConns.size() == 0) {
+			LOGGER.warn("find no locked backend connection!"+session.getSource());
+			OkPacket ok = new OkPacket();
+			ok.packetId = ++ packetId;
+			ok.packetLength = 7; // unlock table 命令返回MySQL协议包长度为7
+			ok.serverStatus = session.getSource().isAutocommit() ? 2:1;
+			ok.write(session.getSource());
+			return;
+		}
+		for (RouteResultsetNode dataNode : dnSet) {
+			RouteResultsetNode node = new RouteResultsetNode(dataNode.getName(), ServerParse.UNLOCK, srcStatement);
 			BackendConnection conn = lockedConns.get(dataNode);
 			if (clearIfSessionClosed(session)) {
 				return;
@@ -64,12 +79,8 @@ public class UnLockTablesHandler extends MultiNodeHandler implements ResponseHan
 	public void okResponse(byte[] data, BackendConnection conn) {
 		boolean executeResponse = conn.syncAndExcute();
 		if (executeResponse) {
-			if (clearIfSessionClosed(session)) {
-                return;
-            } else if (canClose(conn, false)) {
-                return;
-            }
 			boolean isEndPack = decrementCountBy(1);
+			session.releaseLockedConnection(conn);
 			if (isEndPack) {
 				if (this.isFail() || session.closed()) {
 					tryErrorFinished(true);

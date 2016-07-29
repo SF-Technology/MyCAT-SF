@@ -2,15 +2,34 @@
 <!DOCTYPE mycat:schema SYSTEM "schema.dtd">
 <mycat:schema xmlns:mycat="http://org.opencloudb/" >
 
-	<schema name="dev" checkSQLschema="false" sqlMaxLimit="100">
-		<table name="hotnews" primaryKey="id" dataNode="dn$1-8" rule="mod-8_id"></table>
+	<schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
+		<!-- auto sharding by id (long) -->
+		<table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
+
+		<!-- global table is auto cloned to all defined data nodes ,so can join 
+			with any table whose sharding node is in the same data node -->
+		<table name="company" primaryKey="ID" dataNode="dn3,dn2,dn1" rule="mod-long"/>
+		<table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2" />
+		<!-- random sharding using mod sharind rule -->
+		<table name="hotnews" primaryKey="ID" dataNode="dn1,dn2,dn3"
+			rule="mod-long" />
+		<!-- <table name="dual" primaryKey="ID" dataNode="dnx,dnoracle2" type="global" 
+			needAddLimit="false"/> <table name="worker" primaryKey="ID" dataNode="jdbc_dn1,jdbc_dn2,jdbc_dn3" 
+			rule="mod-long" /> -->
+		<table name="employee" primaryKey="ID" dataNode="dn1,dn2"
+			rule="sharding-by-intfile" />
+		<table name="customer" primaryKey="ID" dataNode="dn1,dn2"
+			rule="sharding-by-intfile">
+			<childTable name="orders" primaryKey="ID" joinKey="customer_id"
+				parentKey="id">
+				<childTable name="order_items" joinKey="order_id"
+					parentKey="id" />
+			</childTable>
+			<childTable name="customer_addr" primaryKey="ID" joinKey="customer_id"
+				parentKey="id" />
+		</table>
+		<!-- <table name="oc_call" primaryKey="ID" dataNode="dn1$0-743" rule="latest-month-calldate" 
+			/> -->
 	</schema>
 	
-	<dataNode dataHost="devhost" name="dn$1-8" database="dev$1-8"></dataNode>
-	
-	<dataHost name="devhost" dbType="mysql" balance="0" dbDriver="native" minCon="40" maxCon="400">
-		<heartbeat>select user()</heartbeat>
-		<writeHost user="mycat" password="hellocat" url="localhost:3310" host="hostM1"></writeHost>
-	</dataHost>
-
 </mycat:schema>

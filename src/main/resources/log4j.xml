@@ -34,9 +34,9 @@
  
   
   <root>
-    <level value="warn" />
+    <level value="DEBUG" />
     <appender-ref ref="ConsoleAppender" />
-     <!--<appender-ref ref="FILE" />-->
+    <appender-ref ref="FILE" />
   </root>
 <!--
 <logger name="org.opencloudb.server.NonBlockingSession" >    

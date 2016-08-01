@@ -48,6 +48,8 @@ public class DruidParserFactory
         } else if (statement instanceof MySqlAlterTableStatement)
         {
             parser = new DruidAlterTableParser();
+        } else if (statement instanceof MySqlLockTableStatement) {
+        	parser = new DruidLockTableParser();
         } else
         {
             parser = new DefaultDruidParser();

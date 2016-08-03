@@ -124,6 +124,10 @@ public final class SystemConfig {
 	private  long SQL_SLOW_TIME = 1000;
 	//处理分布式事务开关，默认为不过滤分布式事务
 	private int handleDistributedTransactions = 0;
+	/**
+	 * 启用结果集流输出，不经过merge模块,
+	 */
+	private int useStreamOutput;
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -157,8 +161,17 @@ public final class SystemConfig {
 		this.txIsolation = Isolations.REPEATED_READ;
 		this.parserCommentVersion = DEFAULT_PARSER_COMMENT_VERSION;
 		this.sqlRecordCount = DEFAULT_SQL_RECORD_COUNT;
+		this.useStreamOutput = 0;
 		this.SQL_SLOW_TIME=1000;
 
+	}
+	
+	public int getUseStreamOutput() {
+		return useStreamOutput;
+	}
+
+	public void setUseStreamOutput(int useStreamOutput) {
+		this.useStreamOutput = useStreamOutput;
 	}
 	
 	public void setSlowTime(long time) {

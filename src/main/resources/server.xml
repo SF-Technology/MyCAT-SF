@@ -31,6 +31,8 @@
 			<property name="serverPort">8066</property> <property name="managerPort">9066</property> 
 			<property name="idleTimeout">300000</property> <property name="bindIp">0.0.0.0</property> 
 			<property name="frontWriteQueueSize">4096</property> <property name="processors">32</property> -->
+	<!--是否开启结果集流式输出,0不开启，1开启-->
+        <property name="useStreamOutput">0</property>
 	</system>
 	<user name="test">
 		<property name="password">test</property>

@@ -71,6 +71,15 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 	private final boolean isCallProcedure;
 	private long startTime;
 	private int execCount = 0;
+	/**
+	 * Limit N，M
+	 */
+	private   int limitStart;
+	private   int limitSize;
+
+	private int index = 0;
+
+	private int end = 0;
 
 	public MultiNodeQueryHandler(int sqlType, RouteResultset rrs,
 			boolean autocommit, NonBlockingSession session) {
@@ -92,6 +101,15 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 		this.session = session;
 		this.lock = new ReentrantLock();
 		// this.icHandler = new CommitNodeHandler(session);
+		this.limitStart = rrs.getLimitStart();
+		this.limitSize = rrs.getLimitSize();
+		this.end = limitStart + rrs.getLimitSize();
+
+		if (this.limitStart < 0)
+			this.limitStart = 0;
+
+		if (rrs.getLimitSize() < 0)
+			end = Integer.MAX_VALUE;
 		if (dataMergeSvr != null) {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("has data merge logic ");
@@ -284,7 +302,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 					return;
 				}
 			}
-			if (dataMergeSvr != null) {
+			if (dataMergeSvr != null && !dataMergeSvr.isStreamOutputResult()) {
 				try {
 					dataMergeSvr.outputMergeResult(session, eof);
 				} catch (Exception e) {
@@ -501,7 +519,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			RouteResultsetNode rNode = (RouteResultsetNode) conn
 					.getAttachment();
 			String dataNode = rNode.getName();
-			if (dataMergeSvr != null) {
+			if (dataMergeSvr != null && !dataMergeSvr.isStreamOutputResult()) {
 				// even through discarding the all rest data, we can't
 				//close the connection for tx control such as rollback or commit.
 				// So the "isClosedByDiscard" variable is unnecessary.
@@ -519,8 +537,15 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 							.getRouterservice().getTableId2DataNodeCache();
 					pool.putIfAbsent(priamaryKeyTable, primaryKey, dataNode);
 				}
-				row[3] = ++packetId;
-				session.getSource().write(row);
+				/**
+				 * 流式处理Limit语句
+				 */
+				if(index >= limitStart && index <=end) {
+					row[3] = ++packetId;
+					session.getSource().write(row);
+				}
+
+				index++;
 			}
 
 		} catch (Exception e) {

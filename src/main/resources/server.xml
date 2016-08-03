@@ -33,6 +33,15 @@
 			<property name="frontWriteQueueSize">4096</property> <property name="processors">32</property> -->
 	<!--是否开启结果集流式输出,0不开启，1开启-->
         <property name="useStreamOutput">0</property>
+
+	<!--off heap for merge/order/group/limit -->
+		<property name="useOffHeapForMerge">1</property>
+	<!--内存页大小,单位为m-->
+		<property name="memoryPageSize">1m</property>
+	<!--写文件临时buffer大小,单位为k -->
+		<property name="spillsFileBufferSize">1k</property>
+	<!--Mycat 系统预留内存,单位为m -->
+		<property name="systemReserveMemorySize">384m</property>
 	</system>
 	<user name="test">
 		<property name="password">test</property>

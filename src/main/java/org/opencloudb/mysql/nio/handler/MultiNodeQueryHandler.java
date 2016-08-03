@@ -23,15 +23,15 @@
  */
 package org.opencloudb.mysql.nio.handler;
 
+
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.backend.BackendConnection;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.cache.LayerCachePool;
-import org.opencloudb.mpp.ColMeta;
-import org.opencloudb.mpp.DataMergeService;
-import org.opencloudb.mpp.MergeCol;
+import org.opencloudb.memory.unsafe.row.UnsafeRow;
+import org.opencloudb.mpp.*;
 import org.opencloudb.mysql.LoadDataUtil;
 import org.opencloudb.net.mysql.*;
 import org.opencloudb.route.RouteResultset;
@@ -58,7 +58,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 	private final RouteResultset rrs;
 	private final NonBlockingSession session;
 	// private final CommitNodeHandler icHandler;
-	private final DataMergeService dataMergeSvr;
+	private final AbstractDataNodeMerge dataMergeSvr;
 	private final boolean autocommit;
 	private String priamaryKeyTable = null;
 	private int primaryKeyIndex = -1;
@@ -71,6 +71,8 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 	private final boolean isCallProcedure;
 	private long startTime;
 	private int execCount = 0;
+	
+	private int isOffHeapuseOffHeapForMerge = 1;
 	/**
 	 * Limit N，M
 	 */
@@ -91,8 +93,17 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			LOGGER.debug("execute mutinode query " + rrs.getStatement());
 		}
 		this.rrs = rrs;
+		isOffHeapuseOffHeapForMerge = MycatServer.getInstance().
+				getConfig().getSystem().getUseOffHeapForMerge();
 		if (ServerParse.SELECT == sqlType && rrs.needMerge()) {
-			dataMergeSvr = new DataMergeService(this, rrs);
+			/**
+			 * 使用Off Heap
+			 */
+			if(isOffHeapuseOffHeapForMerge == 1){
+				dataMergeSvr = new DataNodeMergeManager(this,rrs);
+			}else {
+				dataMergeSvr = new DataMergeService(this,rrs);
+			}
 		} else {
 			dataMergeSvr = null;
 		}
@@ -324,7 +335,69 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			}
 		}
 	}
+	
+	
 
+	/**
+	 * 将汇聚结果集数据真正的发送给Mycat客户端
+	 * @param source
+	 * @param eof
+	 * @param
+	 */
+	public void outputMergeResult(final ServerConnection source, final byte[] eof, Iterator<UnsafeRow> iter) {
+		try {
+			lock.lock();
+			ByteBuffer buffer = session.getSource().allocate();
+			final RouteResultset rrs = this.dataMergeSvr.getRrs();
+
+			/**
+			 * 处理limit语句的start 和 end位置，将正确的结果发送给
+			 * Mycat 客户端
+			 */
+			int start = rrs.getLimitStart();
+			int end = start + rrs.getLimitSize();
+			int index = 0;
+
+			if (start < 0)
+				start = 0;
+
+			if (rrs.getLimitSize() < 0)
+				end = Integer.MAX_VALUE;
+
+			while (iter.hasNext()){
+
+				UnsafeRow row = iter.next();
+
+				if(index >= start){
+					row.packetId = ++packetId;
+					buffer = row.write(buffer,source,true);
+				}
+
+				index++;
+
+				if(index == end){
+					break;
+				}
+			}
+
+			eof[3] = ++packetId;
+
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("last packet id:" + packetId);
+			}
+
+			/**
+			 * 真正的开始把Writer Buffer的数据写入到channel 中
+			 */
+			source.write(source.writeToBuffer(eof, buffer));
+		} catch (Exception e) {
+			handleDataProcessException(e);
+		} finally {
+			lock.unlock();
+			dataMergeSvr.clear();
+		}
+	}
 	public void outputMergeResult(final ServerConnection source,
 			final byte[] eof, List<RowDataPacket> results) {
 		try {

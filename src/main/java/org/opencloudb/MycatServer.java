@@ -47,6 +47,7 @@ import org.opencloudb.config.ZkConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.interceptor.SQLInterceptor;
 import org.opencloudb.manager.ManagerConnectionFactory;
+import org.opencloudb.memory.MyCatMemory;
 import org.opencloudb.net.AIOAcceptor;
 import org.opencloudb.net.AIOConnector;
 import org.opencloudb.net.NIOAcceptor;
@@ -85,6 +86,10 @@ public class MycatServer {
 	private boolean aio = false;
 	private final AtomicLong xaIDInc = new AtomicLong();
 
+	/**
+	 * Mycat 内存管理类
+	 */
+	private MyCatMemory myCatMemory = null;
 	public static final MycatServer getInstance() {
 		return INSTANCE;
 	}
@@ -157,6 +162,9 @@ public class MycatServer {
 				+ seq+"'";
 	}
 
+	public MyCatMemory getMyCatMemory() {
+		return myCatMemory;
+	}
 	/**
 	 * get next AsynchronousChannel ,first is exclude if multi
 	 * AsynchronousChannelGroups
@@ -222,8 +230,24 @@ public class MycatServer {
 		long processBuferPool = system.getProcessorBufferPool();
 		int processBufferChunk = system.getProcessorBufferChunk();
 		int socketBufferLocalPercent = system.getProcessorBufferLocalPercent();
+		long totalNetWorkBufferSize = 0L;
 		bufferPool = new BufferPool(processBuferPool, processBufferChunk,
 				socketBufferLocalPercent / processorCount);
+		totalNetWorkBufferSize = processBuferPool;
+		/**
+		 * Off Heap For Merge/Order/Group/Limit 初始化
+		 */
+		if(system.getUseOffHeapForMerge() == 1){
+			try {
+				myCatMemory = new MyCatMemory(system,totalNetWorkBufferSize);
+			} catch (NoSuchFieldException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
 		businessExecutor = ExecutorUtil.create("BusinessExecutor",
 				threadPoolSize);
 		timerExecutor = ExecutorUtil.create("Timer", system.getTimerExecutor());
@@ -355,7 +379,7 @@ public class MycatServer {
 	/**
 	 * save cur datanode index to properties file
 	 * 
-	 * @param dataNode
+	 * @param dataHost
 	 * @param curIndex
 	 */
 	public synchronized void saveDataHostIndex(String dataHost, int curIndex) {

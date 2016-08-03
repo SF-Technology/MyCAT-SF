@@ -58,59 +58,35 @@ import org.opencloudb.util.StringUtil;
  * @since 2016-03-23
  * 
  */
-public class DataMergeService implements Runnable {
+public class DataMergeService extends AbstractDataNodeMerge {
 
-	// 保存包和节点的关系
-	class PackWraper {
-		public byte[] data;
-		public String node;
-
-	}
-
-	// A flag that represents whether the service running in a business thread,
-	// should not a volatile variable!!
-	// @author Uncle-pan
-	// @since 2016-03-23
-	private final AtomicBoolean running = new AtomicBoolean(false);
-	// props
-	private int fieldCount;
-	private RouteResultset rrs;
 	private RowDataSorter sorter;
 	private RowDataPacketGrouper grouper;
-	private MultiNodeQueryHandler multiQueryHandler;
-	public PackWraper END_FLAG_PACK = new PackWraper();
 	private List<RowDataPacket> result = new Vector<RowDataPacket>();
 	private static Logger LOGGER = Logger.getLogger(DataMergeService.class);
-	private BlockingQueue<PackWraper> packs = new LinkedBlockingQueue<PackWraper>();
 	private ConcurrentHashMap<String, Boolean> canDiscard = new ConcurrentHashMap<String, Boolean>();
-	
-	/**
-     * 是否执行流式结果集输出
-     */
-
-    protected boolean isStreamOutputResult = false;
-	
-
 	public DataMergeService(MultiNodeQueryHandler handler, RouteResultset rrs) {
-		this.rrs = rrs;
-		this.multiQueryHandler = handler;
+		super(handler,rrs);
 	}
 
-	public RouteResultset getRrs() {
-		return this.rrs;
-	}
 
-	public void outputMergeResult(NonBlockingSession session, byte[] eof) {
-		addPack(END_FLAG_PACK);
-	}
-
+	/**
+	 * @param columToIndx
+	 * @param fieldCount
+     */
 	public void onRowMetaData(Map<String, ColMeta> columToIndx, int fieldCount) {
+
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("field metadata inf:" + columToIndx.entrySet());
+			LOGGER.debug("field metadata keys:" + columToIndx.keySet());
+			LOGGER.debug("field metadata values:" + columToIndx.values());
 		}
+
+
 		int[] groupColumnIndexs = null;
 		this.fieldCount = fieldCount;
+
 		if (rrs.getGroupByCols() != null) {
+		
 			groupColumnIndexs = toColumnIndex(rrs.getGroupByCols(), columToIndx);
 		}
 
@@ -125,12 +101,16 @@ public class DataMergeService implements Runnable {
 		if (rrs.isHasAggrColumn()) {
 			List<MergeCol> mergCols = new LinkedList<MergeCol>();
 			Map<String, Integer> mergeColsMap = rrs.getMergeCols();
+
+
+
 			if (mergeColsMap != null) {
 				for (Map.Entry<String, Integer> mergEntry : mergeColsMap
 						.entrySet()) {
 					String colName = mergEntry.getKey().toUpperCase();
 					int type = mergEntry.getValue();
 					if (MergeCol.MERGE_AVG == type) {
+					
 						ColMeta sumColMeta = columToIndx.get(colName + "SUM");
 						ColMeta countColMeta = columToIndx.get(colName
 								+ "COUNT");
@@ -142,6 +122,7 @@ public class DataMergeService implements Runnable {
 									.getValue()));
 						}
 					} else {
+						
 						ColMeta colMeta = columToIndx.get(colName);
 						mergCols.add(new MergeCol(colMeta, mergEntry.getValue()));
 					}
@@ -156,10 +137,13 @@ public class DataMergeService implements Runnable {
 					mergCols.add(new MergeCol(fieldEntry.getValue(), result));
 				}
 			}
+
+		
 			grouper = new RowDataPacketGrouper(groupColumnIndexs,
 					mergCols.toArray(new MergeCol[mergCols.size()]),
 					rrs.getHavingCols());
 		}
+
 		if (rrs.getOrderByCols() != null) {
 			LinkedHashMap<String, Integer> orders = rrs.getOrderByCols();
 			OrderCol[] orderCols = new OrderCol[orders.size()];
@@ -169,17 +153,18 @@ public class DataMergeService implements Runnable {
 						.toUpperCase());
 				ColMeta colMeta = columToIndx.get(key);
 				if (colMeta == null) {
-					throw new java.lang.IllegalArgumentException(
+					throw new IllegalArgumentException(
 							"all columns in order by clause should be in the selected column list!"
 									+ entry.getKey());
 				}
 				orderCols[i++] = new OrderCol(colMeta, entry.getValue());
 			}
-			// sorter = new RowDataPacketSorter(orderCols);
+
 			RowDataSorter tmp = new RowDataSorter(orderCols);
 			tmp.setLimit(rrs.getLimitStart(), rrs.getLimitSize());
 			sorter = tmp;
 		}
+
 		if (MycatServer.getInstance().
 				getConfig().getSystem().
 				getUseStreamOutput() == 1
@@ -191,52 +176,6 @@ public class DataMergeService implements Runnable {
 		}
 	}
 
-	/**
-	 * process new record (mysql binary data),if data can output to client
-	 * ,return true
-	 * 
-	 * @param dataNode
-	 *            DN's name (data from this dataNode)
-	 * @param rowData
-	 *            raw data
-	 * @param conn
-	 */
-	public boolean onNewRecord(String dataNode, byte[] rowData) {
-		// 对于需要排序的数据,由于mysql传递过来的数据是有序的,
-		// 如果某个节点的当前数据已经不会进入,后续的数据也不会入堆
-		if (canDiscard.size() == rrs.getNodes().length) {
-			// "END_FLAG" only should be added by MultiNodeHandler.rowEofResponse()
-			// @author Uncle-pan
-			// @since 2016-03-23
-			//LOGGER.info("now we output to client");
-			//addPack(END_FLAG_PACK);
-			return true;
-		}
-		if (canDiscard.get(dataNode) != null) {
-			return true;
-		}
-		final PackWraper data = new PackWraper();
-		data.node = dataNode;
-		data.data = rowData;
-		addPack(data);
-		return false;
-	}
-
-	private static int[] toColumnIndex(String[] columns,
-			Map<String, ColMeta> toIndexMap) {
-		int[] result = new int[columns.length];
-		ColMeta curColMeta;
-		for (int i = 0; i < columns.length; i++) {
-			curColMeta = toIndexMap.get(columns[i].toUpperCase());
-			if (curColMeta == null) {
-				throw new java.lang.IllegalArgumentException(
-						"all columns in group by clause should be in the selected column list.!"
-								+ columns[i]);
-			}
-			result[i] = curColMeta.colIndex;
-		}
-		return result;
-	}
 
 	/**
 	 * release resources
@@ -250,7 +189,7 @@ public class DataMergeService implements Runnable {
 	@Override
 	public void run() {
 		// sort-or-group: no need for us to using multi-threads, because
-		//both sorter and grouper are synchronized!!
+		//both sorter and group are synchronized!!
 		// @author Uncle-pan
 		// @since 2016-03-23
 		if(!running.compareAndSet(false, true)){
@@ -273,6 +212,9 @@ public class DataMergeService implements Runnable {
 				}
 				// eof: handling eof pack and exit
 				if (pack == END_FLAG_PACK) {
+
+
+
 					final int warningCount = 0;
 					final EOFPacket eofp   = new EOFPacket();
 					final ByteBuffer eof   = ByteBuffer.allocate(9);
@@ -286,14 +228,17 @@ public class DataMergeService implements Runnable {
 					multiQueryHandler.outputMergeResult(source, array, getResults(array));
 					break;
 				}
+
+
 				// merge: sort-or-group, or simple add
 				final RowDataPacket row = new RowDataPacket(fieldCount);
-				row.read(pack.data);
+				row.read(pack.rowData);
+
 				if (grouper != null) {
 					grouper.addRow(row);
 				} else if (sorter != null) {
 					if (!sorter.addRow(row)) {
-						canDiscard.put(pack.node, true);
+						canDiscard.put(pack.dataNode,true);
 					}
 				} else {
 					result.add(row);
@@ -313,45 +258,24 @@ public class DataMergeService implements Runnable {
 		}
 	}
 	
-	/**
-	 * Add a row pack, and may be wake up a business thread to work if not running.
-	 * @param pack row pack
-	 * @return true wake up a business thread, otherwise false
-	 * 
-	 * @author Uncle-pan
-	 * @since 2016-03-23
-	 */
-	private final boolean addPack(final PackWraper pack){
-		packs.add(pack);
-		if(running.get()){
-			return false;
-		}
-		final MycatServer server = MycatServer.getInstance();
-		server.getBusinessExecutor().execute(this);
-		return true;
-	}
-	
-	  public boolean isStreamOutputResult() {
-        return isStreamOutputResult;
-      }
 
-       public void setStreamOutputResult(boolean streamOutputResult) {
-        isStreamOutputResult = streamOutputResult;
-       }
 
 	/**
 	 * return merged data
-	 * 
 	 * @return (最多i*(offset+size)行数据)
 	 */
-	private List<RowDataPacket> getResults(byte[] eof) {
+	public List<RowDataPacket> getResults(byte[] eof) {
+	
 		List<RowDataPacket> tmpResult = result;
+
 		if (this.grouper != null) {
 			tmpResult = grouper.getResult();
 			grouper = null;
 		}
+
+		
 		if (sorter != null) {
-			// 处理grouper处理后的数据
+			
 			if (tmpResult != null) {
 				Iterator<RowDataPacket> itor = tmpResult.iterator();
 				while (itor.hasNext()) {
@@ -362,10 +286,11 @@ public class DataMergeService implements Runnable {
 			tmpResult = sorter.getSortedResult();
 			sorter = null;
 		}
+
+
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("prepare mpp merge result for " + rrs.getStatement());
 		}
-
 		return tmpResult;
 	}
 }

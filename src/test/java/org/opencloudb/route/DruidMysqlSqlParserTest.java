@@ -81,7 +81,8 @@ public class DruidMysqlSqlParserTest
 
 	@Test
 	public void testLockTableSql() throws SQLNonTransientException{
-		String sql = "lock tables goods write, tab t1 read";
+		//String sql = "lock tables goods write, tab t1 read";
+		String sql = "lock tables goods write";
 		SchemaConfig schema = schemaMap.get("TESTDB");
 		RouteResultset rrs = routeStrategy.route(new SystemConfig(), schema, ServerParse.LOCK, sql, null, null, cachePool);
 		Assert.assertEquals(3, rrs.getNodes().length);

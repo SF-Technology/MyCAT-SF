@@ -83,6 +83,13 @@ public class DataMergeService implements Runnable {
 	private static Logger LOGGER = Logger.getLogger(DataMergeService.class);
 	private BlockingQueue<PackWraper> packs = new LinkedBlockingQueue<PackWraper>();
 	private ConcurrentHashMap<String, Boolean> canDiscard = new ConcurrentHashMap<String, Boolean>();
+	
+	/**
+     * 是否执行流式结果集输出
+     */
+
+    protected boolean isStreamOutputResult = false;
+	
 
 	public DataMergeService(MultiNodeQueryHandler handler, RouteResultset rrs) {
 		this.rrs = rrs;
@@ -172,6 +179,15 @@ public class DataMergeService implements Runnable {
 			RowDataSorter tmp = new RowDataSorter(orderCols);
 			tmp.setLimit(rrs.getLimitStart(), rrs.getLimitSize());
 			sorter = tmp;
+		}
+		if (MycatServer.getInstance().
+				getConfig().getSystem().
+				getUseStreamOutput() == 1
+				&& grouper == null
+				&& sorter == null) {
+			setStreamOutputResult(true);
+		}else {
+			setStreamOutputResult(false);
 		}
 	}
 
@@ -314,6 +330,14 @@ public class DataMergeService implements Runnable {
 		server.getBusinessExecutor().execute(this);
 		return true;
 	}
+	
+	  public boolean isStreamOutputResult() {
+        return isStreamOutputResult;
+      }
+
+       public void setStreamOutputResult(boolean streamOutputResult) {
+        isStreamOutputResult = streamOutputResult;
+       }
 
 	/**
 	 * return merged data

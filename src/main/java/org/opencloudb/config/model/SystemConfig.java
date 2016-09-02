@@ -128,6 +128,8 @@ public final class SystemConfig {
 	private  long SQL_SLOW_TIME = 1000;
 	//处理分布式事务开关，默认为不过滤分布式事务
 	private int handleDistributedTransactions = 0;
+	// 是否开启sqlstat统计功能, 0表示关闭, 1表示打开, 默认为关闭状态
+	private int useSqlStat = 0;
 	/**
 	 * Mycat 使用 Off Heap For Merge/Order/Group/Limit计算相关参数
 	 */
@@ -746,4 +748,13 @@ public final class SystemConfig {
 	public void setHandleDistributedTransactions(int handleDistributedTransactions) {
 		this.handleDistributedTransactions = handleDistributedTransactions;
 	}
+
+	public int getUseSqlStat() {
+		return useSqlStat;
+	}
+
+	public void setUseSqlStat(int useSqlStat) {
+		this.useSqlStat = useSqlStat;
+	}
+	
 }

@@ -65,6 +65,11 @@ public class QueryResultDispatcher {
 			return;
 		}
 		
+		int useSqlStat = MycatServer.getInstance().getConfig().getSystem().getUseSqlStat();
+		if(useSqlStat == 0) {
+			return ;
+		}
+		
 		//TODO：异步分发，待进一步调优 
 		MycatServer.getInstance().getBusinessExecutor().execute(new Runnable() {
 			
@@ -72,6 +77,7 @@ public class QueryResultDispatcher {
 				
 				for(QueryResultListener listener: listeners) {
 					try {
+						LOGGER.info("dispatch query with " + listener.getClass());
 						listener.onQueryResult( queryResult );
 					} catch(Exception e) {
 						LOGGER.error(e);

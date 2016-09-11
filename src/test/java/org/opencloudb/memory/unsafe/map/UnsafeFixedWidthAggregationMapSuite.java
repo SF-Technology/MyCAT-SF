@@ -226,9 +226,9 @@ public void  testWithMemoryLeakDetection() throws IOException, NoSuchFieldExcept
    fieldCount = 3;
    colMeta = null;
    colMetaMap = new HashMap<String,ColMeta>(fieldCount);
-   colMeta = new ColMeta(0,ColMeta.COL_TYPE_LONG);
+   colMeta = new ColMeta(0,ColMeta.COL_TYPE_LONGLONG);
    colMetaMap.put("age",colMeta);
-   colMeta = new ColMeta(1,ColMeta.COL_TYPE_LONG);
+   colMeta = new ColMeta(1,ColMeta.COL_TYPE_LONGLONG);
    colMetaMap.put("age1",colMeta);
    colMeta = new ColMeta(2,ColMeta.COL_TYPE_STRING);
    colMetaMap.put("name",colMeta);

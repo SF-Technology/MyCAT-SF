@@ -216,7 +216,7 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
                     schema,
                     prefixComparator, prefixComputer,
                     conf.getSizeAsBytes("mycat.buffer.pageSize","1m"),
-                    true/**是否使用基数排序*/,
+                    false/**是否使用基数排序*/,
                     true/**排序*/);
         }
 
@@ -366,6 +366,8 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
                     byte[] colValue = mm.readBytesWithLength();
                     if (colValue != null)
                     	unsafeRowWriter.write(i,colValue);
+                    else
+                        unsafeRow.setNullAt(i);
                 }
 
                 unsafeRow.setTotalSize(bufferHolder.totalSize());

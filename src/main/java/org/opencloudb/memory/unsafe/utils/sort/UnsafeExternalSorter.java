@@ -310,13 +310,15 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
   private void deleteSpillFiles() {
     for (UnsafeSorterSpillWriter spill : spillWriters) {
       File file = spill.getFile();
+      if(file == null)
+        continue;
       try {
         JavaUtils.deleteRecursively(file.getParentFile().getParentFile());
       } catch (IOException e) {
         logger.error(e.getMessage());
       }
 
-      if (file != null && file.exists()) {
+      if (file.exists()) {
         if (!file.delete()) {
           logger.error("Was unable to delete spill file {}", file.getAbsolutePath());
         }
@@ -654,8 +656,7 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
    */
   public UnsafeSorterIterator getIterator() throws IOException {
     /**
-     * 如果spillWriters为空说明，当前只有一个spil file文件
-     * 直接读取内存中即可
+     * 如果spillWriters为空说明，直接读取内存中即可
      */
     if (spillWriters.isEmpty()) {
       assert(inMemSorter != null);
@@ -683,8 +684,6 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
   }
 
   /**
-   * 非常重要的一个ChainedIterator，主要看如果实现合并操作的?
-   * 相当于设计模式中的组合模式
    * Chain multiple UnsafeSorterIterator together as single one.
    */
   static class ChainedIterator extends UnsafeSorterIterator {

@@ -54,9 +54,6 @@ public class SchemaConfig {
 	 */
 	private final Map<String, TableConfig> joinRel2TableMap = new HashMap<String, TableConfig>();
 
-	public String[] getAllDataNodeStrArr() {
-		return allDataNodeStrArr;
-	}
 
 	private final String[] allDataNodeStrArr;
 
@@ -87,6 +84,11 @@ public class SchemaConfig {
 			this.allDataNodeStrArr = null;
 		}
 	}
+	
+	public String[] getAllDataNodeStrArr() {
+		return allDataNodeStrArr;
+	}
+
 
 	public String getDefaultDataNodeDbType()
 	{

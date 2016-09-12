@@ -3,6 +3,7 @@ package org.opencloudb.backend.infoschema;
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.backend.PhysicalDBPool;
+import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.memory.MyCatMemory;
 import org.opencloudb.memory.unsafe.map.UnsafeFixedWidthAggregationMap;
 import org.opencloudb.memory.unsafe.memory.mm.DataNodeMemoryManager;
@@ -135,10 +136,6 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
     public static final Logger LOGGER =
             Logger.getLogger(MySQLInfoSchemaProcessor.class);
 
-    /**
-     * 传入的DataHosts集合
-     */
-    private  Map<String, PhysicalDBPool> nodes;
     private final EngineCtx ctx;
     private int maxjobs = 0;
     private AtomicInteger integer = null;
@@ -219,22 +216,25 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
 
     private final String execSql;
     private final String [] colNames;
+    private final String information_schema_db;
+    private int dataHostSize;
 
-    public MySQLInfoSchemaProcessor(Map<String, PhysicalDBPool> nodes,String sql,String [] cols) throws IOException {
-        assert (cols.length >0);
-        this.nodes = nodes;
+    public MySQLInfoSchemaProcessor(String information_schema_db,int dataHostSize,String sql,String [] cols) throws IOException {
+
+        this.information_schema_db = information_schema_db;
         this.ctx = new EngineCtx(null);
-        this.maxjobs = nodes.size();
+        this.dataHostSize = dataHostSize;
+        this.maxjobs = dataHostSize;
         this.integer = new AtomicInteger(0);
         this.myCatMemory = MycatServer.getInstance().getMyCatMemory();
         this.memoryManager = myCatMemory.getResultMergeMemoryManager();
         this.conf = myCatMemory.getConf();
         this.execSql = sql;
+
         /**
          * TODO 后面通过druid 解析sql中的列名，填充这个colNames。
          */
         this.colNames = cols;
-
         Map<String, ColMeta> columToIndx = new HashMap<String, ColMeta>(
                 this.colNames.length);
         /**
@@ -269,31 +269,25 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
     /**
      * 将SQL发送到后端
      */
-    public Iterator<UnsafeRow> processSQL() throws ExecutionException, InterruptedException {
+    public Iterator<UnsafeRow> processSQL() throws Exception {
+
         MySQLInfoSchemaResultHandler schemaResultHandler =
                 new MySQLInfoSchemaResultHandler(this);
-        String [] dataNodes = {"info_schema1","info_schema2","info_schema3","info_schema4"};
 
-        /**
-        String queryinfoSql ="select TABLE_SCHEMA,TABLE_NAME,COLUMN_NAME ";
+        Map<String,SchemaConfig>  dataNodeMaps = MycatServer.getInstance().getConfig().getSchemas();
 
-        for (String colname:
-                MYSQL_INFO_SCHEMA_TCOLUMNS
-             ) {
-            queryinfoSql += colname + ",";
+        SchemaConfig config =  dataNodeMaps.get(information_schema_db);
+
+        String[] dataNodes = config!=null?config.getAllDataNodeStrArr():null;
+
+        if((dataNodes == null) || (this.dataHostSize != dataNodes.length)){
+            throw new Exception("Information_schema 's DataNode size must equal to datahost size");
         }
 
-        queryinfoSql +="PRIVILEGES from COLUMNS where TABLE_SCHEMA != 'information_schema';";
-
-        LOGGER.error("sql = " + queryinfoSql);
-
-    */
         ctx.executeNativeSQLParallJob(dataNodes,this.execSql,schemaResultHandler);
 
-
         while (countDownLatch.getCount() != 0){
-           // LOGGER.error("count ========================>" + countDownLatch.getCount());
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         }
 
         return futureTask.get();

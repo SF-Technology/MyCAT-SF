@@ -82,6 +82,11 @@ public class SchemaConfig {
 			this.allDataNodeStrArr = null;
 		}
 	}
+	
+	public String[] getAllDataNodeStrArr() {
+		return allDataNodeStrArr;
+	}
+
 
 	public String getDefaultDataNodeDbType()
 	{

@@ -8,7 +8,6 @@ package org.opencloudb.backend.infoschema;
  * @create 2016-09-12 9:30
  */
 
-
 /**
  *
  *
@@ -28,44 +27,44 @@ package org.opencloudb.backend.infoschema;
  "COLUMN_TYPE",
  "COLUMN_KEY",
  "EXTRA",
- "PRIVILEGES"
- };
+ "PRIVILEGES"};
 
- Map<String, PhysicalDBPool> nodes = config.getDataHosts();
 
- MySQLInfoSchemaProcessor processor =null;
+ Map<String, PhysicalDBPool> nodes = config
+ .getDataHosts();
 
+ MySQLInfoSchemaProcessor processor =
+ null;
 
  String execSQL = "select  ";
 
  for (String colname: MYSQL_INFO_SCHEMA_TCOLUMNS
  ) {
-     execSQL +=colname + ",";
+ execSQL +=colname + ",";
  }
 
  execSQL +="PRIVILEGES from COLUMNS where TABLE_SCHEMA != 'information_schema'";
-
+ information_schema 一定要保持跟MySQL的db名一直。
  try {
-    processor = new MySQLInfoSchemaProcessor(nodes,execSQL,MYSQL_INFO_SCHEMA_TCOLUMNS);
+ processor = new MySQLInfoSchemaProcessor("information_schema",nodes.size(),execSQL,MYSQL_INFO_SCHEMA_TCOLUMNS);
  } catch (IOException e) {
-    e.printStackTrace();
+ e.printStackTrace();
  }
-
  try {
-
  Iterator<UnsafeRow> iterator=  processor.processSQL();
 
  int count = 0;
 
  while (iterator.hasNext()){
-    count++;
-    UnsafeRow row = iterator.next();
-
+ count++;
+ UnsafeRow row = iterator.next();
  }
 
- } catch (ExecutionException e) {
-     e.printStackTrace();
- } catch (InterruptedException e) {
-    e.printStackTrace();
+ LOGGER.error("count:" + count);
+
+ } catch (Exception e) {
+ e.printStackTrace();
  }
+
+
  */

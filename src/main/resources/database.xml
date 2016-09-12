@@ -7,6 +7,13 @@
 	<dataNode name="dn1" dataHost="localhost1" database="db1" />
 	<dataNode name="dn2" dataHost="localhost1" database="db2" />
 	<dataNode name="dn3" dataHost="localhost1" database="db3" />
+	
+	<!-- 配置获取后端mysql info schema信息>
+	
+	<dataNode name="info_schema1" dataHost="exphost1" database="information_schema" />
+	<dataNode name="info_schema2" dataHost="exphost2" database="information_schema" />
+	<dataNode name="info_schema3"	dataHost="exphost3" database="information_schema" />
+	<dataNode name="info_schema4"	dataHost="exphost4" database="information_schema" />
 	<!--<dataNode name="dn4" dataHost="sequoiadb1" database="SAMPLE" /> <dataNode 
 		name="jdbc_dn1" dataHost="jdbchost" database="db1" /> <dataNode name="jdbc_dn2" 
 		dataHost="jdbchost" database="db2" /> <dataNode name="jdbc_dn3" dataHost="jdbchost" 

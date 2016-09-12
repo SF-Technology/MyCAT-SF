@@ -31,5 +31,11 @@
 		<!-- <table name="oc_call" primaryKey="ID" dataNode="dn1$0-743" rule="latest-month-calldate" 
 			/> -->
 	</schema>
+	<!-- 配置获取后端mysql info schema信息>
+	
+	<schema name="information_schema" checkSQLschema="false" sqlMaxLimit="10000">
+		<table name="COLUMNS"    type="global" dataNode="info_schema1,info_schema2,info_schema3,info_schema4"></table>
+		<table name="STATISTICS" type="global" dataNode="info_schema1,info_schema2,info_schema3,info_schema4"></table>
+	</schema>
 	
 </mycat:schema>

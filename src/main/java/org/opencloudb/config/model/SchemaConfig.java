@@ -53,11 +53,6 @@ public class SchemaConfig {
 	 * ,then A is root table
 	 */
 	private final Map<String, TableConfig> joinRel2TableMap = new HashMap<String, TableConfig>();
-
-	public String[] getAllDataNodeStrArr() {
-		return allDataNodeStrArr;
-	}
-
 	private final String[] allDataNodeStrArr;
 
 	private  Map<String,String> dataNodeDbTypeMap=new HashMap<>();
@@ -87,6 +82,11 @@ public class SchemaConfig {
 			this.allDataNodeStrArr = null;
 		}
 	}
+	
+	public String[] getAllDataNodeStrArr() {
+		return allDataNodeStrArr;
+	}
+
 
 	public String getDefaultDataNodeDbType()
 	{

@@ -158,7 +158,6 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
             "EXTRA",
             "PRIVILEGES"};
 
-
     private static final String[] MYSQL_INFO_SCHEMA_TSTATISTICS = new String[] {
             "TABLE_SCHEMA",
             "TABLE_NAME",
@@ -185,32 +184,11 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
     private PackWraper END_FLAG_PACK = new PackWraper();
 
     /**
-     * 由于不需要排序相关的属性都为null即可
-     */
-    private OrderCol[] orderCols = null;
-    private StructType schema = null;
-    private UnsafeExternalRowSorter.PrefixComputer prefixComputer = null;
-    private PrefixComparator prefixComparator = null;
-    private DataNodeMemoryManager dataNodeMemoryManager = null;
-
-    /**
-     * sorter需要的上下文环境
-     */
-    private final MyCatMemory myCatMemory;
-    private final MemoryManager memoryManager;
-    private final MycatPropertyConf conf;
-
-    /**
-     * 全局merge，排序器
-     */
-    private UnsafeExternalRowSorter mergeResult = null;
-
-    /**
      * 标志业务线程是否启动了？
      */
     protected final AtomicBoolean running = new AtomicBoolean(false);
 
-    private FutureTask<Iterator<UnsafeRow>> futureTask = null;
+    private FutureTask<HashMap<String,LinkedList<byte[]>>> futureTask = null;
 
     private static  CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -218,76 +196,59 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
     private final String [] colNames;
     private final String information_schema_db;
     private int dataHostSize;
+    private final String dataNodes[];
+    private HashMap<String,LinkedList<byte[]>> mapHostData;
 
-    public MySQLInfoSchemaProcessor(String information_schema_db,int dataHostSize,String sql,String [] cols) throws IOException {
+    public MySQLInfoSchemaProcessor(String information_schema_db,int dataHostSize,String sql,String [] cols) throws Exception {
 
         this.information_schema_db = information_schema_db;
         this.ctx = new EngineCtx(null);
         this.dataHostSize = dataHostSize;
         this.maxjobs = dataHostSize;
         this.integer = new AtomicInteger(0);
-        this.myCatMemory = MycatServer.getInstance().getMyCatMemory();
-        this.memoryManager = myCatMemory.getResultMergeMemoryManager();
-        this.conf = myCatMemory.getConf();
         this.execSql = sql;
+
 
         /**
          * TODO 后面通过druid 解析sql中的列名，填充这个colNames。
          */
         this.colNames = cols;
-        Map<String, ColMeta> columToIndx = new HashMap<String, ColMeta>(
-                this.colNames.length);
-        /**
-         * 1.schema
-         */
-        schema = new StructType(columToIndx, this.colNames.length);
-        schema.setOrderCols(orderCols);
-
-        /**
-         * 2 .PrefixComputer
-         */
-        prefixComputer = new RowPrefixComputer(schema);
-        /**
-         * 3 .PrefixComparator 默认是ASC，可以选择DESC
-         */
-        prefixComparator = PrefixComparators.LONG;
-        dataNodeMemoryManager = new DataNodeMemoryManager(memoryManager,Thread.currentThread().getId());
-
-        mergeResult = new UnsafeExternalRowSorter(
-                dataNodeMemoryManager,
-                myCatMemory,
-                schema,
-                prefixComparator,
-                prefixComputer,
-                conf.getSizeAsBytes("mycat.buffer.pageSize", "1m"),false,false);
-
-        TaskResult task = new TaskResult();
-        futureTask = new FutureTask<Iterator<UnsafeRow>>(task);
-    }
-
-
-    /**
-     * 将SQL发送到后端
-     */
-    public Iterator<UnsafeRow> processSQL() throws Exception {
-
-        MySQLInfoSchemaResultHandler schemaResultHandler =
-                new MySQLInfoSchemaResultHandler(this);
-
         Map<String,SchemaConfig>  dataNodeMaps = MycatServer.getInstance().getConfig().getSchemas();
 
         SchemaConfig config =  dataNodeMaps.get(information_schema_db);
 
-        String[] dataNodes = config!=null?config.getAllDataNodeStrArr():null;
+        this.dataNodes = config!=null?config.getAllDataNodeStrArr():null;
 
         if((dataNodes == null) || (this.dataHostSize != dataNodes.length)){
             throw new Exception("Information_schema 's DataNode size must equal to datahost size");
         }
 
+        mapHostData = new HashMap<String, LinkedList<byte[]>>(dataNodes.length);
+
+        for (String host:dataNodes) {
+            LinkedList<byte []> linkedlist = new LinkedList<byte[]>();
+            mapHostData.put(host,linkedlist);
+        }
+
+
+        TaskResult task = new TaskResult();
+        futureTask = new FutureTask<HashMap<String,LinkedList<byte[]>>>(task);
+
+
+    }
+
+    /**
+     * 将SQL发送到后端,异步等待结果返回
+     */
+    public HashMap<String,LinkedList<byte[]>> processSQL() throws Exception {
+
+        MySQLInfoSchemaResultHandler schemaResultHandler =
+                new MySQLInfoSchemaResultHandler(this);
+
         ctx.executeNativeSQLParallJob(dataNodes,this.execSql,schemaResultHandler);
 
         while (countDownLatch.getCount() != 0){
-            Thread.sleep(2000);
+            Thread.sleep(1000);
         }
 
         return futureTask.get();
@@ -311,24 +272,24 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
 
     protected final boolean addPack(final PackWraper pack){
         packs.add(pack);
+
         if(running.get()){
             return false;
         }
+
         final MycatServer server = MycatServer.getInstance();
         server.getBusinessExecutor().submit(futureTask);
+
         return true;
     }
 
-
-    private class TaskResult implements Callable<Iterator<UnsafeRow>>{
+    private class TaskResult implements Callable<HashMap<String,LinkedList<byte[]>>>{
         @Override
-        public  Iterator<UnsafeRow> call() throws Exception {
-            Iterator<UnsafeRow> iters = null;
+        public HashMap<String,LinkedList<byte[]>> call() throws Exception {
 
             if (!running.compareAndSet(false, true)) {
                 return null;
             }
-
             try {
                 for (; ;) {
                     final PackWraper pack = packs.poll();
@@ -338,47 +299,21 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
                     }
 
                     if (pack == END_FLAG_PACK) {
-                       iters = mergeResult.sort();
                         countDownLatch.countDown();
                         LOGGER.info("countDownLatch" + countDownLatch.getCount());
                         break;
                     }
 
-                    /**
-                     *构造一行row，将对应的col填充.
-                     * 分别构造 key，value.
-                     */
-                    UnsafeRow value = new UnsafeRow(colNames.length);
-                    BufferHolder  bufferHolder = new BufferHolder(value,0);
-                    UnsafeRowWriter unsafeRowWriter = new UnsafeRowWriter(bufferHolder,colNames.length);
-                    bufferHolder.reset();
-                    MySQLMessage mm = new MySQLMessage(pack.rowData);
-                    mm.readUB3();
-                    mm.read();
-                    for (int i = 0; i < colNames.length; i++) {
-                            byte[] colValue = mm.readBytesWithLength();
-                            if (colValue != null)
-                                unsafeRowWriter.write(i,colValue);
-                            else {
-                                value.setNullAt(i);
-                            }
-                    }
-                    value.setTotalSize(bufferHolder.totalSize());
-
-                    mergeResult.insertRow(value);
+                    mapHostData.get(pack.dataNode).add(pack.rowData);
                 }
             } catch (final Exception e) {
                 countDownLatch.countDown();
-                LOGGER.error(e.getMessage());
+                mapHostData = null;
+                e.printStackTrace();
             } finally {
                 running.set(false);
             }
-            return iters;
+            return mapHostData;
         }
-    }
-
-    public void cleanup (){
-        if(mergeResult !=null)
-            mergeResult.cleanupResources();
     }
 }

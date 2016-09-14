@@ -69,15 +69,15 @@ public final class SQLNewInterceptor {
             if (tableAliasMap.size() > 0 && tableAliasMap.containsKey(tName)) {
                 tName = tableAliasMap.get(tName);
             }
-
             if (schema != null) {
                     Map<String, TableConfig> map = schema.getTables();
                     TableConfig tableConfig = map.get(tName.toUpperCase());
-                    if (tableConfig != null && !colSets.contains(tableConfig.getPartitionColumn().toLowerCase())) {
-                        LOGGER.error("------->>>>> no sharding key!!!!!");
-                    }else {
-                        LOGGER.error("------->>>>>  sharding key!!!!!" + tableConfig.getPartitionColumn().toLowerCase() );
+                if (tableConfig != null){
+                    String partitionColumn = tableConfig.getPartitionColumn();
+                    if(partitionColumn !=null && !conditionColSets.contains(partitionColumn)) {
+                        LOGGER.info("------->>>>> no sharding key!!!!!");
                     }
+                }
             }
         }
 
@@ -118,12 +118,17 @@ public final class SQLNewInterceptor {
             if (schema != null) {
                 Map<String, TableConfig> map = schema.getTables();
                 TableConfig tableConfig = map.get(tableName.toUpperCase());
-                if (tableConfig != null &&!conditionColSets.contains(tableConfig.getPartitionColumn().toLowerCase())) {
-                    LOGGER.error("------->>>>> no sharding key!!!!!");
-                }else {
-                    LOGGER.error("------->>>>>  sharding key!!!!!" + tableConfig.getPartitionColumn().toLowerCase() );
+                if (tableConfig != null){
+                    String partitionColumn = tableConfig.getPartitionColumn();
+                    if(partitionColumn !=null && !conditionColSets.contains(partitionColumn)) {
+                        LOGGER.info("------->>>>> no sharding key!!!!!");
+                    }
                 }
             }
+        }
+
+        if(sc ==null){
+            return false;
         }
 
         /**
@@ -146,10 +151,6 @@ public final class SQLNewInterceptor {
            if(tableAliasMap.size() > 0&& tableAliasMap.containsKey(tableName)){
                tableName = tableAliasMap.get(tableName);
            }
-
-           LOGGER.error("tableName"+ tableName + "    colname  : " + colname);
-           LOGGER.error("operator: " + operator.toString());
-           LOGGER.error("values: " + values.toString());
 
            /**
             * 计算当前表在查询时影响最大行数

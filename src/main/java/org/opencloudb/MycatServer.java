@@ -28,8 +28,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.AsynchronousChannelGroup;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ThreadFactory;
@@ -40,6 +40,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.log4j.Logger;
 import org.opencloudb.backend.PhysicalDBPool;
+import org.opencloudb.backend.infoschema.MySQLInfoSchemaProcessor;
 import org.opencloudb.buffer.BufferPool;
 import org.opencloudb.cache.CacheService;
 import org.opencloudb.classloader.DynaClassLoader;
@@ -56,12 +57,15 @@ import org.opencloudb.net.NIOProcessor;
 import org.opencloudb.net.NIOReactorPool;
 import org.opencloudb.net.SocketAcceptor;
 import org.opencloudb.net.SocketConnector;
+import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.route.MyCATSequnceProcessor;
 import org.opencloudb.route.RouteService;
 import org.opencloudb.server.ServerConnectionFactory;
+import org.opencloudb.sqlengine.SQLQueryResultListener;
 import org.opencloudb.statistic.SQLRecorder;
 import org.opencloudb.util.ExecutorUtil;
 import org.opencloudb.util.NameableExecutor;
+import org.opencloudb.util.StringUtil;
 import org.opencloudb.util.TimeUtil;
 
 /**
@@ -336,6 +340,10 @@ public class MycatServer {
 		timer.schedule(dataNodeHeartbeat(), 0L,
 				system.getDataNodeHeartbeatPeriod());
 		timer.schedule(catletClassClear(), 30000);
+		/**
+		 * 定期获取MySQL information_schema 中表Statistics的索引信息
+		 */
+		timer.schedule(dataGetInfoSchemaStatistics(),0L,system.getInfoSchemaStatisticsGetPeriod());
 
 	}
 
@@ -557,6 +565,110 @@ public class MycatServer {
 			}
 		};
 	}
+	
+	
+	
+	/**
+	 * 定期获取MySQL后端info schema statistics 信息。
+	 * @return
+	 */
+	private TimerTask dataGetInfoSchemaStatistics() {
+		return new TimerTask() {
+			@Override
+			public void run() {
+				timerExecutor.execute(new Runnable() {
+					@Override
+					public void run() {
+
+						final String charset = getConfig().getSystem().getCharset();
+
+						final String[] MYSQL_INFO_SCHEMA_TSTATISTICS = new String[] {
+								"TABLE_SCHEMA",
+								"TABLE_NAME",
+								"INDEX_NAME",
+								"INDEX_SCHEMA",
+								"COLUMN_NAME",
+								"CARDINALITY"
+						};
+
+						Map<String, PhysicalDBPool> nodes = config.getDataHosts();
+						MySQLInfoSchemaProcessor processor = null;
+
+						String execSQL = "select ";
+
+						for (String colname: MYSQL_INFO_SCHEMA_TSTATISTICS) {
+							execSQL +=colname + ",";
+						}
+
+						execSQL +="CARDINALITY from STATISTICS where TABLE_SCHEMA != 'information_schema'";
+
+						try {
+							processor = new MySQLInfoSchemaProcessor("information_schema", nodes.size(),
+									execSQL, MYSQL_INFO_SCHEMA_TSTATISTICS, new SQLQueryResultListener<HashMap<String,LinkedList<byte[]>>>() {
+
+								@Override
+								public void onResult(HashMap<String,LinkedList<byte[]>> mapIterator ) {
+
+									ConcurrentHashMap<String,Map<String,String>>  tableIndexMap =
+											getConfig().getTableIndexMap();
+
+									LinkedList<byte []> linkedList = new LinkedList<byte[]>();
+									for (String key:mapIterator.keySet()) {
+										linkedList = mapIterator.get(key);
+										if (linkedList.size() >0)
+											break;
+									}
+
+									for (int i = 0; i < linkedList.size(); i++) {
+										RowDataPacket row = new RowDataPacket(MYSQL_INFO_SCHEMA_TSTATISTICS.length);
+										row.read(linkedList.get(i));
+
+										String tableName = null;
+										String index = null;
+										String cap = null;
+
+										if (row.fieldValues.get(1) != null) {
+											tableName = StringUtil.decode(row.fieldValues.get(1),charset);
+										}
+										if (row.fieldValues.get(4) != null) {
+											index = StringUtil.decode(row.fieldValues.get(4),charset);
+										}
+
+										if (row.fieldValues.get(5) != null) {
+											cap = StringUtil.decode(row.fieldValues.get(5),charset);
+										}
+
+
+										if (tableIndexMap.containsKey(tableName)){
+											tableIndexMap.get(tableName).put(index,cap);
+										}else {
+											Map<String,String> map = new HashMap<String,String>();
+											map.put(index,cap);
+											tableIndexMap.put(tableName,map);
+										}
+									}
+
+									/**
+									for (String key:tableIndexMap.keySet()){
+										Map<String,String> map = tableIndexMap.get(key);
+										for (String k:map.keySet()){
+											LOGGER.error("table :" + key + "," + " index :" + k  + " cap " + map.get(k));
+										}
+									}*/
+
+									linkedList.clear();
+								}
+							});
+							processor.processSQL();
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+		};
+	}
+	
 
 	public boolean isAIO() {
 		return aio;

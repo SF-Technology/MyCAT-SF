@@ -64,6 +64,7 @@ public final class SystemConfig {
 	private static final long DEFAULT_DATANODE_HEARTBEAT_PERIOD = 10 * 1000L;
 	private static final long DEFAULT_CLUSTER_HEARTBEAT_PERIOD = 5 * 1000L;
 	private static final long DEFAULT_CLUSTER_HEARTBEAT_TIMEOUT = 10 * 1000L;
+	private static final long DEFAULT_INFO_SCHEMA_INDEX_GET_PERIOD = 60 * 60 * 1000L;
 	private static final int DEFAULT_CLUSTER_HEARTBEAT_RETRY = 10;
 	private static final int DEFAULT_MAX_LIMIT = 100;
 	private static final String DEFAULT_CLUSTER_HEARTBEAT_USER = "_HEARTBEAT_USER_";
@@ -88,6 +89,7 @@ public final class SystemConfig {
 	private long processorCheckPeriod;
 	private long dataNodeIdleCheckPeriod;
 	private long dataNodeHeartbeatPeriod;
+	private long infoSchemaStatisticsGetPeriod;
 	private String clusterHeartbeatUser;
 	private String clusterHeartbeatPass;
 	private long clusterHeartbeatPeriod;
@@ -200,6 +202,7 @@ public final class SystemConfig {
 		this.processorCheckPeriod = DEFAULT_PROCESSOR_CHECK_PERIOD;
 		this.dataNodeIdleCheckPeriod = DEFAULT_DATANODE_IDLE_CHECK_PERIOD;
 		this.dataNodeHeartbeatPeriod = DEFAULT_DATANODE_HEARTBEAT_PERIOD;
+		this.infoSchemaStatisticsGetPeriod =DEFAULT_INFO_SCHEMA_INDEX_GET_PERIOD;
 		this.clusterHeartbeatUser = DEFAULT_CLUSTER_HEARTBEAT_USER;
 		this.clusterHeartbeatPass = DEFAULT_CLUSTER_HEARTBEAT_PASS;
 		this.clusterHeartbeatPeriod = DEFAULT_CLUSTER_HEARTBEAT_PERIOD;
@@ -470,6 +473,15 @@ public final class SystemConfig {
 	public void setDataNodeIdleCheckPeriod(long dataNodeIdleCheckPeriod) {
 		this.dataNodeIdleCheckPeriod = dataNodeIdleCheckPeriod;
 	}
+
+	public long getInfoSchemaStatisticsGetPeriod() {
+		return infoSchemaStatisticsGetPeriod;
+	}
+
+	public void setInfoSchemaStatisticsGetPeriod(long infoSchemaStatisticsGetPeriod) {
+		this.infoSchemaStatisticsGetPeriod = infoSchemaStatisticsGetPeriod;
+	}
+
 
 	public long getDataNodeHeartbeatPeriod() {
 		return dataNodeHeartbeatPeriod;

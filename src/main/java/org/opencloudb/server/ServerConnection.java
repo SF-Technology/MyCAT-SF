@@ -32,6 +32,7 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.route.RouteResultset;
+import org.opencloudb.server.handler.InformationSchemaHandler;
 import org.opencloudb.server.handler.MysqlProcHandler;
 import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.server.response.Heartbeat;
@@ -176,6 +177,11 @@ public class ServerConnection extends FrontendConnection {
                 MysqlProcHandler.handle(sql,this);
                 return;
             }
+        }
+        if(ServerParse.SELECT == type && (sql.contains("information_schema") || sql.contains("INFORMATION_SCHEMA"))) {
+        	// 解决navicat等数据库管理工具发送查询infomation_schema相关表信息抛错的异常
+        	InformationSchemaHandler.handle(sql, this);
+        	return;
         }
 		SchemaConfig schema = MycatServer.getInstance().getConfig()
 				.getSchemas().get(db);

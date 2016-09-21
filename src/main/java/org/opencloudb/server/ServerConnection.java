@@ -178,10 +178,20 @@ public class ServerConnection extends FrontendConnection {
                 return;
             }
         }
-        if(ServerParse.SELECT == type && (sql.contains("information_schema") || sql.contains("INFORMATION_SCHEMA"))) {
+        if(ServerParse.SELECT == type) {
         	// 解决navicat等数据库管理工具发送查询infomation_schema相关表信息抛错的异常
-        	InformationSchemaHandler.handle(sql, this);
-        	return;
+        	if(sql.contains("information_schema") || sql.contains("INFORMATION_SCHEMA")) {
+	        	InformationSchemaHandler.handle(sql, this);
+	        	return;
+        	}
+        	/*
+        	 *  navicat在查询里面执行select查询单表以后会发送SELECT * FROM `dbname`.`tablename` LIMIT 0 语句
+        	 *  这里使用正则表达式匹配并移除相应的dbname
+        	 *  [注意] 这里的dbname是分库真实的dbname, 不去除会在后面的路由模块抛no route异常
+        	 */
+        	if(sql.matches("SELECT \\* FROM `.*`\\.`.*` LIMIT 0")) {
+        		sql = sql.replaceFirst("`.*`\\.", "");
+        	}
         }
 		SchemaConfig schema = MycatServer.getInstance().getConfig()
 				.getSchemas().get(db);

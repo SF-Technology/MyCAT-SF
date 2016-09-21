@@ -13,6 +13,7 @@ import org.opencloudb.server.ServerConnection;
 import org.opencloudb.util.ByteUtil;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.expr.SQLAllColumnExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
@@ -118,7 +119,11 @@ public class InformationSchemaHandler {
 			if(alias != null) { // 取别名作为返回列名
 				fieldNames[i] = alias;
 			} else { // 取真实列名作为返回列名
-				fieldNames[i] = ((SQLIdentifierExpr)selectItem.getExpr()).getName();
+				if(selectItem.getExpr() instanceof SQLAllColumnExpr) {
+					fieldNames[i] = "*"; // TODO 是否考虑返回真实的所有列?
+				} else if(selectItem.getExpr() instanceof SQLIdentifierExpr) {
+					fieldNames[i] = ((SQLIdentifierExpr)selectItem.getExpr()).getName();
+				}
 			}
 		}
 		return fieldNames;

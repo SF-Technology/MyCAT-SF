@@ -89,7 +89,53 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
       this.task  = new Task();
 
     }
+    
+public MySQLInfoSchemaProcessor(String schema, String sql, SQLQueryResultListener callback) throws Exception {
+    	
+    	this.colNames = null;
+    	this.information_schema_db = null;
+    	this.sqlQueryResultListener = callback;
+    	this.execSql = sql;
+    	this.ctx = new EngineCtx(null);
+    	this.integer = new AtomicInteger(0);
+    	this.ctx.setAllJobFinishedListener(this);
+    	
+    	SchemaConfig schemaConf = MycatServer.getInstance().getConfig().getSchemas().get(schema);
+    	if(schemaConf == null) {
+    		throw new Exception("can not find " + schema + " in schema.xml");
+    	}
 
+    	/*
+    	 * 找最小化dn集合,一个dh可能被多个dn所使用,这个时候只要获取一次dn的连接发sql语句就OK
+    	 */
+    	Set<String> dnSet = schemaConf.getAllDataNodes();
+    	Set<String> minDnSet = new HashSet<String>();
+    	Map<String, List<String>> dhToDnSetMap = new HashMap<String, List<String>>();
+    	for(String dn : dnSet) {
+    		String dh = MycatServer.getInstance().getConfig().getDataNodes().get(dn).getDbPool().getHostName();
+    		if(dhToDnSetMap.get(dh) == null) {
+    			dhToDnSetMap.put(dh, new ArrayList<String>());
+    			minDnSet.add(dn);
+    		}
+    		dhToDnSetMap.get(dh).add(dn);
+    	}
+    	
+    	this.dataNodes = new String[minDnSet.size()];
+    	this.dataHostSize = this.dataNodes.length;
+    	this.maxjobs = this.dataHostSize;
+    	minDnSet.toArray(this.dataNodes);
+    	
+    	mapHostData = new HashMap<String,LinkedList<byte[]>>(this.dataNodes.length);
+
+        for (String host: this.dataNodes) {
+            LinkedList<byte []> linkedlist = new LinkedList<byte[]>();
+            mapHostData.put(host,linkedlist);
+        }
+
+        this.task  = new Task();
+    	
+    }
+    
     /**
      * 将SQL发送到后端,异步等待结果返回
      */

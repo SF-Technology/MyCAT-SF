@@ -9,10 +9,12 @@ import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.opencloudb.cache.LayerCachePool;
 import org.opencloudb.config.model.SchemaConfig;
+import org.opencloudb.interceptor.SQLNewInterceptor;
 import org.opencloudb.parser.druid.*;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.route.util.RouterUtil;
+import org.opencloudb.server.ServerConnection;
 import org.opencloudb.server.parser.ServerParse;
 
 import java.sql.SQLNonTransientException;
@@ -28,7 +30,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 	@Override
 	public RouteResultset routeNormalSqlWithAST(SchemaConfig schema,
 			String stmt, RouteResultset rrs, String charset,
-			LayerCachePool cachePool) throws SQLNonTransientException {
+			LayerCachePool cachePool, ServerConnection sc) throws SQLNonTransientException {
 		
 		/**
 		 *  只有mysql时只支持mysql语法
@@ -63,17 +65,28 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		DruidParser druidParser = DruidParserFactory.create(schema, statement, visitor);
 		druidParser.parser(schema, rrs, statement, stmt,cachePool,visitor);
 
+
+		DruidShardingParseInfo ctx=  druidParser.getCtx() ;
+
+
+		/**
+		 * SQL 语句拦截
+		 */
+
+		if(SQLNewInterceptor.interceptSQL(schema,statement,ctx,stmt,sc)){
+			return null;
+		}
+
 		/**
 		 * DruidParser 解析过程中已完成了路由的直接返回
 		 */
 		if ( rrs.isFinishedRoute() ) {
 			return rrs;
 		}
-		
+
 		/**
 		 * 没有from的select语句或其他
 		 */
-        DruidShardingParseInfo ctx=  druidParser.getCtx() ;
         if((ctx.getTables() == null || ctx.getTables().size() == 0)&&(ctx.getTableAliasMap()==null||ctx.getTableAliasMap().isEmpty()))
         {
 			return RouterUtil.routeToSingleNode(rrs, schema.getRandomDataNode(), druidParser.getCtx().getSql());

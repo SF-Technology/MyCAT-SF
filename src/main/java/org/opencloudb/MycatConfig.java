@@ -27,8 +27,11 @@ import java.io.IOException;
 import java.net.StandardSocketOptions;
 import java.nio.channels.NetworkChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+
 
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.backend.PhysicalDBPool;
@@ -65,6 +68,9 @@ public class MycatConfig {
 	private int status;
 	private final ReentrantLock lock;
 
+	private ConcurrentHashMap<String,Map<String,String>> tableIndexMap = null;
+
+
 	public MycatConfig() {
 		ConfigInitializer confInit = new ConfigInitializer(true);
 		this.system = confInit.getSystem();
@@ -83,12 +89,21 @@ public class MycatConfig {
 		this.rollbackTime = -1L;
 		this.status = RELOAD;
 		this.lock = new ReentrantLock();
+
+		this.tableIndexMap = new ConcurrentHashMap<String, Map<String, String>>();
 	}
+	
+	
+	
 
 	public SystemConfig getSystem() {
 		return system;
 	}
 
+	public ConcurrentHashMap<String,Map<String,String>> getTableIndexMap() {
+		return tableIndexMap;
+	}
+	
 	public void setSocketParams(AbstractConnection con, boolean isFrontChannel)
 			throws IOException {
 		int sorcvbuf = 0;

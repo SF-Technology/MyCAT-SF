@@ -466,7 +466,7 @@ public class UnsafeRowGrouper {
 						break;
 					case ColMeta.COL_TYPE_DOUBLE:
 					case ColMeta.COL_TYPE_NEWDECIMAL:
-						key.setDouble(curColMeta.colIndex,
+						key.setDouble(i,
 								BytesTools.getDouble(row.getBinary(curColMeta.colIndex)));
 						break;
 					case ColMeta.COL_TYPE_LONGLONG:

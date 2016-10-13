@@ -535,8 +535,10 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 
 						}
 
+						ColMeta colMeta = new ColMeta(i, fieldPkg.type);
+						colMeta.decimals = fieldPkg.decimals;
 						columToIndx.put(fieldName,
-								new ColMeta(i, fieldPkg.type));
+								colMeta);
 					}
 				} else if (primaryKey != null && primaryKeyIndex == -1) {
 					// find primary key index

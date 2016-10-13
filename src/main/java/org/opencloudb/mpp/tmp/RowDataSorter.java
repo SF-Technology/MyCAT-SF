@@ -70,7 +70,7 @@ public class RowDataSorter extends RowDataPacketSorter {
 		if (!hasBuild) {
 			heap.buildHeap();
 		}
-		heap.heapSort(this.size);
+		heap.heapSort(heap.getData().size());
 		return heap.getData();
 	}
 

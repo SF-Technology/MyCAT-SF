@@ -320,9 +320,16 @@ public class UnsafeRowGrouper {
 								BytesTools.float2Bytes(row.getFloat(curColMeta.colIndex)));
 						break;
 					case ColMeta.COL_TYPE_DOUBLE:
-					case ColMeta.COL_TYPE_NEWDECIMAL:
 						unsafeRowWriter.write(curColMeta.colIndex,
 								BytesTools.double2Bytes(row.getDouble(curColMeta.colIndex)));
+						break;
+					case ColMeta.COL_TYPE_NEWDECIMAL:
+						int precision = curColMeta.decimals;
+						if (isMergAvg){
+							precision +=4;
+						}
+						unsafeRowWriter.write(curColMeta.colIndex,
+								BytesTools.double2Bytes(row.getDouble(curColMeta.colIndex),precision));
 						break;
 					default:
 						unsafeRowWriter.write(curColMeta.colIndex,
@@ -511,35 +518,23 @@ public class UnsafeRowGrouper {
 					case ColMeta.COL_TYPE_INT24:
 						value.setInt(curColMeta.colIndex,
 								BytesTools.getInt(row.getBinary(curColMeta.colIndex)));
-
-						//logger.error("getValue INT " + BytesTools.getInt(row.getBinary(curColMeta.colIndex)));
 						break;
 					case ColMeta.COL_TYPE_SHORT:
 						value.setShort(curColMeta.colIndex,
 								BytesTools.getShort(row.getBinary(curColMeta.colIndex)));
-						//logger.error("getValue toShort " + BytesTools.getShort(row.getBinary(curColMeta.colIndex)));
 						break;
 					case ColMeta.COL_TYPE_LONGLONG:
 						value.setLong(curColMeta.colIndex,
 								BytesTools.getLong(row.getBinary(curColMeta.colIndex)));
-
-						//logger.error("getValue COL_TYPE_LONGLONG ===> " + "size  " + row.getBinary(curColMeta.colIndex).length + "  " +
-						//		ByteUtil.getLong(row.getBinary(curColMeta.colIndex)));
-
-
 						break;
 					case ColMeta.COL_TYPE_FLOAT:
 						value.setFloat(curColMeta.colIndex,
 								BytesTools.getFloat(row.getBinary(curColMeta.colIndex)));
-						//logger.error("getValue COL_TYPE_FLOAT " + BytesTools.getFloat(row.getBinary(curColMeta.colIndex)));
 
 						break;
 					case ColMeta.COL_TYPE_DOUBLE:
 					case ColMeta.COL_TYPE_NEWDECIMAL:
 						value.setDouble(curColMeta.colIndex, BytesTools.getDouble(row.getBinary(curColMeta.colIndex)));
-						//logger.error("getValue COL_TYPE_NEWDECIMAL " +
-						//		BytesTools.getDouble(row.getBinary(curColMeta.colIndex)));
-
 						break;
 					default:
 						unsafeRowWriter.write(curColMeta.colIndex,
@@ -548,7 +543,6 @@ public class UnsafeRowGrouper {
 				}
 			}else {
 				value.setNullAt(curColMeta.colIndex);
-				//logger.error("NULL");
 			}
 		}
 
@@ -756,10 +750,10 @@ public class UnsafeRowGrouper {
 						|| colType == ColMeta.COL_TYPE_DECIMAL
 						|| colType == ColMeta.COL_TYPE_DOUBLE
 						|| colType == ColMeta.COL_TYPE_FLOAT){
-					double vale = BytesTools.getDouble(bs) +
+					double value = BytesTools.getDouble(bs) +
 							BytesTools.getDouble(bs2);
-					//logger.error("MERGE_SUM " + vale);
-					return BytesTools.double2Bytes(vale);
+
+					return BytesTools.double2Bytes(value);
 				}
 
 			case MergeCol.MERGE_COUNT: {
@@ -790,11 +784,8 @@ public class UnsafeRowGrouper {
 				 * 元素总个数
 				 */
 				long count = BytesTools.getLong(bs2);
-				double value = sum / count;
-				NumberFormat nf = NumberFormat.getNumberInstance();
-				nf.setMaximumFractionDigits(4);
-			//	logger.error("MERGE_SUM " +value);
-				return BytesTools.double2Bytes(value);
+				double value1 = sum / count;
+				return BytesTools.double2Bytes(value1);
 			}
 			default:
 				return null;

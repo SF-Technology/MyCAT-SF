@@ -73,9 +73,9 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		 * SQL 语句拦截
 		 */
 
-		if(SQLNewInterceptor.interceptSQL(schema,statement,ctx,stmt,sc)){
-			return null;
-		}
+		//if(SQLNewInterceptor.interceptSQL(schema,statement,ctx,stmt,sc)){
+		//	return null;
+		//}
 
 		/**
 		 * DruidParser 解析过程中已完成了路由的直接返回

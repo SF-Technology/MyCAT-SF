@@ -168,8 +168,9 @@ public class EngineCtx {
 
 		boolean allFinished = bachJob.jobFinished(sqlJob);
 		if (allFinished && finished.compareAndSet(false, true)) {
-			LOGGER.info("all job finished  for front connection: "
-					+ session.getSource());
+
+			//LOGGER.info("all job finished  for front connection: " + session != null? session.getSource():"null");
+
 			allJobFinishedListener.onAllJobFinished(this);
 		}
 

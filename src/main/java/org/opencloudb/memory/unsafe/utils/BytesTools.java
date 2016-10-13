@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.text.DecimalFormat;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -383,6 +384,23 @@ public class BytesTools {
      */
     public static byte[] double2Bytes(double d) throws UnsupportedEncodingException {
         String dstr = Double.toString(d);
+        return dstr.getBytes("US-ASCII");
+    }
+
+
+    /**
+     * Convert a double value to a byte array
+     * @param d
+     * @return
+     * @throws UnsupportedEncodingException
+     */
+    public static byte[] double2Bytes(double d,int precision) throws UnsupportedEncodingException {
+        String s_pre = "0.0";
+        for (int i = 0; i <(precision-1) ; i++) {
+            s_pre +="0";
+        }
+        String dstr = new DecimalFormat(s_pre).format(d).toString();
+
         return dstr.getBytes("US-ASCII");
     }
 

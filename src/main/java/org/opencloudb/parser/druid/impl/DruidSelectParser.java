@@ -268,7 +268,14 @@ public class DruidSelectParser extends DefaultDruidParser {
 			//clear group having
 			SQLSelectGroupByClause groupByClause = mysqlSelectQuery.getGroupBy();
 			if(groupByClause != null && groupByClause.getHaving() != null && isRoutMultiNode(schema,rrs)){
+				/*
+				 * 路由多节点 sql中带group by子句并且有having过滤条件,最后下发的sql需要去掉having,在sql结果集汇聚模块进行过滤!!!
+				 */
 				groupByClause.setHaving(null);
+//				isNeedRemoveHaving = true;
+				String changeSql = stmt.toString();
+				rrs.changeNodeSql(changeSql);
+				ctx.setSql(changeSql);
 			}
 
 			Map<String, Map<String, Set<ColumnRoutePair>>> allConditions = getAllConditions();

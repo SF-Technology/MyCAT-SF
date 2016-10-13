@@ -322,6 +322,14 @@ public final class RouteResultset implements Serializable {
 
         }
     }
+    
+    public void changeNodeSql(String changeSql) {
+    	if(nodes != null) {
+    		for(RouteResultsetNode node : nodes) {
+    			node.setStatement(changeSql);
+    		}
+    	}
+    }
 
     public boolean isAutocommit() {
         return autocommit;

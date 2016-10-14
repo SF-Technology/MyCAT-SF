@@ -30,11 +30,19 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
+import com.alibaba.druid.sql.dialect.db2.ast.stmt.DB2SelectQueryBlock;
+import com.alibaba.druid.sql.dialect.db2.visitor.DB2OutputVisitor;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlSelectGroupByExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock.Limit;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlUnionQuery;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlOutputVisitor;
+import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectQueryBlock;
+import com.alibaba.druid.sql.dialect.oracle.visitor.OracleOutputVisitor;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock;
+import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
+import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerSelectQueryBlock;
+import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 import com.alibaba.druid.util.JdbcConstants;
 import com.alibaba.druid.wall.spi.WallVisitorUtils;
 
@@ -95,10 +103,20 @@ public class DruidSelectParser extends DefaultDruidParser {
 			{
 				SQLAggregateExpr expr = (SQLAggregateExpr) item.getExpr();
 				String method = expr.getMethodName();
+				String aggColName = null;
 				StringBuilder sb = new StringBuilder();
-				expr.accept(new MySqlOutputVisitor(sb));
-				String aggColName = sb.toString();
-
+				if(mysqlSelectQuery instanceof MySqlSelectQueryBlock) {
+					expr.accept(new MySqlOutputVisitor(sb));
+				} else if(mysqlSelectQuery instanceof OracleSelectQueryBlock) {
+					expr.accept(new OracleOutputVisitor(sb));
+				} else if(mysqlSelectQuery instanceof PGSelectQueryBlock){
+					expr.accept(new PGOutputVisitor(sb));
+				} else if(mysqlSelectQuery instanceof SQLServerSelectQueryBlock) {
+					expr.accept(new SQLASTOutputVisitor(sb));
+				} else if(mysqlSelectQuery instanceof DB2SelectQueryBlock) {
+					expr.accept(new DB2OutputVisitor(sb));
+				}
+				aggColName = sb.toString();
 				//只处理有别名的情况，无别名添加别名，否则某些数据库会得不到正确结果处理
 				int mergeType = MergeCol.getMergeType(method);
                 if (MergeCol.MERGE_AVG == mergeType&&isRoutMultiNode(schema,rrs))

@@ -45,6 +45,7 @@ public final class ManagerParse {
 	public static final int CLEAR = 11;
 	public static final int CONFIGFILE = 12;
 	public static final int LOGFILE = 13;
+	public static final int CHECK = 14;
 
 	public static int parse(String stmt) {
 		for (int i = 0; i < stmt.length(); i++) {
@@ -104,6 +105,23 @@ public final class ManagerParse {
 
 	// CLEAR or config file
 	private static int cCheck(String stmt, int offset) {
+		if(stmt.length() > offset + 1) {
+			switch(stmt.charAt(offset + 1)) {
+				case 'L':
+				case 'l':
+					return clearCheck(stmt, offset);
+				case 'H':
+				case 'h':
+					return checkCheck(stmt, offset);
+				default:
+					return OTHER;
+			}
+			
+		}
+		return OTHER;
+	}
+	
+	private static int clearCheck(String stmt, int offset) {
 		if (stmt.length() > offset + "LEAR ".length()) {
 			char c1 = stmt.charAt(++offset);
 			char c2 = stmt.charAt(++offset);
@@ -114,6 +132,22 @@ public final class ManagerParse {
 					&& (c3 == 'A' || c3 == 'a') && (c4 == 'R' || c4 == 'r')
 					&& (c5 == ' ' || c5 == '\t' || c5 == '\r' || c5 == '\n')) {
 				return (offset << 8) | CLEAR;
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int checkCheck(String stmt, int offset) {
+		if (stmt.length() > offset + "HECK ".length()) {
+			char c1 = stmt.charAt(++offset); // H
+			char c2 = stmt.charAt(++offset); // E
+			char c3 = stmt.charAt(++offset); // C
+			char c4 = stmt.charAt(++offset); // K
+			char c5 = stmt.charAt(++offset);
+			if ((c1 == 'H' || c1 == 'h') && (c2 == 'E' || c2 == 'e')
+					&& (c3 == 'C' || c3 == 'c') && (c4 == 'K' || c4 == 'k')
+					&& (c5 == ' ' || c5 == '\t' || c5 == '\r' || c5 == '\n')) {
+				return (offset << 8) | CHECK;
 			}
 		}
 		return OTHER;

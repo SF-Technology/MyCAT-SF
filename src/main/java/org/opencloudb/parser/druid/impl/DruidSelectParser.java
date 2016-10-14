@@ -103,20 +103,6 @@ public class DruidSelectParser extends DefaultDruidParser {
 			{
 				SQLAggregateExpr expr = (SQLAggregateExpr) item.getExpr();
 				String method = expr.getMethodName();
-				String aggColName = null;
-				StringBuilder sb = new StringBuilder();
-				if(mysqlSelectQuery instanceof MySqlSelectQueryBlock) {
-					expr.accept(new MySqlOutputVisitor(sb));
-				} else if(mysqlSelectQuery instanceof OracleSelectQueryBlock) {
-					expr.accept(new OracleOutputVisitor(sb));
-				} else if(mysqlSelectQuery instanceof PGSelectQueryBlock){
-					expr.accept(new PGOutputVisitor(sb));
-				} else if(mysqlSelectQuery instanceof SQLServerSelectQueryBlock) {
-					expr.accept(new SQLASTOutputVisitor(sb));
-				} else if(mysqlSelectQuery instanceof DB2SelectQueryBlock) {
-					expr.accept(new DB2OutputVisitor(sb));
-				}
-				aggColName = sb.toString();
 				//只处理有别名的情况，无别名添加别名，否则某些数据库会得不到正确结果处理
 				int mergeType = MergeCol.getMergeType(method);
                 if (MergeCol.MERGE_AVG == mergeType&&isRoutMultiNode(schema,rrs))
@@ -150,6 +136,20 @@ public class DruidSelectParser extends DefaultDruidParser {
                 } else
 				if (MergeCol.MERGE_UNSUPPORT != mergeType)
 				{
+					String aggColName = null;
+					StringBuilder sb = new StringBuilder();
+					if(mysqlSelectQuery instanceof MySqlSelectQueryBlock) {
+						expr.accept(new MySqlOutputVisitor(sb));
+					} else if(mysqlSelectQuery instanceof OracleSelectQueryBlock) {
+						expr.accept(new OracleOutputVisitor(sb));
+					} else if(mysqlSelectQuery instanceof PGSelectQueryBlock){
+						expr.accept(new PGOutputVisitor(sb));
+					} else if(mysqlSelectQuery instanceof SQLServerSelectQueryBlock) {
+						expr.accept(new SQLASTOutputVisitor(sb));
+					} else if(mysqlSelectQuery instanceof DB2SelectQueryBlock) {
+						expr.accept(new DB2OutputVisitor(sb));
+					}
+					aggColName = sb.toString();
 					if (item.getAlias() != null && item.getAlias().length() > 0)
 					{
 						aggrColumns.put(item.getAlias(), mergeType);

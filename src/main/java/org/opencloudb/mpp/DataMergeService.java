@@ -31,10 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
@@ -44,7 +41,6 @@ import org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler;
 import org.opencloudb.net.mysql.EOFPacket;
 import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.route.RouteResultset;
-import org.opencloudb.server.NonBlockingSession;
 import org.opencloudb.server.ServerConnection;
 import org.opencloudb.util.StringUtil;
 
@@ -107,7 +103,7 @@ public class DataMergeService extends AbstractDataNodeMerge {
 			if (mergeColsMap != null) {
 				for (Map.Entry<String, Integer> mergEntry : mergeColsMap
 						.entrySet()) {
-					String colName = mergEntry.getKey().toUpperCase();
+					String colName = StringUtil.removeBackquote(mergEntry.getKey().toUpperCase());
 					int type = mergEntry.getValue();
 					if (MergeCol.MERGE_AVG == type) {
 					

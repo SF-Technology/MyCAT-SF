@@ -30,10 +30,19 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
+import com.alibaba.druid.sql.dialect.db2.ast.stmt.DB2SelectQueryBlock;
+import com.alibaba.druid.sql.dialect.db2.visitor.DB2OutputVisitor;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlSelectGroupByExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock.Limit;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlUnionQuery;
+import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlOutputVisitor;
+import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectQueryBlock;
+import com.alibaba.druid.sql.dialect.oracle.visitor.OracleOutputVisitor;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock;
+import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
+import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerSelectQueryBlock;
+import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 import com.alibaba.druid.util.JdbcConstants;
 import com.alibaba.druid.wall.spi.WallVisitorUtils;
 
@@ -94,7 +103,6 @@ public class DruidSelectParser extends DefaultDruidParser {
 			{
 				SQLAggregateExpr expr = (SQLAggregateExpr) item.getExpr();
 				String method = expr.getMethodName();
-
 				//只处理有别名的情况，无别名添加别名，否则某些数据库会得不到正确结果处理
 				int mergeType = MergeCol.getMergeType(method);
                 if (MergeCol.MERGE_AVG == mergeType&&isRoutMultiNode(schema,rrs))
@@ -128,14 +136,30 @@ public class DruidSelectParser extends DefaultDruidParser {
                 } else
 				if (MergeCol.MERGE_UNSUPPORT != mergeType)
 				{
+					String aggColName = null;
+					StringBuilder sb = new StringBuilder();
+					if(mysqlSelectQuery instanceof MySqlSelectQueryBlock) {
+						expr.accept(new MySqlOutputVisitor(sb));
+					} else if(mysqlSelectQuery instanceof OracleSelectQueryBlock) {
+						expr.accept(new OracleOutputVisitor(sb));
+					} else if(mysqlSelectQuery instanceof PGSelectQueryBlock){
+						expr.accept(new PGOutputVisitor(sb));
+					} else if(mysqlSelectQuery instanceof SQLServerSelectQueryBlock) {
+						expr.accept(new SQLASTOutputVisitor(sb));
+					} else if(mysqlSelectQuery instanceof DB2SelectQueryBlock) {
+						expr.accept(new DB2OutputVisitor(sb));
+					}
+					aggColName = sb.toString();
 					if (item.getAlias() != null && item.getAlias().length() > 0)
 					{
 						aggrColumns.put(item.getAlias(), mergeType);
+						aliaColumns.put(aggColName, item.getAlias());
 					} else
 					{   //如果不加，jdbc方式时取不到正确结果   ;修改添加别名
-							item.setAlias(method + i);
-							aggrColumns.put(method + i, mergeType);
-                            isNeedChangeSql=true;
+						item.setAlias(method + i);
+						aggrColumns.put(method + i, mergeType);
+						aliaColumns.put(aggColName, method + i);
+						isNeedChangeSql=true;
 					}
 					rrs.setHasAggrColumn(true);
 				}
@@ -177,11 +201,10 @@ public class DruidSelectParser extends DefaultDruidParser {
 			List<SQLExpr> groupByItems = mysqlSelectQuery.getGroupBy().getItems();
 			String[] groupByCols = buildGroupByCols(groupByItems,aliaColumns);
 			rrs.setGroupByCols(groupByCols);
-			rrs.setHavings(buildGroupByHaving(mysqlSelectQuery.getGroupBy().getHaving()));
+			rrs.setHavings(buildGroupByHaving(mysqlSelectQuery.getGroupBy().getHaving(), aliaColumns));
 			rrs.setHasAggrColumn(true);
 		}
-
-
+		
         if (isNeedChangeSql)
         {
             String sql = stmt.toString();
@@ -191,7 +214,7 @@ public class DruidSelectParser extends DefaultDruidParser {
 		return aliaColumns;
 	}
 
-	private HavingCols buildGroupByHaving(SQLExpr having){
+	private HavingCols buildGroupByHaving(SQLExpr having, Map<String, String> aliasColumnMap){
 		if (having == null) {
 			return null;
 		}
@@ -205,6 +228,11 @@ public class DruidSelectParser extends DefaultDruidParser {
 		if (left instanceof SQLAggregateExpr) {
 			leftValue = ((SQLAggregateExpr) left).getMethodName() + "("
 					+ ((SQLAggregateExpr) left).getArguments().get(0) + ")";
+			String aggrColumnAlias = getAliaColumn(aliasColumnMap, leftValue);
+			if(aggrColumnAlias != null) { // having聚合函数存在别名
+				expr.setLeft(new SQLIdentifierExpr(aggrColumnAlias));
+				leftValue = aggrColumnAlias;
+			}
 		} else if (left instanceof SQLIdentifierExpr) {
 			leftValue = ((SQLIdentifierExpr) left).getName();
 		}
@@ -603,12 +631,14 @@ public class DruidSelectParser extends DefaultDruidParser {
 			   col = ((SQLName)expr).getSimpleName();
 			}
 			else {
-				col =expr.toString();
+				StringBuffer sb = new StringBuffer();
+				expr.accept(new MySqlOutputVisitor(sb));
+				col = sb.toString();
 			}
 			if(type == null) {
 				type = SQLOrderingSpecification.ASC;
 			}
-			col=getAliaColumn(aliaColumns,col);//此步骤得到的col必须是不带.的，有别名的用别名，无别名的用字段名
+			col = getAliaColumn(aliaColumns,col);//此步骤得到的col必须是不带.的，有别名的用别名，无别名的用字段名
 			map.put(col, type == SQLOrderingSpecification.ASC ? OrderCol.COL_ORDER_TYPE_ASC : OrderCol.COL_ORDER_TYPE_DESC);
 		}
 		return map;

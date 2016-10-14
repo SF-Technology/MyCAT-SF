@@ -320,16 +320,27 @@ public class UnsafeRowGrouper {
 								BytesTools.float2Bytes(row.getFloat(curColMeta.colIndex)));
 						break;
 					case ColMeta.COL_TYPE_DOUBLE:
+						double val1 = row.getDouble(curColMeta.colIndex);
+
+						if (Double.isNaN(val1)){
+							val1 = 0.0;
+						}
+
 						unsafeRowWriter.write(curColMeta.colIndex,
-								BytesTools.double2Bytes(row.getDouble(curColMeta.colIndex)));
+								BytesTools.double2Bytes(val1));
 						break;
 					case ColMeta.COL_TYPE_NEWDECIMAL:
 						int precision = curColMeta.decimals;
-						if (isMergAvg){
+						double val = row.getDouble(curColMeta.colIndex);
+
+						if (isMergAvg && !Double.isNaN(val)){
 							precision +=4;
+						}else if (Double.isNaN(val)){
+							val = 0.0;
 						}
+
 						unsafeRowWriter.write(curColMeta.colIndex,
-								BytesTools.double2Bytes(row.getDouble(curColMeta.colIndex),precision));
+								BytesTools.double2Bytes(val,precision));
 						break;
 					default:
 						unsafeRowWriter.write(curColMeta.colIndex,

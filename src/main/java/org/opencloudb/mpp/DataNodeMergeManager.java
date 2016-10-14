@@ -133,7 +133,7 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
             if (mergeColsMap != null) {
                 for (Map.Entry<String, Integer> mergEntry : mergeColsMap
                         .entrySet()) {
-                    String colName = mergEntry.getKey().toUpperCase();
+                    String colName = StringUtil.removeBackquote(mergEntry.getKey().toUpperCase());
                     int type = mergEntry.getValue();
                     if (MergeCol.MERGE_AVG == type) {
                         ColMeta sumColMeta = columToIndx.get(colName + "SUM");

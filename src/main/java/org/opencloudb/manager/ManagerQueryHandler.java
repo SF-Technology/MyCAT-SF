@@ -34,6 +34,7 @@ import org.opencloudb.handler.ShowHandler;
 import org.opencloudb.handler.ShowServerLog;
 import org.opencloudb.handler.StopHandler;
 import org.opencloudb.handler.SwitchHandler;
+import org.opencloudb.manager.handler.CheckHandler;
 import org.opencloudb.net.handler.FrontendQueryHandler;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.parser.ManagerParse;
@@ -99,6 +100,9 @@ public class ManagerQueryHandler implements FrontendQueryHandler {
             case ManagerParse.CLEAR:
                 ClearHandler.handle(sql, c, rs >>> SHIFT);
                 break;
+            case ManagerParse.CHECK:
+            	CheckHandler.handle(sql, c, rs >>> SHIFT);
+            	break;
             case ManagerParse.CONFIGFILE:
                 ConfFileHandler.handle(sql, c);
                 break;

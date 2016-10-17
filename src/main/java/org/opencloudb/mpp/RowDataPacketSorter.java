@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.opencloudb.memory.unsafe.utils.BytesTools;
 import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.util.ByteUtil;
-import org.opencloudb.util.CompareUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -182,7 +181,8 @@ public class RowDataPacketSorter {
         case ColMeta.COL_TYPE_DATETIME:
         case ColMeta.COL_TYPE_NEWDATE:
         case ColMeta.COL_TYPE_BIT:
-            return BytesTools.compareTo(left,right);
+//            return BytesTools.compareTo(left,right);
+        	return ByteUtil.compareNumberByte(left, right);
         case ColMeta.COL_TYPE_VAR_STRING:
         case ColMeta.COL_TYPE_STRING:
             // ENUM和SET类型都是字符串，按字符串处理

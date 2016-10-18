@@ -343,7 +343,7 @@ public class MycatServer {
 		/**
 		 * 定期获取MySQL information_schema 中表Statistics的索引信息
 		 */
-		timer.schedule(dataGetInfoSchemaStatistics(),0L,system.getInfoSchemaStatisticsGetPeriod());
+		//timer.schedule(dataGetInfoSchemaStatistics(),0L,system.getInfoSchemaStatisticsGetPeriod());
 
 	}
 

@@ -28,5 +28,10 @@ public class BytesToolsTest {
 
         byte [] bytes3 =  "301353.00".getBytes("US-ASCII");
         Assert.assertArrayEquals(bytes3,BytesTools.double2Bytes(val2,2));
+
+        double va = 0.0/0.0;
+        byte [] bytes11 = BytesTools.double2Bytes(va);
+        System.out.println(new String(bytes11));
+        Assert.assertEquals(true, Double.isNaN(BytesTools.getDouble(bytes11)));
     }
 }

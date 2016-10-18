@@ -597,7 +597,7 @@ public class UnsafeRowGrouper {
 		}
 
 		for (MergeCol merg : mergCols) {
-             if(merg.mergeType != MergeCol.MERGE_AVG) {
+             if(merg.mergeType != MergeCol.MERGE_AVG && merg.colMeta !=null) {
 				 byte[] result = null;
 				 byte[] left = null;
 				 byte[] right = null;
@@ -771,7 +771,7 @@ public class UnsafeRowGrouper {
 				long s1 = BytesTools.getLong(bs);
 				long s2 = BytesTools.getLong(bs2);
 				long total = s1 + s2;
-				//logger.error("total " + total);
+
 				return BytesTools.long2Bytes(total);
 			}
 

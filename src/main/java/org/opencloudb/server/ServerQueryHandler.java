@@ -116,10 +116,14 @@ public class ServerQueryHandler implements FrontendQueryHandler {
             c.loadDataInfileStart(sql);
             break;
         case ServerParse.LOCK:
-        	c.lockTable(sql);
+		LOGGER.warn(new StringBuilder().append("Unsupported command:").append(sql).toString());
+		c.writeErrMessage(ErrorCode.ER_UNKNOWN_COM_ERROR,"Unsupported SQL : " + sql);
+        	//c.lockTable(sql);
         	break;
         case ServerParse.UNLOCK:
-        	c.unLockTable(sql);
+	        LOGGER.warn(new StringBuilder().append("Unsupported command:").append(sql).toString());
+		c.writeErrMessage(ErrorCode.ER_UNKNOWN_COM_ERROR,"Unsupported SQL : "  + sql);
+        	//c.unLockTable(sql);
         	break;
 		default:
 			if(readOnly){

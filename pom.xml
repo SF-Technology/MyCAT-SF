@@ -411,7 +411,7 @@
 									<extraArgument>-XX:+AggressiveOpts</extraArgument>
 									<extraArgument>-XX:MaxDirectMemorySize=8G</extraArgument>
 									<extraArgument>-XX:+UseParallelGC</extraArgument>
-									<extraArgument>-XX:Xss512K</extraArgument>
+									<extraArgument>-Xss512K</extraArgument>
 									<!-- 远程JMX -->
 									<extraArgument>-Dcom.sun.management.jmxremote </extraArgument>
 									<extraArgument>-Dcom.sun.management.jmxremote.port=1984</extraArgument>

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.opencloudb.mycat</groupId>
 	<artifactId>Mycat-server</artifactId>
-	<version>1.5.2-DEV</version>
+	<version>1.5.2-RELEASE</version>
 	<packaging>jar</packaging>
 	<name>Mycat-server</name>
 	<description>The project of Mycat-server</description>
@@ -409,14 +409,16 @@
 									<extraArgument>-server </extraArgument>
 									<extraArgument>-XX:MaxPermSize=64M</extraArgument>
 									<extraArgument>-XX:+AggressiveOpts</extraArgument>
-									<extraArgument>-XX:MaxDirectMemorySize=2G</extraArgument>
+									<extraArgument>-XX:MaxDirectMemorySize=8G</extraArgument>
+									<extraArgument>-XX:+UseParallelGC</extraArgument>
+									<extraArgument>-XX:Xss512K</extraArgument>
 									<!-- 远程JMX -->
 									<extraArgument>-Dcom.sun.management.jmxremote </extraArgument>
 									<extraArgument>-Dcom.sun.management.jmxremote.port=1984</extraArgument>
 									<extraArgument>-Dcom.sun.management.jmxremote.authenticate=false </extraArgument>
 									<extraArgument>-Dcom.sun.management.jmxremote.ssl=false </extraArgument>
 									<extraArgument>-Xmx4G</extraArgument>
-									<extraArgument>-Xms1G</extraArgument>
+									<extraArgument>-Xms4G</extraArgument>
 								</extraArguments>
 							</jvmSettings>
 							<generatorConfigurations>

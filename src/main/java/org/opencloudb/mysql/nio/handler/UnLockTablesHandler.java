@@ -2,7 +2,7 @@ package org.opencloudb.mysql.nio.handler;
 
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.opencloudb.backend.BackendConnection;
@@ -32,7 +32,7 @@ public class UnLockTablesHandler extends MultiNodeHandler implements ResponseHan
 	}
 
 	public void execute() {
-		ConcurrentHashMap<RouteResultsetNode, BackendConnection> lockedConns = session.getLockedTargetMap();
+		Map<RouteResultsetNode, BackendConnection> lockedConns = session.getTargetMap();
 		Set<RouteResultsetNode> dnSet = lockedConns.keySet();
 		this.reset(lockedConns.size());
 		// 客户端直接发送unlock tables命令，由于之前未发送lock tables语句，无法获取后端绑定的连接，此时直接返回OK包
@@ -80,7 +80,7 @@ public class UnLockTablesHandler extends MultiNodeHandler implements ResponseHan
 		boolean executeResponse = conn.syncAndExcute();
 		if (executeResponse) {
 			boolean isEndPack = decrementCountBy(1);
-			session.releaseLockedConnection(conn);
+			session.releaseConnection(conn);
 			if (isEndPack) {
 				if (this.isFail() || session.closed()) {
 					tryErrorFinished(true);

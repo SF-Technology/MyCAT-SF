@@ -49,6 +49,8 @@ import org.opencloudb.server.parser.ServerParseShow;
 import org.opencloudb.server.response.ShowFullTables;
 import org.opencloudb.server.response.ShowTables;
 
+import org.opencloudb.sqlfw.SQLFirewallServer;
+import org.opencloudb.sqlfw.SQLRecord;
 import org.opencloudb.stat.QueryResult;
 import org.opencloudb.stat.QueryResultDispatcher;
 
@@ -322,10 +324,20 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 	}
 
 	@Override
-	public void fieldEofResponse(byte[] header, List<byte[]> fields,
-			byte[] eof, BackendConnection conn) {
-		
-		
+	public void fieldEofResponse(byte[] header, List<byte[]> fields,byte[] eof, BackendConnection conn) {
+			/**
+			 * 统计SQL执行次数
+			 */
+			SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+
+		    SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
+
+			if(sqlRecord != null) {
+				sqlRecord.setStartTime(startTime);
+				sqlRecord.setEndTime(System.currentTimeMillis());
+				sqlRecord.setResultRows(1);
+				sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
+			}
 			//TODO: add by zhuam
 			//查询结果派发
 			QueryResult queryResult = new QueryResult(session.getSource().getUser(), session.getSource().getHost(),

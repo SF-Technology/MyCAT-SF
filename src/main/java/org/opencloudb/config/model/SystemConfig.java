@@ -172,8 +172,80 @@ public final class SystemConfig {
 	 * 写入到临时目录
 	 */
 	private String dataNodeSortedTempDir;
-	
-	
+	/**
+	 * SQL 防火墙功能配置选项 from druid 项目
+	 */
+
+
+	/**
+	 *  SQL 防火墙开关 1开启，2 关闭，并记录拦截信息
+	 */
+	public int enableSQLFirewall;
+
+
+	/**
+	 * 是否启用正则表达式匹配SQL
+	 */
+	public boolean enableRegEx;
+
+
+	/**
+	 * 允许结果集，超过了maxAllowResultRow 动态添加到SQL黑名单中
+	 */
+	public int maxAllowResultRow;
+
+	/**
+	 *  maxAllowExecuteUnitTime s 内最大允许执行次数，超过了动态添加到SQL黑名单中
+	 */
+	public int maxAllowExecuteTimes;
+
+	/**
+	 * 单位为s,一条sql执行的时间，超过了, 则动态加入SQL黑名单中
+	 */
+	public int maxAllowExecuteSqlTime;
+
+	/**
+	 * 单位为s 默认配置1s 与maxAllowExecuteTimes配合使用
+	 */
+	public int maxAllowExecuteUnitTime;
+
+    /**
+	 * 拦截配置－语句
+	 */
+	public boolean selectAllColumnAllow;   // true 是否允许执行SELECT * FROM T这样的语句。如果设置为false，不允许执行select * from t，但select * from (select id, name from t) a。这个选项是防御程序通过调用select *获得数据表的结构信息。
+
+
+	/**
+	 * 拦截配置－永真条件
+	 */
+	public boolean selectWhereAlwayTrueCheck;	// true 检查SELECT语句的WHERE子句是否是一个永真条件
+	public boolean selectHavingAlwayTrueCheck;	// true 检查SELECT语句的HAVING子句是否是一个永真条件
+	public boolean deleteWhereAlwayTrueCheck;	// true 检查DELETE语句的WHERE子句是否是一个永真条件
+	public boolean deleteWhereNoneCheck;	    // false 检查DELETE语句是否无where条件，这是有风险的，但不是SQL注入类型的风险
+	public boolean updateWhereAlayTrueCheck;	// true 检查UPDATE语句的WHERE子句是否是一个永真条件
+	public boolean updateWhereNoneCheck;	    // false 检查UPDATE语句是否无where条件，这是有风险的，但不是SQL注入类型的风险
+	public boolean conditionAndAlwayTrueAllow;	// false检查查询条件(WHERE/HAVING子句)中是否包含AND永真条件
+	public boolean conditionAndAlwayFalseAllow;	// false 检查查询条件(WHERE/HAVING子句)中是否包含AND永假条件
+	public boolean conditionLikeTrueAllow;	    // true 检查查询条件(WHERE/HAVING子句)中是否包含LIKE永真条件
+
+
+	/**
+	 * 其他拦截配置
+	 */
+	public boolean selectIntoOutfileAllow;		//false SELECT ... INTO OUTFILE 是否允许，这个是mysql注入攻击的常见手段，缺省是禁止的
+	public boolean selectUnionCheck;	       //true 检测SELECT UNION
+	public boolean selectMinusCheck;	       //true 检测SELECT MINUS
+	public boolean selectExceptChec;		   //true 检测SELECT EXCEPT
+	public boolean selectIntersectCheck;	   //true 检测SELECT INTERSECT
+	public boolean mustParameterized;		   //false 是否必须参数化，如果为True，则不允许类似WHERE ID = 1这种不参数化的SQL
+	public boolean strictSyntaxCheck;		   //true 是否进行严格的语法检测，Druid SQL Parser在某些场景不能覆盖所有的SQL语法，出现解析SQL出错，可以临时把这个选项设置为false，同时把SQL反馈给Druid的开发者。
+	public boolean conditionOpXorAllow;		   //false 查询条件中是否允许有XOR条件。XOR不常用，很难判断永真或者永假，缺省不允许。
+	public boolean conditionOpBitwseAllow;		//true 查询条件中是否允许有"&"、"~"、"|"、"^"运算符。
+	public boolean conditionDoubleConstAllow;		//false 查询条件中是否允许连续两个常量运算表达式
+    public boolean minusAllow;		//true 是否允许SELECT * FROM A MINUS SELECT * FROM B这样的语句
+	public boolean intersectAllow;		//true 是否允许SELECT * FROM A INTERSECT SELECT * FROM B这样的语句
+	public boolean constArithmeticAllow; //true 拦截常量运算的条件，比如说WHERE FID = 3 - 1，其中"3 - 1"是常量运算表达式。
+	public boolean limitZeroAllow;       	//false 是否允许limit 0这样的语句
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -218,9 +290,110 @@ public final class SystemConfig {
 		this.systemReserveMemorySize = RESERVED_SYSTEM_MEMORY_BYTES;
 		this.dataNodeSortedTempDir = System.getProperty("user.dir");
 		this.SQL_SLOW_TIME=1000;
+		
+		
+
+		/**
+		 * SQL 防火墙配置默认配置
+		 */
+		this.enableSQLFirewall = 1;
+		this.selectAllColumnAllow = true;
+		this.maxAllowResultRow = 1000000;
+		this.maxAllowExecuteTimes = 100000;
+		this.maxAllowExecuteSqlTime = 3;
+		this.maxAllowExecuteUnitTime = 1;
+		this.enableRegEx = false;
+
+
+        /**
+         * 拦截配置－永真条件
+         */
+        this.selectWhereAlwayTrueCheck = true;
+        this.selectHavingAlwayTrueCheck = true;
+        this.deleteWhereAlwayTrueCheck = true;
+        this.deleteWhereNoneCheck = false;
+        this.updateWhereAlayTrueCheck = true;
+        this.updateWhereNoneCheck = false;
+        this.conditionAndAlwayTrueAllow = false;
+        this.conditionAndAlwayFalseAllow = false;
+        this.conditionLikeTrueAllow = true;
+
+        /**
+         * 其他拦截配置
+         */
+        this.selectIntoOutfileAllow = false;
+        this.selectUnionCheck = true;
+        this.selectMinusCheck = true ;
+        this.selectExceptChec = true ;
+        this.selectIntersectCheck = true ;
+        this.mustParameterized = false;
+        this.strictSyntaxCheck = true ;
+        this.conditionOpXorAllow = false ;
+        this.conditionOpBitwseAllow = true ;
+        this.conditionDoubleConstAllow = false ;
+        this.minusAllow = true;
+        this.intersectAllow = true;
+        this.constArithmeticAllow = true ;
+        this.limitZeroAllow = false;
+		
+		
+
+	
 
 	}
-	
+	public boolean isEnableRegEx() {
+		return enableRegEx;
+	}
+
+	public void setEnableRegEx(boolean enableRegEx) {
+		this.enableRegEx = enableRegEx;
+	}
+
+
+	public int getMaxAllowResultRow() {
+		return maxAllowResultRow;
+	}
+
+	public void setMaxAllowResultRow(int maxAllowResultRow) {
+		this.maxAllowResultRow = maxAllowResultRow;
+	}
+
+	public int getMaxAllowExecuteTimes() {
+		return maxAllowExecuteTimes;
+	}
+
+	public void setMaxAllowExecuteTimes(int maxAllowExecuteTimes) {
+		this.maxAllowExecuteTimes = maxAllowExecuteTimes;
+	}
+
+	public int getMaxAllowExecuteSqlTime() {
+		return maxAllowExecuteSqlTime;
+	}
+
+	public void setMaxAllowExecuteSqlTime(int maxAllowExecuteSqlTime) {
+		this.maxAllowExecuteSqlTime = maxAllowExecuteSqlTime;
+	}
+
+	public int getMaxAllowExecuteUnitTime() {
+		return maxAllowExecuteUnitTime;
+	}
+
+	public void setMaxAllowExecuteUnitTime(int maxAllowExecuteUnitTime) {
+		this.maxAllowExecuteUnitTime = maxAllowExecuteUnitTime;
+	}
+
+
+
+
+
+
+	public int getEnableSQLFirewall() {
+		return enableSQLFirewall;
+	}
+
+	public void setEnableSQLFirewall(int enableSQLFirewall) {
+		this.enableSQLFirewall = enableSQLFirewall;
+	}
 
 	
 	public String getDataNodeSortedTempDir() {
@@ -768,5 +941,196 @@ public final class SystemConfig {
 	public void setUseSqlStat(int useSqlStat) {
 		this.useSqlStat = useSqlStat;
 	}
-	
+
+    public boolean isSelectAllColumnAllow() {
+        return selectAllColumnAllow;
+    }
+
+    public void setSelectAllColumnAllow(boolean selectAllColumnAllow) {
+        this.selectAllColumnAllow = selectAllColumnAllow;
+    }
+
+    public boolean isSelectWhereAlwayTrueCheck() {
+        return selectWhereAlwayTrueCheck;
+    }
+
+    public void setSelectWhereAlwayTrueCheck(boolean selectWhereAlwayTrueCheck) {
+        this.selectWhereAlwayTrueCheck = selectWhereAlwayTrueCheck;
+    }
+
+    public boolean isSelectHavingAlwayTrueCheck() {
+        return selectHavingAlwayTrueCheck;
+    }
+
+    public void setSelectHavingAlwayTrueCheck(boolean selectHavingAlwayTrueCheck) {
+        this.selectHavingAlwayTrueCheck = selectHavingAlwayTrueCheck;
+    }
+
+    public boolean isDeleteWhereAlwayTrueCheck() {
+        return deleteWhereAlwayTrueCheck;
+    }
+
+    public void setDeleteWhereAlwayTrueCheck(boolean deleteWhereAlwayTrueCheck) {
+        this.deleteWhereAlwayTrueCheck = deleteWhereAlwayTrueCheck;
+    }
+
+    public boolean isDeleteWhereNoneCheck() {
+        return deleteWhereNoneCheck;
+    }
+
+    public void setDeleteWhereNoneCheck(boolean deleteWhereNoneCheck) {
+        this.deleteWhereNoneCheck = deleteWhereNoneCheck;
+    }
+
+    public boolean isUpdateWhereAlayTrueCheck() {
+        return updateWhereAlayTrueCheck;
+    }
+
+    public void setUpdateWhereAlayTrueCheck(boolean updateWhereAlayTrueCheck) {
+        this.updateWhereAlayTrueCheck = updateWhereAlayTrueCheck;
+    }
+
+    public boolean isUpdateWhereNoneCheck() {
+        return updateWhereNoneCheck;
+    }
+
+    public void setUpdateWhereNoneCheck(boolean updateWhereNoneCheck) {
+        this.updateWhereNoneCheck = updateWhereNoneCheck;
+    }
+
+    public boolean isConditionAndAlwayTrueAllow() {
+        return conditionAndAlwayTrueAllow;
+    }
+
+    public void setConditionAndAlwayTrueAllow(boolean conditionAndAlwayTrueAllow) {
+        this.conditionAndAlwayTrueAllow = conditionAndAlwayTrueAllow;
+    }
+
+    public boolean isConditionAndAlwayFalseAllow() {
+        return conditionAndAlwayFalseAllow;
+    }
+
+    public void setConditionAndAlwayFalseAllow(boolean conditionAndAlwayFalseAllow) {
+        this.conditionAndAlwayFalseAllow = conditionAndAlwayFalseAllow;
+    }
+
+    public boolean isConditionLikeTrueAllow() {
+        return conditionLikeTrueAllow;
+    }
+
+    public void setConditionLikeTrueAllow(boolean conditionLikeTrueAllow) {
+        this.conditionLikeTrueAllow = conditionLikeTrueAllow;
+    }
+
+    public boolean isSelectIntoOutfileAllow() {
+        return selectIntoOutfileAllow;
+    }
+
+    public void setSelectIntoOutfileAllow(boolean selectIntoOutfileAllow) {
+        this.selectIntoOutfileAllow = selectIntoOutfileAllow;
+    }
+
+    public boolean isSelectUnionCheck() {
+        return selectUnionCheck;
+    }
+
+    public void setSelectUnionCheck(boolean selectUnionCheck) {
+        this.selectUnionCheck = selectUnionCheck;
+    }
+
+    public boolean isSelectMinusCheck() {
+        return selectMinusCheck;
+    }
+
+    public void setSelectMinusCheck(boolean selectMinusCheck) {
+        this.selectMinusCheck = selectMinusCheck;
+    }
+
+    public boolean isSelectExceptChec() {
+        return selectExceptChec;
+    }
+
+    public void setSelectExceptChec(boolean selectExceptChec) {
+        this.selectExceptChec = selectExceptChec;
+    }
+
+    public boolean isSelectIntersectCheck() {
+        return selectIntersectCheck;
+    }
+
+    public void setSelectIntersectCheck(boolean selectIntersectCheck) {
+        this.selectIntersectCheck = selectIntersectCheck;
+    }
+
+    public boolean isMustParameterized() {
+        return mustParameterized;
+    }
+
+    public void setMustParameterized(boolean mustParameterized) {
+        this.mustParameterized = mustParameterized;
+    }
+
+    public boolean isStrictSyntaxCheck() {
+        return strictSyntaxCheck;
+    }
+
+    public void setStrictSyntaxCheck(boolean strictSyntaxCheck) {
+        this.strictSyntaxCheck = strictSyntaxCheck;
+    }
+
+    public boolean isConditionOpXorAllow() {
+        return conditionOpXorAllow;
+    }
+
+    public void setConditionOpXorAllow(boolean conditionOpXorAllow) {
+        this.conditionOpXorAllow = conditionOpXorAllow;
+    }
+
+    public boolean isConditionOpBitwseAllow() {
+        return conditionOpBitwseAllow;
+    }
+
+    public void setConditionOpBitwseAllow(boolean conditionOpBitwseAllow) {
+        this.conditionOpBitwseAllow = conditionOpBitwseAllow;
+    }
+
+    public boolean isConditionDoubleConstAllow() {
+        return conditionDoubleConstAllow;
+    }
+
+    public void setConditionDoubleConstAllow(boolean conditionDoubleConstAllow) {
+        this.conditionDoubleConstAllow = conditionDoubleConstAllow;
+    }
+
+    public boolean isMinusAllow() {
+        return minusAllow;
+    }
+
+    public void setMinusAllow(boolean minusAllow) {
+        this.minusAllow = minusAllow;
+    }
+
+    public boolean isIntersectAllow() {
+        return intersectAllow;
+    }
+
+    public void setIntersectAllow(boolean intersectAllow) {
+        this.intersectAllow = intersectAllow;
+    }
+
+    public boolean isConstArithmeticAllow() {
+        return constArithmeticAllow;
+    }
+
+    public void setConstArithmeticAllow(boolean constArithmeticAllow) {
+        this.constArithmeticAllow = constArithmeticAllow;
+    }
+
+    public boolean isLimitZeroAllow() {
+        return limitZeroAllow;
+    }
+
+    public void setLimitZeroAllow(boolean limitZeroAllow) {
+        this.limitZeroAllow = limitZeroAllow;
+    }
 }

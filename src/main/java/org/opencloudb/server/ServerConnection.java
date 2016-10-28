@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SchemaConfig;
+import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.server.handler.InformationSchemaHandler;
@@ -38,6 +39,7 @@ import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.server.response.Heartbeat;
 import org.opencloudb.server.response.Ping;
 import org.opencloudb.server.util.SchemaUtil;
+import org.opencloudb.sqlfw.SQLFirewallServer;
 import org.opencloudb.util.SplitUtil;
 import org.opencloudb.util.TimeUtil;
 
@@ -262,6 +264,24 @@ public class ServerConnection extends FrontendConnection {
 			String msg = e.getMessage();
 			writeErrMessage(ErrorCode.ER_PARSE_ERROR, msg == null ? e.getClass().getSimpleName() : msg);
 			return;
+		}
+		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+		SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
+
+
+		/**
+		 * 
+		 * sql 语句拦截
+		 * 1.基于sql blacklist 拦截 完整的sql 或者 sql正则表达式拦截
+		 * 2.基于结果集合和执行频度拦截
+		 */
+		if (sqlFirewallServer.sqlMatcher(sql)){
+			if (systemConfig.enableSQLFirewall ==1) {
+				writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, sql + " is sql blacklist....");
+				return;
+			}if (systemConfig.enableSQLFirewall ==2){
+				sqlFirewallServer.recordSQLReporter(sql,sql + " is blacklist!!");
+			}
 		}
 		if (rrs != null) {
 			// session执行

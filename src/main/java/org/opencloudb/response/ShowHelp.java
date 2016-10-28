@@ -147,7 +147,11 @@ public final class ShowHelp {
         helps.put("show @@syslog limit=?", "Report system mycat.log");
         helps.put("show @@white", "show mycat white host ");
         helps.put("show @@white.set=?,?", "set mycat white host,[ip,user]");
-        
+        helps.put("show @@sql.blacklist", "show sql blacklist ");
+        helps.put("show @@sql.blacklist.set=?", "add sql to blacklist ");
+        helps.put("show @@sql.blacklist.remove=?", "?=sql_id,remove sql from blacklist ");
+        helps.put("show @@sql.intercept.reporter", "report intercept sql  ");
+
         // switch
         helps.put("switch @@datasource name:index", "Switch dataSource");
 

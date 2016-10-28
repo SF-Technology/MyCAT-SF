@@ -39,6 +39,8 @@ import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.server.NonBlockingSession;
 import org.opencloudb.server.ServerConnection;
 import org.opencloudb.server.parser.ServerParse;
+import org.opencloudb.sqlfw.SQLFirewallServer;
+import org.opencloudb.sqlfw.SQLRecord;
 import org.opencloudb.stat.QueryResult;
 import org.opencloudb.stat.QueryResultDispatcher;
 
@@ -383,6 +385,18 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			eof[3] = ++packetId;
 
 
+			/**
+			 * 统计SQL执行次数
+			 */
+			SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+			SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
+
+			if(sqlRecord != null) {
+				sqlRecord.setStartTime(startTime);
+				sqlRecord.setEndTime(System.currentTimeMillis());
+				sqlRecord.setResultRows(index);
+				sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
+			}
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("last packet id:" + packetId);
 			}

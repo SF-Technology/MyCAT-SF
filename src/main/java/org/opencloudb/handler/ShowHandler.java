@@ -61,6 +61,9 @@ import org.opencloudb.response.ShowTime;
 import org.opencloudb.response.ShowVariables;
 import org.opencloudb.response.ShowVersion;
 import org.opencloudb.response.ShowWhiteHost;
+import org.opencloudb.response.ShowSQLBackList;
+import org.opencloudb.response.ShowInterceptSQL;
+
 import org.opencloudb.util.StringUtil;
 
 /**
@@ -226,6 +229,18 @@ public final class ShowHandler {
 		case ManagerParseShow.DATASOURCE_CLUSTER://by songwie
 			ShowDatasourceCluster.response(c,stmt);
 			break;	
+        case ManagerParseShow.SQL_BACKLIST:
+			ShowSQLBackList.execute(c);
+			break;
+		case ManagerParseShow.SQL_BACKLIST_SET:
+			ShowSQLBackList.addSqlBackList(c,ParseUtil.parseString(stmt));
+			break;
+		case ManagerParseShow.SQL_BACKLIST_REMOVE:
+			ShowSQLBackList.removeSqlFromBackList(c,ParseUtil.parseString(stmt));
+			break;
+		case ManagerParseShow.SQL_INTERCEPT_REPORTER:
+			ShowInterceptSQL.execute(c);
+			break;
 		default:
 			c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
 		}

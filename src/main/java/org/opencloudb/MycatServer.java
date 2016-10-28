@@ -62,6 +62,7 @@ import org.opencloudb.route.MyCATSequnceProcessor;
 import org.opencloudb.route.RouteService;
 import org.opencloudb.server.ServerConnectionFactory;
 import org.opencloudb.sqlengine.SQLQueryResultListener;
+import org.opencloudb.sqlfw.SQLFirewallServer;
 import org.opencloudb.statistic.SQLRecorder;
 import org.opencloudb.util.ExecutorUtil;
 import org.opencloudb.util.NameableExecutor;
@@ -79,6 +80,7 @@ public class MycatServer {
 	private static final Logger LOGGER = Logger.getLogger("MycatServer");
 	private final RouteService routerService;
 	private final CacheService cacheService;
+	private SQLFirewallServer sqlFirewallServer;
 	private Properties dnIndexProperties;
 	private AsynchronousChannelGroup[] asyncChannelGroups;
 	private volatile int channelIndex = 0;
@@ -319,6 +321,7 @@ public class MycatServer {
 		LOGGER.info(server.getName() + " is started and listening on "
 				+ server.getPort());
 		LOGGER.info("===============================================");
+		sqlFirewallServer = new SQLFirewallServer();
 		// init datahost
 		Map<String, PhysicalDBPool> dataHosts = config.getDataHosts();
 		LOGGER.info("Initialize dataHost ...");
@@ -433,6 +436,9 @@ public class MycatServer {
 		return cacheService;
 	}
 
+	public SQLFirewallServer getSqlFirewallServer() {
+		return sqlFirewallServer;
+	}
 	public NameableExecutor getBusinessExecutor() {
 		return businessExecutor;
 	}

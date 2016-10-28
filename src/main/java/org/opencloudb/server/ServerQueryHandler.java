@@ -24,11 +24,14 @@
 package org.opencloudb.server;
 
 import org.apache.log4j.Logger;
+import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.net.handler.FrontendQueryHandler;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.server.handler.*;
 import org.opencloudb.server.parser.ServerParse;
+import org.opencloudb.sqlfw.SQLFirewallServer;
 
 /**
  * @author mycat
@@ -55,7 +58,31 @@ public class ServerQueryHandler implements FrontendQueryHandler {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(new StringBuilder().append(c).append(sql).toString());
 		}
-		//
+		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+
+		/**
+		 * 记录SQL执行情况
+		 */
+		sqlFirewallServer.AddSQLRecord(sql,null);
+
+		/**
+		 * 使用druid sql wall 模块 做 SQL check，不允许sql执行
+		 */
+		SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
+		int enableSQLFirewall = systemConfig.getEnableSQLFirewall();
+		boolean enableRegEx = systemConfig.isEnableRegEx();
+
+		if(!enableRegEx && !sqlFirewallServer.checkSql(sql,c,enableSQLFirewall)){
+			if (enableSQLFirewall == 1){
+				return;
+			}else if (enableSQLFirewall == 2){
+				/**
+				 * Nothing ... checkSQL already report sql
+				 */
+			}else {
+				LOGGER.error(sql +  "have not record sql reporter");
+			}
+		}
 		int rs = ServerParse.parse(sql);
 		int sqlType = rs & 0xff;
 		

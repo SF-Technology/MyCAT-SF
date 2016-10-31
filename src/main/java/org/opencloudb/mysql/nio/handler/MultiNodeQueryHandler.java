@@ -151,13 +151,8 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 		}
 		MycatConfig conf = MycatServer.getInstance().getConfig();
 		startTime = System.currentTimeMillis();
-		boolean isLocked = session.getSource().isLocked();
 		for (final RouteResultsetNode node : rrs.getNodes()) {
 			BackendConnection conn = session.getTarget(node);
-			// 如果执行过lock table语句，则从lockedTarget map中获取后端连接
-			if (isLocked) {
-				conn = session.getLockedTarget(node);
-			}
 			if (session.tryExistsCon(conn, node)) {
 				_execute(conn, node);
 			} else {
@@ -242,7 +237,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			boolean isEndPacket = isCallProcedure ? decrementOkCountBy(1)
 					: decrementCountBy(1);
 			if (isEndPacket&&isCanClose2Client) {
-				if (this.autocommit) {// clear all connections
+				if (this.autocommit && !session.getSource().isLocked()) {// clear all connections
 					session.releaseConnections(false);
 				}
 				if (this.isFail() || session.closed()) {
@@ -304,7 +299,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 
 		if (decrementCountBy(1)) {
             if (!rrs.isCallStatement()||(rrs.isCallStatement()&&rrs.getProcedure().isResultSimpleValue())) {
-				if (this.autocommit) {// clear all connections
+				if (this.autocommit && !session.getSource().isLocked()) {// clear all connections
 					session.releaseConnections(false);
 				}
 

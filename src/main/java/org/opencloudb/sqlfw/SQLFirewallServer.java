@@ -71,6 +71,12 @@ public class SQLFirewallServer {
     private static final ExecutorService updateH2DBService =
             Executors.newSingleThreadExecutor(threadFactory);
 
+    private static final ThreadFactory scheduleFactory =
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("schedule fixed rate").build();
+    ScheduledExecutorService scheduleAtFixedRateExecutor =
+            new ScheduledThreadPoolExecutor(1,scheduleFactory);
+
+    private SystemConfig systemConfig = null;
     /**
      * Task 主要将Key对应的value超时写入H2DB中
      * @param <V>
@@ -102,6 +108,8 @@ public class SQLFirewallServer {
     }
 
     public SQLFirewallServer(){
+
+        systemConfig = MycatServer.getInstance().getConfig().getSystem();
         /**
          * 初始化sql_id
          * 从数据sql_backlist 查询最大sql_id作为初始值。
@@ -119,6 +127,24 @@ public class SQLFirewallServer {
          * druid wall 功能
          */
         sqlFirewall = SQLFirewall.getSqlFirewall();
+        /**
+         * 定时移除sqlRecordMap过期的元素
+         */
+        scheduleAtFixedRateExecutor.scheduleAtFixedRate(new Runnable(){
+            @Override
+            public void run() {
+                for (String key:sqlRecordMap.keySet()) {
+                    SQLRecord sqlRec = sqlRecordMap.get(key);
+                    if((System.currentTimeMillis()-sqlRec.getLastAccessedTimestamp())
+                            > systemConfig.getMaxAllowExecuteUnitTime()*1000){
+                        if(LOGGER.isDebugEnabled()){
+                            LOGGER.debug("sql record:  " +  key + "will remove from sql record map......");
+                        }
+                        sqlRecordMap.remove(key);
+                    }
+                }
+            }
+        },0,systemConfig.getMaxAllowExecuteUnitTime()*2,TimeUnit.SECONDS);
     }
 
     /**
@@ -287,8 +313,6 @@ public class SQLFirewallServer {
             LOGGER.debug("Sql  Record  " +   sqlRecord.toString());
         }
 
-        SystemConfig systemConfig =
-             MycatServer.getInstance().getConfig().getSystem();
 
         /**
          * 结果集超过了max rows, 则动态添加到SQL黑名单中

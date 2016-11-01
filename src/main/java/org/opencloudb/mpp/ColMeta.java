@@ -54,6 +54,7 @@ public class ColMeta {
 	public  int colIndex;
 	public final int colType;
 	public int decimals;
+	public int precision;
 	
     public  int avgSumIndex;
     public  int avgCountIndex;

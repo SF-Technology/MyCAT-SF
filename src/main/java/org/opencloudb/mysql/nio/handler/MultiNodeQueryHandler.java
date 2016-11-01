@@ -525,15 +525,20 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 									fieldName.length() - 3);
 							fieldPkg.name = newFieldName.getBytes();
 							fieldPkg.packetId = ++packetId;
+							// process avg field precision and scale
+ 							fieldPkg.length = fieldPkg.length - 14;
+ 							fieldPkg.decimals = (byte) (fieldPkg.decimals + 4);
 							shouldSkip = true;
 							buffer = fieldPkg.write(buffer, source, false);
 
+							// recovery field scale
+							fieldPkg.decimals = (byte) (fieldPkg.decimals - 4);
 						}
 
 						ColMeta colMeta = new ColMeta(i, fieldPkg.type);
 						colMeta.decimals = fieldPkg.decimals;
-						columToIndx.put(fieldName,
-								colMeta);
+						colMeta.precision = (int) fieldPkg.length;
+						columToIndx.put(fieldName, colMeta);
 					}
 				} else if (primaryKey != null && primaryKeyIndex == -1) {
 					// find primary key index

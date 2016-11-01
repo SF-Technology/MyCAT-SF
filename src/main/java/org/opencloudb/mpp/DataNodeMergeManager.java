@@ -143,6 +143,8 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
                             ColMeta colMeta = new ColMeta(sumColMeta.colIndex,
                                     countColMeta.colIndex,
                                     sumColMeta.getColType());
+                            colMeta.decimals = sumColMeta.decimals;
+                            colMeta.precision = sumColMeta.precision;
                             mergCols.add(new MergeCol(colMeta, mergEntry
                                     .getValue()));
                         }

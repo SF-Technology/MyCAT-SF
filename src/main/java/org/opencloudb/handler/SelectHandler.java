@@ -29,6 +29,7 @@ import static org.opencloudb.parser.ManagerParseSelect.SESSION_TX_READ_ONLY;
 
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.manager.ManagerConnection;
+import org.opencloudb.monitor.MonitorHandler;
 import org.opencloudb.parser.ManagerParseSelect;
 import org.opencloudb.response.SelectSessionAutoIncrement;
 import org.opencloudb.response.SelectTxReadOnly;
@@ -51,7 +52,8 @@ public final class SelectHandler {
             SelectTxReadOnly.response(c);
             break;
         default:
-            c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+                MonitorHandler.execute(c,stmt);
+                break;
         }
     }
 

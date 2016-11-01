@@ -49,6 +49,7 @@ import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.interceptor.SQLInterceptor;
 import org.opencloudb.manager.ManagerConnectionFactory;
 import org.opencloudb.memory.MyCatMemory;
+import org.opencloudb.monitor.MonitorServer;
 import org.opencloudb.net.AIOAcceptor;
 import org.opencloudb.net.AIOConnector;
 import org.opencloudb.net.NIOAcceptor;
@@ -81,6 +82,7 @@ public class MycatServer {
 	private final RouteService routerService;
 	private final CacheService cacheService;
 	private SQLFirewallServer sqlFirewallServer;
+	private MonitorServer monitorServer;
 	private Properties dnIndexProperties;
 	private AsynchronousChannelGroup[] asyncChannelGroups;
 	private volatile int channelIndex = 0;
@@ -322,6 +324,7 @@ public class MycatServer {
 				+ server.getPort());
 		LOGGER.info("===============================================");
 		sqlFirewallServer = new SQLFirewallServer();
+		monitorServer = new MonitorServer();
 		// init datahost
 		Map<String, PhysicalDBPool> dataHosts = config.getDataHosts();
 		LOGGER.info("Initialize dataHost ...");
@@ -438,6 +441,9 @@ public class MycatServer {
 
 	public SQLFirewallServer getSqlFirewallServer() {
 		return sqlFirewallServer;
+	}
+	public MonitorServer getMonitorServer() {
+		return monitorServer;
 	}
 	public NameableExecutor getBusinessExecutor() {
 		return businessExecutor;

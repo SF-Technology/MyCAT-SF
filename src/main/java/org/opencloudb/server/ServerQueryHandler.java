@@ -63,7 +63,7 @@ public class ServerQueryHandler implements FrontendQueryHandler {
 		/**
 		 * 记录SQL执行情况
 		 */
-		//sqlFirewallServer.AddSQLRecord(sql,null);
+		sqlFirewallServer.AddSQLRecord(sql,null);
 
 		/**
 		 * 使用druid sql wall 模块 做 SQL check，不允许sql执行

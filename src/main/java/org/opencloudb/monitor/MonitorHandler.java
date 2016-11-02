@@ -74,7 +74,7 @@ public class MonitorHandler {
             fields = new FieldPacket[FIELD_COUNT];
             header.packetId = ++packetId;
             for (int i = 1; i <=FIELD_COUNT; i++) {
-                String colname = rset.getMetaData().getColumnName(i);
+                String colname = rset.getMetaData().getColumnName(i).toLowerCase();
                 int colType = rset.getMetaData().getColumnType(i);
                 switch (colType){
                     case Types.VARCHAR:/**12*/
@@ -92,12 +92,14 @@ public class MonitorHandler {
                     default:
                         break;
                 }
-                ColMetaData colMetaData = new ColMetaData(colname,colType);
-                LOGGER.error(colMetaData.toString());
+
+                if (LOGGER.isDebugEnabled()) {
+                    ColMetaData colMetaData = new ColMetaData(colname,colType);
+                    LOGGER.error(colMetaData.toString());
+                }
             }
+
             eof.packetId = ++packetId;
-
-
             ByteBuffer buffer = c.allocate();
             /**
              *  write header
@@ -160,6 +162,7 @@ public class MonitorHandler {
 
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
+            c.writeErrMessage(ErrorCode.ER_YES, e.getMessage());
         }finally {
             try {
                 if(stmt !=null){
@@ -170,6 +173,7 @@ public class MonitorHandler {
                 }
             } catch (SQLException e) {
                 LOGGER.error(e.getMessage());
+                c.writeErrMessage(ErrorCode.ER_YES, e.getMessage());
             }
         }
         return;

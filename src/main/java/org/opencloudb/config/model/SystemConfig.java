@@ -60,6 +60,7 @@ public final class SystemConfig {
 	public static final int DEFAULT_POOL_SIZE = 128;// 保持后端数据通道的默认最大值
 	public static final long DEFAULT_IDLE_TIMEOUT = 30 * 60 * 1000L;
 	private static final long DEFAULT_PROCESSOR_CHECK_PERIOD = 1 * 1000L;
+	private static final long DEFAULT_MONITOR_UPDATE_PERIOD = 2 * 1000L;
 	private static final long DEFAULT_DATANODE_IDLE_CHECK_PERIOD = 5 * 60 * 1000L;
 	private static final long DEFAULT_DATANODE_HEARTBEAT_PERIOD = 10 * 1000L;
 	private static final long DEFAULT_CLUSTER_HEARTBEAT_PERIOD = 5 * 1000L;
@@ -246,6 +247,11 @@ public final class SystemConfig {
 	public boolean intersectAllow;		//true 是否允许SELECT * FROM A INTERSECT SELECT * FROM B这样的语句
 	public boolean constArithmeticAllow; //true 拦截常量运算的条件，比如说WHERE FID = 3 - 1，其中"3 - 1"是常量运算表达式。
 	public boolean limitZeroAllow;       	//false 是否允许limit 0这样的语句
+
+	/**
+	 * 定时采集监控信息入H2DB，间隔时间
+	 */
+	public long monitorUpdatePeriod;
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -336,10 +342,16 @@ public final class SystemConfig {
         this.constArithmeticAllow = true ;
         this.limitZeroAllow = false;
 		
-		
+		this.monitorUpdatePeriod = DEFAULT_MONITOR_UPDATE_PERIOD;
+	}
 
-	
 
+	public long getMonitorUpdatePeriod() {
+		return monitorUpdatePeriod;
+	}
+
+	public void setMonitorUpdatePeriod(long monitorUpdatePeriod) {
+		this.monitorUpdatePeriod = monitorUpdatePeriod;
 	}
 	public boolean isEnableRegEx() {
 		return enableRegEx;

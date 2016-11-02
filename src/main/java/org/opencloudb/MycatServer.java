@@ -111,6 +111,7 @@ public class MycatServer {
 	private SocketConnector connector;
 	private NameableExecutor businessExecutor;
 	private NameableExecutor timerExecutor;
+	private NameableExecutor updateMonitorInfoExecutor;
 	private ListeningExecutorService listeningExecutorService;
 
 	public MycatServer() {
@@ -142,6 +143,14 @@ public class MycatServer {
 
 	public NameableExecutor getTimerExecutor() {
 		return timerExecutor;
+	}
+
+	public NameableExecutor getUpdateMonitorInfoExecutor() {
+		return updateMonitorInfoExecutor;
+	}
+
+	public void setUpdateMonitorInfoExecutor(NameableExecutor updateMonitorInfoExecutor) {
+		this.updateMonitorInfoExecutor = updateMonitorInfoExecutor;
 	}
 
 	public DynaClassLoader getCatletClassLoader() {
@@ -259,6 +268,7 @@ public class MycatServer {
 		businessExecutor = ExecutorUtil.create("BusinessExecutor",
 				threadPoolSize);
 		timerExecutor = ExecutorUtil.create("Timer", system.getTimerExecutor());
+		updateMonitorInfoExecutor = ExecutorUtil.create("UpdateMonitorInfo",1);
 		listeningExecutorService = MoreExecutors.listeningDecorator(businessExecutor);
 
 		for (int i = 0; i < processors.length; i++) {
@@ -324,7 +334,7 @@ public class MycatServer {
 				+ server.getPort());
 		LOGGER.info("===============================================");
 		sqlFirewallServer = new SQLFirewallServer();
-		monitorServer = new MonitorServer();
+		monitorServer = new MonitorServer(Thread.currentThread().getId(),timer,updateMonitorInfoExecutor);
 		// init datahost
 		Map<String, PhysicalDBPool> dataHosts = config.getDataHosts();
 		LOGGER.info("Initialize dataHost ...");

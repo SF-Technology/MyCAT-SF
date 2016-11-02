@@ -47,12 +47,20 @@ DELETE FROM t_threadpool WHERE thread_name='World';
 	t_connectpool
 	
 DROP TABLE IF EXISTS 	t_connectpool;
-CREATE TABLE 	t_connectpool(processor VARCHAR(255) PRIMARY KEY,id INT,mysqlId INT,host VARCHAR(32),port INT,l_port INT,net_in BIGINT,net_out BIGINT,life BIGINT,closed VARCHAR(16),borrowed VARCHAR(16),SEND_QUEUE INT,schema VARCHAR(32),charset VARCHAR(32),txlevel VARCHAR(16),autocommit VARCHAR(16));
+CREATE TABLE 	t_connectpool(processor VARCHAR(255) PRIMARY KEY,
+								id INT,mysqlId INT,
+								host VARCHAR(32),port INT,l_port INT,
+								net_in BIGINT,net_out BIGINT,
+								life BIGINT,closed VARCHAR(16),
+								borrowed VARCHAR(16),SEND_QUEUE INT,
+								schema VARCHAR(32),charset VARCHAR(32),
+								txlevel VARCHAR(16),autocommit VARCHAR(16));
 
 
 
-INSERT INTO t_connectpool VALUES('Hello',12,1,22,22,22);
-INSERT INTO t_connectpool VALUES('World',12,1,22,22,222);
+INSERT INTO t_connectpool VALUES('Hello1',12,1,'www.baidu.com',33,22,100000,100000,200,'false','false',112,'db_1','utf8','1','0');
+INSERT INTO t_connectpool VALUES('Hello2',12,1,'www.baidu.com',33,22,100000,100000,200,'false','false',112,'db_1','utf8','1','0');
+
 SELECT * FROM t_connectpool ORDER BY thread_name;
 UPDATE t_connectpool SET pool_size = 1100 WHERE thread_name='Hello';
 DELETE FROM t_connectpool WHERE thread_name='World';
@@ -109,10 +117,17 @@ autocommit  FIELD_TYPE_VAR_STRING
 2.线程池监控(timerx线程,业务线程,reactor 线程)
 3.数据库连接池(后端数据库连接)
 4.sql统计（ip，端口，mysql_ip,mysql_port,sql,sql执行时间，sql类型）
-5.mycat状态信息
-6.client 连进mycat的信息
-7. 系统缓存在Enchache中信息
+
+5.mycat状态信息show @@sysparam;
+	添加版本号，系统启动时间，在线时间
+
+6.client 连进mycat的信息 show @@connection
+7.系统缓存在Enchache中信息 show @@cache;
 8. show @@session;
 9. show @@heartbeat
 10.show @@database
 11.show @@datanode;
+12.show @@processor
+13.show @@datasource;
+14.show @@database;
+UPDATE t_connectpool SET id =5,mysqlId =460,host = 'localhost',port = 3306,l_port = 60251,net_in = 89,net_out = 70,life = 5,closed = 'false',borrowed = 'null',SEND_QUEUE = 0,schema = 'testdb2',charset = 'utf8:33',txlevel = '0',autocommit = 'true'WHERE processor = Processor5 [42122-192]

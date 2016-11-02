@@ -35,10 +35,6 @@ public class H2DBMonitorManager {
     private H2DBMonitorManager(){
         startMonitorServer();
         init();
-        String insertSql = "INSERT INTO t_memory VALUES(1, 'Hello','dd',12,1,22)";
-        insert(getH2DBMonitorConn(),insertSql);
-        insertSql = "INSERT INTO t_memory VALUES(2, 'World','dd',12,1,22)";
-        insert(getH2DBMonitorConn(),insertSql);
     }
 
     private void init() {
@@ -62,8 +58,8 @@ public class H2DBMonitorManager {
              * MyCat内存监控表
              * table:t_memory
              */
-            sql = "CREATE TABLE t_memory(thread_id INT PRIMARY KEY,thread_name VARCHAR(255)," +
-                         "memory_type VARCHAR(255),used BIGINT,free BIGINT,total BIGINT)";
+            sql = "CREATE TABLE t_memory(thread_id BIGINT PRIMARY KEY,thread_name VARCHAR(255)," +
+                         "memory_type VARCHAR(255),used BIGINT,max BIGINT,total BIGINT)";
             createH2dbTable(conn,sql,"t_memory");
 
             /**
@@ -71,7 +67,7 @@ public class H2DBMonitorManager {
              * table:t_threadpool
              */
             sql = "CREATE TABLE t_threadpool(thread_name VARCHAR(255) PRIMARY KEY,pool_size BIGINT," +
-                    "active_count INT,task_queue_size INT,completed_task INT,total_task INT)";
+                    "active_count BIGINT,task_queue_size BIGINT,completed_task BIGINT,total_task BIGINT)";
             createH2dbTable(conn,sql,"t_threadpool");
 
 
@@ -79,11 +75,12 @@ public class H2DBMonitorManager {
              * MyCat数据库连接池监控
              * table:t_connectpool
              */
-            sql = "CREATE TABLE t_connectpool(processor VARCHAR(255) PRIMARY KEY,id INT," +
-                    "mysqlId INT,host VARCHAR(32),port INT,l_port INT,net_in BIGINT," +
+            sql = "CREATE TABLE t_connectpool(processor VARCHAR(255),id BIGINT PRIMARY KEY," +
+                    "mysqlId BIGINT,host VARCHAR(32),port INT,l_port INT,net_in BIGINT," +
                     "net_out BIGINT,life BIGINT,closed VARCHAR(16),borrowed VARCHAR(16)," +
                     "SEND_QUEUE INT,schema VARCHAR(32),charset VARCHAR(32),txlevel VARCHAR(16)," +
                     "autocommit VARCHAR(16))";
+
             createH2dbTable(conn,sql,"t_connectpool");
 
             /**
@@ -92,7 +89,6 @@ public class H2DBMonitorManager {
              */
             sql = "";
             createH2dbTable(conn,sql,"t_sqlstat");
-
 
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());

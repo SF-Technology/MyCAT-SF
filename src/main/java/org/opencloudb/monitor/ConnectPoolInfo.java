@@ -16,8 +16,6 @@ import java.sql.Statement;
 public class ConnectPoolInfo {
     private final static Logger LOGGER =
             LoggerFactory.getLogger(ConnectPoolInfo.class);
-
-
     private String processorName;
     private long id;
     private long mysqlId;

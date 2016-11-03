@@ -27,7 +27,6 @@ import static org.opencloudb.parser.ManagerParseSelect.SESSION_AUTO_INCREMENT;
 import static org.opencloudb.parser.ManagerParseSelect.VERSION_COMMENT;
 import static org.opencloudb.parser.ManagerParseSelect.SESSION_TX_READ_ONLY;
 
-import org.opencloudb.config.ErrorCode;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.monitor.MonitorHandler;
 import org.opencloudb.parser.ManagerParseSelect;

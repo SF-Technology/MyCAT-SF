@@ -4,6 +4,7 @@ import com.alibaba.druid.wall.WallCheckResult;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.Fields;
 import org.opencloudb.manager.ManagerConnection;
+import org.opencloudb.memory.unsafe.utils.BytesTools;
 import org.opencloudb.mysql.PacketUtil;
 import org.opencloudb.net.mysql.EOFPacket;
 import org.opencloudb.net.mysql.FieldPacket;
@@ -89,6 +90,10 @@ public class MonitorHandler {
                         fields[n] = PacketUtil.getField(colname, Fields.FIELD_TYPE_LONG);
                         fields[n++].packetId = ++packetId;
                         break;
+                    case Types.DOUBLE:
+                        fields[n] = PacketUtil.getField(colname, Fields.FIELD_TYPE_DOUBLE);
+                        fields[n++].packetId = ++packetId;
+                        break;
                     default:
                         break;
                 }
@@ -140,6 +145,13 @@ public class MonitorHandler {
                         case Types.INTEGER: /**4*/
                             row.add(IntegerUtil.toBytes(rset.getInt(i)));
                             break;
+                        case Types.DOUBLE:/**8*/
+                            try {
+                                row.add(BytesTools.double2Bytes(rset.getDouble(i)));
+                            } catch (UnsupportedEncodingException e) {
+                                e.printStackTrace();
+                            };
+                            break;
                         default:
                             break;
                     }
@@ -147,7 +159,6 @@ public class MonitorHandler {
                 row.packetId = ++packetId;
                 buffer = row.write(buffer, c, true);
             }
-
             /**
              * write last eof
               */

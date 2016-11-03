@@ -2,21 +2,37 @@ package org.opencloudb.monitor;
 
 
 
+import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.backend.BackendConnection;
+import org.opencloudb.backend.PhysicalDBNode;
+import org.opencloudb.backend.PhysicalDBPool;
+import org.opencloudb.backend.PhysicalDatasource;
+import org.opencloudb.buffer.BufferPool;
+import org.opencloudb.cache.CachePool;
+import org.opencloudb.cache.CacheService;
+import org.opencloudb.cache.CacheStatic;
+import org.opencloudb.cache.LayerCachePool;
+import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.heartbeat.DBHeartbeat;
 import org.opencloudb.jdbc.JDBCConnection;
 import org.opencloudb.mysql.nio.MySQLConnection;
 import org.opencloudb.net.BackendAIOConnection;
+import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.net.NIOProcessor;
+import org.opencloudb.net.mysql.RowDataPacket;
+import org.opencloudb.response.ShowDataNode;
+import org.opencloudb.server.ServerConnection;
 import org.opencloudb.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.*;
+
 /**
  * 监控服务，对外提供统统一接口
  *
@@ -32,14 +48,12 @@ public class MonitorServer {
     private final Timer timer;
     private final long mainThreadId;
     public MonitorServer(long threadId,Timer timer,NameableExecutor executor){
-
         SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
-
         this.timer = timer;
         this.updateMonitorInfoExecutor = executor;
         this.mainThreadId = threadId;
         timer.schedule(doUpateMonitorInfo(),0L,systemConfig.getMonitorUpdatePeriod());
-
+        updataDBInfo();
     }
 
     private TimerTask doUpateMonitorInfo() {
@@ -50,6 +64,11 @@ public class MonitorServer {
                     @Override
                     public void run() {
                         updateMemoryInfo();
+                        updateHeartBeat();
+                        updateDataNode();
+                        updateDataSource();
+                        updateCacheInfo();
+                        updateProcessor();
                     }
                 });
             }
@@ -57,10 +76,245 @@ public class MonitorServer {
     }
 
     /**
+     * 更新DB信息
+     */
+    private void updataDBInfo(){
+        Map<String, SchemaConfig> schemas = MycatServer.getInstance().getConfig().getSchemas();
+        for (String name : new TreeSet<String>(schemas.keySet())) {
+            DataBaseInfo databaseInfo = new DataBaseInfo();
+            databaseInfo.setDbName(name);
+            databaseInfo.update();
+        }
+    }
+
+    /**
+     * 更新Heartbeat信息
+     */
+
+    public void updateHeartBeat(){
+
+        MycatConfig conf = MycatServer.getInstance().getConfig();
+        // host nodes
+        Map<String, PhysicalDBPool> dataHosts = conf.getDataHosts();
+        for (PhysicalDBPool pool : dataHosts.values()) {
+            for (PhysicalDatasource ds : pool.getAllDataSources()) {
+                DBHeartbeat hb = ds.getHeartbeat();
+                HeartbeatInfo heartbeatInfo =new HeartbeatInfo();
+               // row.add(ds.getName().getBytes());
+                heartbeatInfo.setName(ds.getName());
+               // row.add(ds.getConfig().getDbType().getBytes());
+                heartbeatInfo.setType(ds.getConfig().getDbType());
+                if (hb != null) {
+                //    row.add(ds.getConfig().getIp().getBytes());
+                    heartbeatInfo.setHost(ds.getConfig().getIp());
+                //    row.add(IntegerUtil.toBytes(ds.getConfig().getPort()));
+                    heartbeatInfo.setPort(ds.getConfig().getPort());
+                //    row.add(IntegerUtil.toBytes(hb.getStatus()));
+                    heartbeatInfo.setRsCode(hb.getStatus());
+                //   row.add(IntegerUtil.toBytes(hb.getErrorCount()));
+                    heartbeatInfo.setRetry(hb.getErrorCount());
+                //    row.add(hb.isChecking() ? "checking".getBytes() : "idle".getBytes());
+                    heartbeatInfo.setStatus(hb.isChecking() ? "checking": "idle");
+                //   row.add(LongUtil.toBytes(hb.getTimeout()));
+                    heartbeatInfo.setTimeout(hb.getTimeout());
+                //    row.add(hb.getRecorder().get().getBytes());
+                    heartbeatInfo.setExecuteTime(hb.getRecorder().get());
+                    String lat = hb.getLastActiveTime();
+                //   row.add(lat == null ? null : lat.getBytes());
+                    heartbeatInfo.setLastActiveTime(lat == null ? null : lat);
+                //   row.add(hb.isStop() ? "true".getBytes() : "false".getBytes());
+                    heartbeatInfo.setStop(hb.isStop() ? "true":"false");
+                    heartbeatInfo.update();
+                }
+            }
+        }
+    }
+
+    /**
+     * update DataNode的信息
+     */
+    public void updateDataNode() {
+        MycatConfig conf = MycatServer.getInstance().getConfig();
+        Map<String, PhysicalDBNode> dataNodes = conf.getDataNodes();
+        List<String> keys = new ArrayList<String>();
+        keys.addAll(dataNodes.keySet());
+
+        for (String key : keys) {
+            PhysicalDBNode node = dataNodes.get(key);
+            DataNodeInfo dataNodeInfo = new DataNodeInfo();
+            //row.add(StringUtil.encode(node.getName(), charset));
+            dataNodeInfo.setName(node.getName());
+            //row.add(StringUtil.encode(node.getDbPool().getHostName() + '/' + node.getDatabase(), charset));
+            dataNodeInfo.setDatahost(node.getDbPool().getHostName() + '/' + node.getDatabase());
+
+            PhysicalDBPool pool = node.getDbPool();
+            PhysicalDatasource ds = pool.getSource();
+
+            if (ds != null) {
+                int active = ds.getActiveCountForSchema(node.getDatabase());
+                int idle = ds.getIdleCountForSchema(node.getDatabase());
+                //    row.add(IntegerUtil.toBytes(pool.getActivedIndex()));
+                dataNodeInfo.setIndex(pool.getActivedIndex());
+                //    row.add(StringUtil.encode(ds.getConfig().getDbType(), charset));
+                dataNodeInfo.setType(ds.getConfig().getDbType());
+                //   row.add(IntegerUtil.toBytes(active));
+                dataNodeInfo.setActive(active);
+                //    row.add(IntegerUtil.toBytes(idle));
+                dataNodeInfo.setIdle(idle);
+                //    row.add(IntegerUtil.toBytes(ds.getSize()));
+                dataNodeInfo.setSize(ds.getSize());
+                // } else {
+                //    row.add(null);
+                //    row.add(null);
+                //    row.add(null);
+                //    row.add(null);
+                //    row.add(null);
+                // }
+                //  row.add(LongUtil.toBytes(ds.getExecuteCountForSchema(node.getDatabase())));
+                dataNodeInfo.setExecute(ds.getExecuteCountForSchema(node.getDatabase()));
+                NumberFormat nf = DecimalFormat.getInstance();
+                // row.add(StringUtil.encode(nf.format(0), charset));
+                dataNodeInfo.setTotalTime(0.0);
+                // row.add(StringUtil.encode(nf.format(0), charset));
+                dataNodeInfo.setMaxTime(0.0);
+                // row.add(LongUtil.toBytes(0));
+                dataNodeInfo.setMaxSql(0);
+                long recoveryTime = pool.getSource().getHeartbeatRecoveryTime() - TimeUtil.currentTimeMillis();
+                // row.add(LongUtil.toBytes(recoveryTime > 0 ? recoveryTime / 1000L : -1L));
+                dataNodeInfo.setRecoveryTime(recoveryTime > 0 ? recoveryTime / 1000L : -1L);
+                dataNodeInfo.update();
+            }
+        }
+    }
+
+    /**
+     * 更新 Data Source信息
+     */
+    private void updateDataSource(){
+        MycatConfig conf = MycatServer.getInstance().getConfig();
+        Map<String, List<PhysicalDatasource>> dataSources =
+                    new HashMap<String, List<PhysicalDatasource>>();
+
+        for (PhysicalDBNode dn : conf.getDataNodes().values()) {
+            List<PhysicalDatasource> dslst = new LinkedList<PhysicalDatasource>();
+            dslst.addAll(dn.getDbPool().getAllDataSources());
+            dataSources.put(dn.getName(), dslst);
+        }
+
+        for (Map.Entry<String, List<PhysicalDatasource>> dsEntry : dataSources
+                .entrySet()) {
+            String dataNodeName = dsEntry.getKey();
+            for (PhysicalDatasource ds : dsEntry.getValue()) {
+                DataSourceInfo dataSourceInfo = new DataSourceInfo();
+                //row.add(StringUtil.encode(dataNodeName, charset));
+                dataSourceInfo.setDataNode(dataNodeName);
+                //row.add(StringUtil.encode(ds.getName(), charset));
+                dataSourceInfo.setName(ds.getName());
+                //row.add(StringUtil.encode(ds.getConfig().getDbType(), charset));
+                dataSourceInfo.setType(ds.getConfig().getDbType());
+                //row.add(StringUtil.encode(ds.getConfig().getIp(), charset));
+                dataSourceInfo.setHost(ds.getConfig().getIp());
+               // row.add(IntegerUtil.toBytes(ds.getConfig().getPort()));
+                dataSourceInfo.setPort(ds.getConfig().getPort());
+               // row.add(StringUtil.encode(ds.isReadNode() ? "R" : "W", charset));
+                dataSourceInfo.setWR(ds.isReadNode() ? "R" : "W");
+                //row.add(IntegerUtil.toBytes(ds.getActiveCount()));
+                dataSourceInfo.setActive(ds.getActiveCount());
+                //row.add(IntegerUtil.toBytes(ds.getIdleCount()));
+                dataSourceInfo.setIdle(ds.getIdleCount());
+                //row.add(IntegerUtil.toBytes(ds.getSize()));
+                dataSourceInfo.setSize(ds.getSize());
+                //row.add(LongUtil.toBytes(ds.getExecuteCount()));
+                dataSourceInfo.setExecute(ds.getExecuteCount());
+                dataSourceInfo.update();
+            }
+        }
+    }
+
+    /**
+     * 更新 Cache 信息
+     */
+
+    public  void updateCacheInfo(){
+        CacheService cacheService = MycatServer.getInstance().getCacheService();
+        for (Map.Entry<String, CachePool> entry : cacheService
+                .getAllCachePools().entrySet()) {
+            String cacheName=entry.getKey();
+            CachePool cachePool = entry.getValue();
+            if (cachePool instanceof LayerCachePool) {
+                for (Map.Entry<String, CacheStatic> staticsEntry : ((LayerCachePool) cachePool)
+                        .getAllCacheStatic().entrySet()) {
+                    CacheInfo cacheInfo = new CacheInfo();
+                    cacheInfo.setCache(cacheName+'.'+staticsEntry.getKey());
+                    cacheInfo.setMax(staticsEntry.getValue().getMaxSize());
+                    cacheInfo.setCur(staticsEntry.getValue().getItemSize());
+                    cacheInfo.setAccess(staticsEntry.getValue().getAccessTimes());
+                    cacheInfo.setHit(staticsEntry.getValue().getHitTimes());
+                    cacheInfo.setPut(staticsEntry.getValue().getPutTimes());
+                    cacheInfo.setLastAccess(staticsEntry.getValue().getLastAccesTime());
+                    cacheInfo.setLastPut(staticsEntry.getValue().getLastPutTime());
+                    cacheInfo.update();
+
+                }
+            } else {
+                CacheInfo cacheInfo = new CacheInfo();
+                cacheInfo.setCache(cacheName);
+                cacheInfo.setMax(cachePool.getCacheStatic().getMaxSize());
+                cacheInfo.setCur(cachePool.getCacheStatic().getItemSize());
+                cacheInfo.setAccess(cachePool.getCacheStatic().getAccessTimes());
+                cacheInfo.setHit(cachePool.getCacheStatic().getHitTimes());
+                cacheInfo.setPut(cachePool.getCacheStatic().getPutTimes());
+                cacheInfo.setLastAccess(cachePool.getCacheStatic().getLastAccesTime());
+                cacheInfo.setLastPut(cachePool.getCacheStatic().getLastPutTime());
+                cacheInfo.update();
+            }
+        }
+    }
+
+    /**
+     * 更新 Processor信息
+     */
+
+    public void updateProcessor(){
+        for (NIOProcessor processor : MycatServer.getInstance().getProcessors()) {
+            BufferPool bufferPool=processor.getBufferPool();
+            long bufferSize=bufferPool.size();
+            long bufferCapacity=bufferPool.capacity();
+            long bufferSharedOpts=bufferPool.getSharedOptsCount();
+            long bufferUsagePercent=(bufferCapacity-bufferSize)*100/bufferCapacity;
+
+            ProcessorInfo processorInfo = new ProcessorInfo();
+           // row.add(processor.getName().getBytes());
+            processorInfo.setName(processor.getName());
+           // row.add(LongUtil.toBytes(processor.getNetInBytes()));
+            processorInfo.setNetIN(processor.getNetInBytes());
+           // row.add(LongUtil.toBytes(processor.getNetOutBytes()));
+            processorInfo.setNetOut(processor.getNetOutBytes());
+           // row.add(LongUtil.toBytes(0));
+            processorInfo.setReactorCount(0);
+           // row.add(IntegerUtil.toBytes(0));
+            processorInfo.setrQueue(0);
+           // row.add(IntegerUtil.toBytes(processor.getWriteQueueSize()));
+            processorInfo.setwQueue(processor.getWriteQueueSize());
+           // row.add(LongUtil.toBytes(bufferSize));
+            processorInfo.setFreeBuffer(bufferSize);
+           // row.add(LongUtil.toBytes(bufferCapacity));
+            processorInfo.setTotalBuffer(bufferCapacity);
+           // row.add(LongUtil.toBytes(bufferUsagePercent));
+            processorInfo.setBufferPercent((int) bufferUsagePercent);
+           // row.add(LongUtil.toBytes(bufferSharedOpts));
+            processorInfo.setBufferWarns((int)bufferSharedOpts);
+           // row.add(IntegerUtil.toBytes(processor.getFrontends().size()));
+            processorInfo.setFcCount(processor.getFrontends().size());
+           // row.add(IntegerUtil.toBytes(processor.getBackends().size()));
+            processorInfo.setBcCount(processor.getBackends().size());
+            processorInfo.update();
+        }
+    }
+    /**
      * 获取系统内存运行状态，写入H2DB库中
      */
     private void updateMemoryInfo(){
-
         /**
          * 更新memory info
          */
@@ -165,6 +419,56 @@ public class MonitorServer {
                     //row.add(txAutommit.getBytes());
                     connectPoolInfo.setAutocommit(txAutommit);
                     connectPoolInfo.update();
+                }
+            }
+        }
+
+        /**
+         * 更新Mycat Client Connection信息
+         */
+        for (NIOProcessor p : MycatServer.getInstance().getProcessors()) {
+            for (FrontendConnection fc : p.getFrontends().values()) {
+                if (!fc.isClosed()) {
+                    ClientConnectionInfo clientConnInfo = new ClientConnectionInfo();
+                    //row.add(c.getProcessor().getName().getBytes());
+                    clientConnInfo.setProcessor(fc.getProcessor().getName());
+                    // row.add(LongUtil.toBytes(c.getId()));
+                    clientConnInfo.setId(fc.getId());
+                   // row.add(StringUtil.encode(c.getHost(), charset));
+                    clientConnInfo.setHost(fc.getHost());
+                   // row.add(IntegerUtil.toBytes(c.getPort()));
+                    clientConnInfo.setPort(fc.getPort());
+                   // row.add(IntegerUtil.toBytes(c.getLocalPort()));
+                    clientConnInfo.setLocalPort(fc.getLocalPort());
+                   // row.add(StringUtil.encode(c.getUser(), charset));
+                    clientConnInfo.setUser(fc.getUser());
+                   // row.add(StringUtil.encode(c.getSchema(), charset));
+                    clientConnInfo.setSchema(fc.getSchema());
+                   // row.add(StringUtil.encode(c.getCharset()+":"+c.getCharsetIndex(), charset));
+                    clientConnInfo.setCharset(fc.getCharset()+":"+fc.getCharsetIndex());
+                   // row.add(LongUtil.toBytes(c.getNetInBytes()));
+                    clientConnInfo.setNetIn(fc.getNetInBytes());
+                   // row.add(LongUtil.toBytes(c.getNetOutBytes()));
+                    clientConnInfo.setNetOut(fc.getNetOutBytes());
+                  //  row.add(LongUtil.toBytes((TimeUtil.currentTimeMillis() - c.getStartupTime()) / 1000L));
+                    clientConnInfo.setAliveTime((TimeUtil.currentTimeMillis() - fc.getStartupTime()) / 1000L);
+                     ByteBuffer bb = fc.getReadBuffer();
+                   // row.add(IntegerUtil.toBytes(bb == null ? 0 : bb.capacity()));
+                    clientConnInfo.setRecvBuffer(bb == null ? 0 : bb.capacity());
+                   // row.add(IntegerUtil.toBytes(c.getWriteQueue().size()));
+                    clientConnInfo.setSendQueue(fc.getWriteQueue().size());
+                    String txLevel = "";
+                    String txAutommit = "";
+                    if (fc instanceof ServerConnection) {
+                        ServerConnection mysqlC = (ServerConnection) fc;
+                        txLevel = mysqlC.getTxIsolation() + "";
+                        txAutommit = mysqlC.isAutocommit() + "";
+                    }
+                   // row.add(txLevel.getBytes());
+                    clientConnInfo.setTxLevel(txLevel);
+                   // row.add(txAutommit.getBytes());
+                    clientConnInfo.setAutoCommit(txAutommit);
+                    clientConnInfo.update();
                 }
             }
         }

@@ -58,30 +58,17 @@ public class H2DBMonitorManager {
              * MyCat内存监控表
              * table:t_memory
              */
-            sql = "CREATE TABLE t_memory(thread_id BIGINT PRIMARY KEY,thread_name VARCHAR(255)," +
-                         "memory_type VARCHAR(255),used BIGINT,max BIGINT,total BIGINT)";
-            createH2dbTable(conn,sql,"t_memory");
-
+            createH2dbTable(conn,TableCreateSQL.T_MEMORY,"t_memory");
             /**
              * MyCat 线程池监控
              * table:t_threadpool
              */
-            sql = "CREATE TABLE t_threadpool(thread_name VARCHAR(255) PRIMARY KEY,pool_size BIGINT," +
-                    "active_count BIGINT,task_queue_size BIGINT,completed_task BIGINT,total_task BIGINT)";
-            createH2dbTable(conn,sql,"t_threadpool");
-
-
+            createH2dbTable(conn,TableCreateSQL.T_THREADPOOL,"t_threadpool");
             /**
              * MyCat数据库连接池监控
              * table:t_connectpool
              */
-            sql = "CREATE TABLE t_connectpool(processor VARCHAR(255),id BIGINT PRIMARY KEY," +
-                    "mysqlId BIGINT,host VARCHAR(32),port INT,l_port INT,net_in BIGINT," +
-                    "net_out BIGINT,life BIGINT,closed VARCHAR(16),borrowed VARCHAR(16)," +
-                    "SEND_QUEUE INT,schema VARCHAR(32),charset VARCHAR(32),txlevel VARCHAR(16)," +
-                    "autocommit VARCHAR(16))";
-
-            createH2dbTable(conn,sql,"t_connectpool");
+            createH2dbTable(conn,TableCreateSQL.T_CONNCETPOOL,"t_connectpool");
 
             /**
              * MyCat Sql 统计
@@ -89,6 +76,52 @@ public class H2DBMonitorManager {
              */
             sql = "";
             createH2dbTable(conn,sql,"t_sqlstat");
+
+            /**
+             * 用户连接信息
+             * table:t_connection_cli
+             */
+            createH2dbTable(conn,TableCreateSQL.T_CONNECTION_CLI,"t_connection_cli");
+
+
+            /**
+             * db 信息
+             * table:t_database
+             */
+            createH2dbTable(conn,TableCreateSQL.T_DATABASE,"t_database");
+
+
+            /**
+             * heartbeat 信息
+             * table :t_heartbeat
+             */
+            createH2dbTable(conn,TableCreateSQL.T_HEARTBEAT,"t_heartbeat");
+
+            /**
+             * datanode 信息
+             * table:t_datanode
+             */
+            createH2dbTable(conn,TableCreateSQL.T_DATANODE,"t_datanode");
+
+
+            /**
+             * datasource 信息
+             * table:t_datasource
+             */
+            createH2dbTable(conn,TableCreateSQL.T_DATASOUCE,"t_datasource");
+
+
+            /**
+             * Cache 信息
+             * table: t_cache
+             */
+            createH2dbTable(conn,TableCreateSQL.T_CACHE,"t_cache");
+
+            /**
+             * processor 信息
+             * table:t_processor
+             */
+            createH2dbTable(conn,TableCreateSQL.T_PROCESSOR,"t_process");
 
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());

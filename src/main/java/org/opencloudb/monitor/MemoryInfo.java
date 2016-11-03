@@ -1,7 +1,5 @@
 package org.opencloudb.monitor;
 
-import org.opencloudb.sqlfw.H2DBManager;
-import org.opencloudb.sqlfw.SQLRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

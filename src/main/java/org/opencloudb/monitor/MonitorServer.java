@@ -28,6 +28,7 @@ import org.opencloudb.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -54,6 +55,7 @@ public class MonitorServer {
         this.mainThreadId = threadId;
         timer.schedule(doUpateMonitorInfo(),0L,systemConfig.getMonitorUpdatePeriod());
         updataDBInfo();
+        updateSystemParam();
     }
 
     private TimerTask doUpateMonitorInfo() {
@@ -234,7 +236,6 @@ public class MonitorServer {
     /**
      * 更新 Cache 信息
      */
-
     public  void updateCacheInfo(){
         CacheService cacheService = MycatServer.getInstance().getCacheService();
         for (Map.Entry<String, CachePool> entry : cacheService
@@ -269,6 +270,62 @@ public class MonitorServer {
                 cacheInfo.update();
             }
         }
+    }
+
+    /**
+     * 更新 系统参数信息
+     */
+
+
+    public  void updateSystemParam(){
+       int len = SystemParameter.SYS_PARAM.length;
+        SystemConfig systemConfig  = MycatServer.getInstance().getConfig().getSystem();
+        for (int i = 0; i <len ; i++) {
+            String sysParam[] = SystemParameter.SYS_PARAM[i];
+            String varName = sysParam[0];
+            String desc = sysParam[1];
+            Object value = null;
+            SystemParameter sysParameter = new SystemParameter();
+            sysParameter.setVarName(varName);
+            sysParameter.setDescribe(desc);
+            try {
+                Method method = null;
+                String upperName = varName.substring(0,1).toUpperCase()
+                        + varName.substring(1);
+                method = systemConfig.getClass()
+                        .getMethod("get" + upperName);
+                value = method.invoke(systemConfig);
+                sysParameter.setVarValue(String.valueOf(value));
+            } catch (Exception e) {
+              LOGGER.error(e.getMessage());
+            }
+            sysParameter.update();
+        }
+
+
+        int len1 = SystemParameter.SYS_PARAM_BOOL.length;
+        for (int i = 0; i <len1 ; i++) {
+            String sysParamBool[] = SystemParameter.SYS_PARAM_BOOL[i];
+            String varName = sysParamBool[0];
+            String desc = sysParamBool[1];
+            Object value = null;
+            SystemParameter sysParameter = new SystemParameter();
+            sysParameter.setVarName(varName);
+            sysParameter.setDescribe(desc);
+            try {
+                Method method = null;
+                String upperName = varName.substring(0,1).toUpperCase()
+                        + varName.substring(1);
+                method = systemConfig.getClass()
+                        .getMethod("is" + upperName);
+                value = method.invoke(systemConfig);
+                sysParameter.setVarValue(String.valueOf(value));
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage());
+            }
+            sysParameter.update();
+        }
+
     }
 
     /**

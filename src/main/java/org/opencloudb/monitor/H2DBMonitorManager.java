@@ -123,6 +123,13 @@ public class H2DBMonitorManager {
              */
             createH2dbTable(conn,TableCreateSQL.T_PROCESSOR,"t_process");
 
+
+            /**
+             * sys param 信息
+             * table:t_sysparam
+             */
+            createH2dbTable(conn,TableCreateSQL.T_SYSPARAM,"t_sysparam");
+
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         } finally {

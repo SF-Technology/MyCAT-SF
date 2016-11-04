@@ -164,4 +164,13 @@ public class TableCreateSQL {
             "bu_warns INT," +
             "fc_count INT," +
             "bc_count INT)";
+
+
+    /**
+     * t_sysparam
+     */
+    public final static String T_SYSPARAM="CREATE TABLE t_sysparam(" +
+            "var_name VARCHAR(32) PRIMARY KEY," +
+            "var_value VARCHAR(32)," +
+            "describe VARCHAR(255))";
 }

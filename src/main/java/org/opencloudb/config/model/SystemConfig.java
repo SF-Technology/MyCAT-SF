@@ -61,6 +61,7 @@ public final class SystemConfig {
 	public static final long DEFAULT_IDLE_TIMEOUT = 30 * 60 * 1000L;
 	private static final long DEFAULT_PROCESSOR_CHECK_PERIOD = 1 * 1000L;
 	private static final long DEFAULT_MONITOR_UPDATE_PERIOD = 2 * 1000L;
+	private static final long DEFAULT_SQL_INMEMDB_PERIOD = 30 * 1000L;
 	private static final long DEFAULT_DATANODE_IDLE_CHECK_PERIOD = 5 * 60 * 1000L;
 	private static final long DEFAULT_DATANODE_HEARTBEAT_PERIOD = 10 * 1000L;
 	private static final long DEFAULT_CLUSTER_HEARTBEAT_PERIOD = 5 * 1000L;
@@ -248,10 +249,40 @@ public final class SystemConfig {
 	public boolean constArithmeticAllow; //true 拦截常量运算的条件，比如说WHERE FID = 3 - 1，其中"3 - 1"是常量运算表达式。
 	public boolean limitZeroAllow;       	//false 是否允许limit 0这样的语句
 
+
+
 	/**
 	 * 定时采集监控信息入H2DB，间隔时间
 	 */
 	public long monitorUpdatePeriod;
+
+	/**
+	 * SQL执行的情况在内存数据库中停留时间
+	 */
+	public long sqlInMemDBPeriod;
+
+
+	/**
+	 * 间隔根据SQL类型汇总，SQL执行次数
+	 */
+	public long bySqlTypeSummaryPeriod;
+
+	/**
+	 * 间隔取执行结果集和SQL执行时间TOP N
+	 */
+	public long topNSummaryPeriod;
+
+	/**
+	 * SQL执行结果集 TOP N
+	 */
+	public long topExecuteResultN;
+
+	/**
+	 * SQL执行时间 TOP N
+	 */
+	public long topSqlExecuteTimeN;
+
+
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -296,8 +327,6 @@ public final class SystemConfig {
 		this.systemReserveMemorySize = RESERVED_SYSTEM_MEMORY_BYTES;
 		this.dataNodeSortedTempDir = System.getProperty("user.dir");
 		this.SQL_SLOW_TIME=1000;
-		
-		
 
 		/**
 		 * SQL 防火墙配置默认配置
@@ -341,10 +370,55 @@ public final class SystemConfig {
         this.intersectAllow = true;
         this.constArithmeticAllow = true ;
         this.limitZeroAllow = false;
-		
+
 		this.monitorUpdatePeriod = DEFAULT_MONITOR_UPDATE_PERIOD;
+		this.sqlInMemDBPeriod = DEFAULT_SQL_INMEMDB_PERIOD;
+		this.bySqlTypeSummaryPeriod = DEFAULT_SQL_INMEMDB_PERIOD;
+		this.topNSummaryPeriod = DEFAULT_SQL_INMEMDB_PERIOD;
+		this.topExecuteResultN = 100;
+		this.topSqlExecuteTimeN = 100;
 	}
 
+
+	public long getTopExecuteResultN() {
+		return topExecuteResultN;
+	}
+
+	public void setTopExecuteResultN(long topExecuteResultN) {
+		this.topExecuteResultN = topExecuteResultN;
+	}
+
+	public long getTopSqlExecuteTimeN() {
+		return topSqlExecuteTimeN;
+	}
+
+	public void setTopSqlExecuteTimeN(long topSqlExecuteTimeN) {
+		this.topSqlExecuteTimeN = topSqlExecuteTimeN;
+	}
+
+	public long getBySqlTypeSummaryPeriod() {
+		return bySqlTypeSummaryPeriod;
+	}
+
+	public void setBySqlTypeSummaryPeriod(long bySqlTypeSummaryPeriod) {
+		this.bySqlTypeSummaryPeriod = bySqlTypeSummaryPeriod;
+	}
+
+	public long getTopNSummaryPeriod() {
+		return topNSummaryPeriod;
+	}
+
+	public void setTopNSummaryPeriod(long topNSummaryPeriod) {
+		this.topNSummaryPeriod = topNSummaryPeriod;
+	}
+
+	public long getSqlInMemDBPeriod() {
+		return sqlInMemDBPeriod;
+	}
+
+	public void setSqlInMemDBPeriod(long sqlInMemDBPeriod) {
+		this.sqlInMemDBPeriod = sqlInMemDBPeriod;
+	}
 
 	public long getMonitorUpdatePeriod() {
 		return monitorUpdatePeriod;
@@ -353,6 +427,7 @@ public final class SystemConfig {
 	public void setMonitorUpdatePeriod(long monitorUpdatePeriod) {
 		this.monitorUpdatePeriod = monitorUpdatePeriod;
 	}
+
 	public boolean isEnableRegEx() {
 		return enableRegEx;
 	}

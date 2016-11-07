@@ -57,7 +57,17 @@ public class TableCreateSQL {
      * t_sqlstat
      */
 
-    public final static String T_SQLSTAT = "";
+    public final static String T_SQLSTAT= "CREATE TABLE t_sqlstat(" +
+            "original_sql VARCHAR(255) PRIMARY KEY, " +
+            "modified_sql VARCHAR(255)," +
+            "user VARCHAR(32)," +
+            "host VARCHAR(64)," +
+            "schema VARCHAR(32)," +
+            "result_rows BIGINT," +
+            "exe_times BIGINT," +
+            "start_time BIGINT," +
+            "end_time BIGINT," +
+            "lastaccess_t BIGINT)";
 
     /**
      * t_connection_cli
@@ -173,4 +183,7 @@ public class TableCreateSQL {
             "var_name VARCHAR(32) PRIMARY KEY," +
             "var_value VARCHAR(32)," +
             "describe VARCHAR(255))";
+
+
+
 }

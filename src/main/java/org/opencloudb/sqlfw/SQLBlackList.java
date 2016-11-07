@@ -151,6 +151,11 @@ public class SQLBlackList implements H2DBInterface<SQLBlackList> {
     }
 
     @Override
+    public void update_row() {
+
+    }
+
+    @Override
     public void insert() {
 
     }

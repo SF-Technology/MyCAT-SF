@@ -22,7 +22,7 @@ public class ThreadPoolInfo {
     private long poolSize;
     private int activeCount;
     private int taskQueueSize;
-    private long compeletedTask;
+    private long completedTask;
     private long totalTask;
 
     public String getThreadName() {
@@ -57,12 +57,12 @@ public class ThreadPoolInfo {
         this.taskQueueSize = taskQueueSize;
     }
 
-    public long getCompeletedTask() {
-        return compeletedTask;
+    public long getCompletedTask() {
+        return completedTask;
     }
 
-    public void setCompeletedTask(long compeletedTask) {
-        this.compeletedTask = compeletedTask;
+    public void setCompletedTask(long completedTask) {
+        this.completedTask = completedTask;
     }
 
     public long getTotalTask() {
@@ -83,7 +83,7 @@ public class ThreadPoolInfo {
         if (poolSize != that.poolSize) return false;
         if (activeCount != that.activeCount) return false;
         if (taskQueueSize != that.taskQueueSize) return false;
-        if (compeletedTask != that.compeletedTask) return false;
+        if (completedTask != that.completedTask) return false;
         if (totalTask != that.totalTask) return false;
         return threadName != null ? threadName.equals(that.threadName) : that.threadName == null;
 
@@ -95,7 +95,7 @@ public class ThreadPoolInfo {
         result = 31 * result + (int) (poolSize ^ (poolSize >>> 32));
         result = 31 * result + activeCount;
         result = 31 * result + taskQueueSize;
-        result = 31 * result + (int) (compeletedTask ^ (compeletedTask >>> 32));
+        result = 31 * result + (int) (completedTask ^ (completedTask >>> 32));
         result = 31 * result + (int) (totalTask ^ (totalTask >>> 32));
         return result;
     }
@@ -107,7 +107,7 @@ public class ThreadPoolInfo {
                 ", poolSize=" + poolSize +
                 ", activeCount=" + activeCount +
                 ", taskQueueSize=" + taskQueueSize +
-                ", compeletedTask=" + compeletedTask +
+                ", completedTask=" + completedTask +
                 ", totalTask=" + totalTask +
                 '}';
     }
@@ -167,12 +167,12 @@ public class ThreadPoolInfo {
         if(isAdd){
             sql = "INSERT INTO t_threadpool VALUES('" + getThreadName()+ "'," + getPoolSize() + ","
                     + getActiveCount() + "," + getTaskQueueSize() + ","
-                    + getCompeletedTask() + "," + getTotalTask() +")";
+                    + getCompletedTask() + "," + getTotalTask() +")";
         }else {
             sql = "UPDATE t_threadpool SET pool_size =" +getPoolSize() +"," +
                     "active_count =" + getActiveCount() + ","  +
                     "task_queue_size = " + getTaskQueueSize() + ","  +
-                    "completed_task = " + getCompeletedTask() + ","  +
+                    "completed_task = " + getCompletedTask() + ","  +
                     "total_task =" + getTotalTask()+
                     " WHERE thread_name = '" + getThreadName() + "'";
         }

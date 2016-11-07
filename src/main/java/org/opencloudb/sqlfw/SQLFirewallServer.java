@@ -18,6 +18,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.monitor.SQLRecord;
 import org.opencloudb.net.AbstractConnection;
 import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.server.ServerConnection;
@@ -61,6 +62,7 @@ public class SQLFirewallServer {
     private  AtomicInteger sqlId;
     public static final   int OP_UPATE = 1;
     public static final  int OP_DEL = 2;
+    public static final  int OP_UPATE_ROW = 3;
 
     /**
      * 异步线程，用来将数据更新到H2DB.
@@ -71,17 +73,21 @@ public class SQLFirewallServer {
     private static final ExecutorService updateH2DBService =
             Executors.newSingleThreadExecutor(threadFactory);
 
+
     private static final ThreadFactory scheduleFactory =
             new ThreadFactoryBuilder().setDaemon(true).setNameFormat("schedule fixed rate").build();
-    ScheduledExecutorService scheduleAtFixedRateExecutor =
+
+    private static final ScheduledExecutorService scheduleAtFixedRateExecutor =
             new ScheduledThreadPoolExecutor(1,scheduleFactory);
 
     private SystemConfig systemConfig = null;
+
+
     /**
      * Task 主要将Key对应的value超时写入H2DB中
      * @param <V>
      */
-    private static class Task<V extends H2DBInterface> implements Runnable{
+    public static class Task<V extends H2DBInterface> implements Runnable{
         private V value = null;
         private int op = 0;
 
@@ -98,6 +104,9 @@ public class SQLFirewallServer {
                         break;
                     case SQLFirewallServer.OP_DEL:
                         value.delete();
+                        break;
+                    case SQLFirewallServer.OP_UPATE_ROW:
+                        value.update_row();
                         break;
                     default:
                         LOGGER.info("op err");
@@ -123,10 +132,12 @@ public class SQLFirewallServer {
          * 加载全部sql黑名单到sqlBackListMap中
          */
         loadSQLBlackList();
+
         /**
          * druid wall 功能
          */
         sqlFirewall = SQLFirewall.getSqlFirewall();
+
         /**
          * 定时移除sqlRecordMap过期的元素
          */
@@ -274,13 +285,12 @@ public class SQLFirewallServer {
                 sqlRecord.getExecutionTimes().incrementAndGet();
             }else {
                 sqlRecord = new SQLRecord(DEFAULT_TIMEOUT);
+                sqlRecord.setStartTime(t);
+                sqlRecord.setEndTime(t);
                 sqlRecord.setOriginalSQL(originalSQL);
                 sqlRecord.setModifiedSQL(modifiedSQL);
                 sqlRecord.getExecutionTimes().lazySet(1);
             }
-
-            sqlRecord.setStartTime(t);
-            sqlRecord.setEndTime(t);
             sqlRecord.setLastAccessedTimestamp(t);
             sqlRecordMap.put(originalSQL,sqlRecord);
             flag = true;

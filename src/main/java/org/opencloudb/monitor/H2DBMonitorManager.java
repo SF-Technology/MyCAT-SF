@@ -43,7 +43,6 @@ public class H2DBMonitorManager {
          */
         Connection conn = null;
         Statement stmt = null;
-        String sql = null;
 
         try {
 
@@ -74,8 +73,8 @@ public class H2DBMonitorManager {
              * MyCat Sql 统计
              * table: t_sqlstat
              */
-            sql = "";
-            createH2dbTable(conn,sql,"t_sqlstat");
+
+            createH2dbTable(conn,TableCreateSQL.T_SQLSTAT,"t_sqlstat");
 
             /**
              * 用户连接信息

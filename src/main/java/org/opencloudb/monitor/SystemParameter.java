@@ -35,6 +35,7 @@ public class SystemParameter {
             {"memoryPageSize"," "},
             {"spillsFileBufferSize"," "},
             {"useStreamOutput"," "},
+            {"useSqlStat"," "},
             {"systemReserveMemorySize"," "},
             {"dataNodeSortedTempDir"," "},
 
@@ -46,11 +47,15 @@ public class SystemParameter {
             {"maxAllowExecuteTimes"," "},
             {"maxAllowExecuteSqlTime"," "},
             {"maxAllowExecuteUnitTime"," "},
-            {"monitorUpdatePeriod"," "}
+            {"monitorUpdatePeriod"," "},
+            {"sqlInMemDBPeriod","SQL执行的情况在内存数据库中停留时间.. 单位ms"},
+            {"bySqlTypeSummaryPeriod","间隔根据SQL类型汇总，SQL执行次数.. 单位ms"},
+            {"topNSummaryPeriod","间隔取执行结果集和SQL执行时间TOP N.. 单位ms"},
+            {"topExecuteResultN","SQL执行结果集 TOP N"},
+            {"topSqlExecuteTimeN","SQL执行时间 TOP N"}
     };
 
     public final static String [][] SYS_PARAM_BOOL={
-
             /**
              * SQL 防火墙配置默认配置
              */
@@ -65,7 +70,6 @@ public class SystemParameter {
             {"conditionAndAlwayTrueAllow"," "},
             {"conditionAndAlwayFalseAllow"," "},
             {"conditionLikeTrueAllow"," "},
-
             /**
              * 其他拦截配置
             */
@@ -84,6 +88,7 @@ public class SystemParameter {
             {"constArithmeticAllow"," "},
             {"limitZeroAllow"," "}
     };
+
 
     public String getVarName() {
         return varName;

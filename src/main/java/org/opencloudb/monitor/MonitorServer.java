@@ -2,6 +2,7 @@ package org.opencloudb.monitor;
 
 
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.backend.BackendConnection;
@@ -33,6 +34,10 @@ import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 监控服务，对外提供统统一接口
@@ -48,14 +53,54 @@ public class MonitorServer {
     private final NameableExecutor updateMonitorInfoExecutor;
     private final Timer timer;
     private final long mainThreadId;
+
+    /**
+     * 定时线程1 定期移除内存DB中sql统计信息
+     * 从访问时间过期时间
+     * sqlInMemDBPeriod
+     * sql从第一次执行开始，在H2DB中停留sqlInMemDBPeriod，将被移除H2DB中。
+     */
+
+    /**
+     *定时线程2 内存中的数据合并
+     * select，insert，update，delete语句
+     * 根据对应的表 分别统计执行次数
+     * bySqlTypeSummaryPeriod
+     * 从H2DB中统计四种sql语句执行的次数（精确到表级别）
+     */
+
+    /**
+     * 定时线程3，维护TOPN执行结果集，维护TOPN，SQL执行时间
+     * topNSummaryPeriod : 定期获取结果集TOPN和SQL执行时间TOPN
+     * topExecuteResultN
+     * topSqlExecuteTimeN
+     */
+    private static final ThreadFactory scheduleFactory =
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("async fixed rate").build();
+
+    private static final ScheduledExecutorService scheduleAtFixedRateExecutor =
+            new ScheduledThreadPoolExecutor(1,scheduleFactory);
+
+    private final SystemConfig systemConfig;
+
     public MonitorServer(long threadId,Timer timer,NameableExecutor executor){
-        SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
+        systemConfig = MycatServer.getInstance().getConfig().getSystem();
         this.timer = timer;
         this.updateMonitorInfoExecutor = executor;
         this.mainThreadId = threadId;
         timer.schedule(doUpateMonitorInfo(),0L,systemConfig.getMonitorUpdatePeriod());
         updataDBInfo();
         updateSystemParam();
+
+        /**
+         * 定时移除sqlRecordMap过期的元素
+         */
+        scheduleAtFixedRateExecutor.scheduleAtFixedRate(new Runnable(){
+            @Override
+            public void run() {
+
+            }
+        },0,systemConfig.getSqlInMemDBPeriod(),TimeUnit.SECONDS);
     }
 
     private TimerTask doUpateMonitorInfo() {
@@ -275,8 +320,6 @@ public class MonitorServer {
     /**
      * 更新 系统参数信息
      */
-
-
     public  void updateSystemParam(){
        int len = SystemParameter.SYS_PARAM.length;
         SystemConfig systemConfig  = MycatServer.getInstance().getConfig().getSystem();
@@ -399,7 +442,7 @@ public class MonitorServer {
                 threadPoolInfo.setPoolSize(exec.getPoolSize());
                 threadPoolInfo.setActiveCount(exec.getActiveCount());
                 threadPoolInfo.setTaskQueueSize(exec.getQueue().size());
-                threadPoolInfo.setCompeletedTask(exec.getCompletedTaskCount());
+                threadPoolInfo.setCompletedTask(exec.getCompletedTaskCount());
                 threadPoolInfo.setTotalTask(exec.getTaskCount());
                 threadPoolInfo.update();
             }

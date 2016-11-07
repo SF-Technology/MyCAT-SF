@@ -7,6 +7,7 @@ package org.opencloudb.sqlfw;
 
 public interface H2DBInterface<V>{
      void update();
+     void update_row();
      void insert();
      V query(String key);
      void delete();

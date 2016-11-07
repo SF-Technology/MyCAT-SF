@@ -65,28 +65,19 @@ public class H2DBManager {
              */
             String createSqlBlacklist = "CREATE TABLE sql_blacklist(sql_id INT PRIMARY KEY, sql VARCHAR(255))";
             String createSqlReporter = "CREATE TABLE sql_reporter(sql VARCHAR(255) PRIMARY KEY, sql_msg VARCHAR(255),count INT);";
-            String createSqlRecord = "CREATE TABLE sql_record(original_sql VARCHAR(255) PRIMARY KEY, " +
-                                                       "modified_sql VARCHAR(255),result_rows BIGINT," +
-                                                       "exe_times BIGINT,start_time BIGINT,end_time BIGINT,lastaccess_t BIGINT)";
 
             stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("show tables");
 
 
             if(!rs.next()){
-                stmt.execute(createSqlRecord);
                 stmt.execute(createSqlBlacklist);
                 stmt.execute(createSqlReporter);
             }
 
             rs.close();
 
-            rs = stmt.executeQuery("select * from sql_record limit 1");
 
-            if (!rs.next()){
-                stmt.execute("DROP TABLE IF EXISTS sql_record");
-                stmt.execute(createSqlRecord);
-            }
 
             rs.close();
 

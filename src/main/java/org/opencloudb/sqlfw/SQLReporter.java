@@ -149,6 +149,11 @@ public class SQLReporter implements H2DBInterface<SQLReporter> {
     }
 
     @Override
+    public void update_row() {
+
+    }
+
+    @Override
     public void insert() {
 
     }

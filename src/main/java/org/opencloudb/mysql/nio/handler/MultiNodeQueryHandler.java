@@ -40,7 +40,7 @@ import org.opencloudb.server.NonBlockingSession;
 import org.opencloudb.server.ServerConnection;
 import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.sqlfw.SQLFirewallServer;
-import org.opencloudb.sqlfw.SQLRecord;
+import org.opencloudb.monitor.SQLRecord;
 import org.opencloudb.stat.QueryResult;
 import org.opencloudb.stat.QueryResultDispatcher;
 
@@ -48,6 +48,9 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE;
+import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE_ROW;
 
 /**
  * @author mycat
@@ -71,7 +74,8 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 	private volatile boolean fieldsReturned;
 	private int okCount;
 	private final boolean isCallProcedure;
-	private long startTime;
+	private long startTime = 0L;
+	private long endTime = 0L;
 	private int execCount = 0;
 	
 	private int isOffHeapuseOffHeapForMerge = 1;
@@ -271,6 +275,25 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 						source.setLastInsertId(insertId);
 					}
 					ok.write(source);
+					/**
+					 * delete & update 统计SQL执行次数
+					 */
+					SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+					SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
+					if(sqlRecord != null) {
+						sqlRecord.setUser(session.getSource().getUser());
+						sqlRecord.setHost(session.getSource().getHost());
+						sqlRecord.setSchema(session.getSource().getSchema());
+						sqlRecord.setStartTime(startTime);
+						sqlRecord.setEndTime(System.currentTimeMillis());
+						sqlRecord.setResultRows(affectedRows);
+						sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
+						sqlFirewallServer.getUpdateH2DBService().
+								submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE));
+						if (LOGGER.isDebugEnabled()){
+							LOGGER.debug(sqlRecord.toString());
+						}
+					}
 				} catch (Exception e) {
 					handleDataProcessException(e);
 				} finally {
@@ -282,6 +305,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 
 	@Override
 	public void rowEofResponse(final byte[] eof, BackendConnection conn) {
+
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("on row end reseponse " + conn);
 		}
@@ -321,8 +345,8 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 				} catch (Exception e) {
 					handleDataProcessException(e);
 				}
-
 			} else {
+
 				try {
 					lock.lock();
 					eof[3] = ++packetId;
@@ -332,7 +356,30 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 					source.write(eof);
 				} finally {
 					lock.unlock();
-
+				}
+				/**
+				 * select --- >更新rows
+				 */
+				SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+				SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
+				if(sqlRecord != null) {
+					sqlRecord.setResultRows(index);
+					sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
+					sqlFirewallServer.getUpdateH2DBService().
+							submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
+					if (LOGGER.isDebugEnabled()){
+						LOGGER.debug(sqlRecord.toString());
+					}
+				}else {
+					sqlRecord = new SQLRecord(SQLFirewallServer.DEFAULT_TIMEOUT);
+					sqlRecord = sqlRecord.query(rrs.getStatement());
+					sqlRecord.setResultRows(index);
+					sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
+					sqlFirewallServer.getUpdateH2DBService().
+							submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
+					if (LOGGER.isDebugEnabled()){
+						LOGGER.debug(sqlRecord.toString());
+					}
 				}
 			}
 		}
@@ -384,22 +431,32 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 
 			eof[3] = ++packetId;
 
-
 			/**
-			 * 统计SQL执行次数
+			 * select --- > 更新rows
 			 */
 			SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
 			SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
-
 			if(sqlRecord != null) {
-				sqlRecord.setStartTime(startTime);
-				sqlRecord.setEndTime(System.currentTimeMillis());
 				sqlRecord.setResultRows(index);
 				sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
+				sqlFirewallServer.getUpdateH2DBService().
+						submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
+				if (LOGGER.isDebugEnabled()){
+					LOGGER.debug(sqlRecord.toString());
+				}
+			}else {
+				sqlRecord = new SQLRecord(SQLFirewallServer.DEFAULT_TIMEOUT);
+				sqlRecord = sqlRecord.query(rrs.getStatement());
+				sqlRecord.setResultRows(index);
+				sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
+				sqlFirewallServer.getUpdateH2DBService().
+						submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
+
+				if (LOGGER.isDebugEnabled()){
+					LOGGER.debug(sqlRecord.toString());
+				}
 			}
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("last packet id:" + packetId);
-			}
+
 
 			/**
 			 * 真正的开始把Writer Buffer的数据写入到channel 中
@@ -428,12 +485,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 
 			if (rrs.getLimitSize() < 0)
 				end = results.size();
-				
-//			// 对于不需要排序的语句,返回的数据只有rrs.getLimitSize()
-//			if (rrs.getOrderByCols() == null) {
-//				end = results.size();
-//				start = 0;
-//			}
+
 			if (end > results.size())
 				end = results.size();
 
@@ -448,7 +500,6 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 				LOGGER.debug("last packet id:" + packetId);
 			}
 			source.write(source.writeToBuffer(eof, buffer));
-
 		} catch (Exception e) {
 			handleDataProcessException(e);
 		} finally {
@@ -462,12 +513,26 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			byte[] eof, BackendConnection conn) {
 		ServerConnection source = null;
 		execCount++;
-		if (execCount == rrs.getNodes().length) {			
-			//TODO: add by zhuam
-			//查询结果派发
-			QueryResult queryResult = new QueryResult(session.getSource().getUser(), session.getSource().getHost(),
-					rrs.getSqlType(), rrs.getStatement(), startTime, System.currentTimeMillis());
-			QueryResultDispatcher.dispatchQuery( queryResult );
+		if (execCount == rrs.getNodes().length) {
+			/**
+			 * select 统计SQL执行情况
+			 */
+			SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+			SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
+			if(sqlRecord != null) {
+				sqlRecord.setUser(session.getSource().getUser());
+				sqlRecord.setHost(session.getSource().getHost());
+				sqlRecord.setSchema(session.getSource().getSchema());
+				sqlRecord.setStartTime(startTime);
+				sqlRecord.setEndTime(System.currentTimeMillis());
+				sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
+				sqlFirewallServer.getUpdateH2DBService().
+						submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE));
+				LOGGER.info(sqlRecord.toString());
+				if (LOGGER.isDebugEnabled()){
+					LOGGER.debug(sqlRecord.toString());
+				}
+			}
 		}
 		if (fieldsReturned) {
 			return;
@@ -500,9 +565,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 						}
 					}
 				}
-
 			}
-
 			source = session.getSource();
 			ByteBuffer buffer = source.allocate();
 			fieldCount = fields.size();
@@ -512,7 +575,6 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 				packet.fieldCount = fieldCount - shouldRemoveAvgField.size();
 				buffer = packet.write(buffer, source, true);
 			} else {
-
 				header[3] = ++packetId;
 				buffer = source.writeToBuffer(header, buffer);
 			}
@@ -546,9 +608,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 							fieldPkg.packetId = ++packetId;
 							shouldSkip = true;
 							buffer = fieldPkg.write(buffer, source, false);
-
 						}
-
 						ColMeta colMeta = new ColMeta(i, fieldPkg.type);
 						colMeta.decimals = fieldPkg.decimals;
 						columToIndx.put(fieldName,
@@ -573,8 +633,8 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			buffer = source.writeToBuffer(eof, buffer);
 			source.write(buffer);
 			if (dataMergeSvr != null) {
+				LOGGER.info(dataMergeSvr.toString());
 				dataMergeSvr.onRowMetaData(columToIndx, fieldCount);
-
 			}
 		} catch (Exception e) {
 			handleDataProcessException(e);
@@ -633,7 +693,6 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 					row[3] = ++packetId;
 					session.getSource().write(row);
 				}
-
 				index++;
 			}
 

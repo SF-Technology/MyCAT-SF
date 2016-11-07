@@ -655,6 +655,11 @@ public class BytesTools {
      * @return 0 if equal, &lt; 0 if left is less than right, etc.
      */
     public static int compareTo(final byte [] left, final byte [] right) {
+    	if(left == null || left.length == 0) {
+    		return -1; 
+    	} else if(right == null || right.length == 0) {
+    		return 1;
+    	}
         return LexicographicalComparerHolder.BEST_COMPARER.
                 compareTo(left, 0, left.length, right, 0, right.length);
     }

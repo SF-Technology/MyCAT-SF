@@ -25,15 +25,7 @@ package org.opencloudb.manager;
 
 import org.apache.log4j.Logger;
 import org.opencloudb.config.ErrorCode;
-import org.opencloudb.handler.ClearHandler;
-import org.opencloudb.handler.ConfFileHandler;
-import org.opencloudb.handler.ReloadHandler;
-import org.opencloudb.handler.RollbackHandler;
-import org.opencloudb.handler.SelectHandler;
-import org.opencloudb.handler.ShowHandler;
-import org.opencloudb.handler.ShowServerLog;
-import org.opencloudb.handler.StopHandler;
-import org.opencloudb.handler.SwitchHandler;
+import org.opencloudb.handler.*;
 import org.opencloudb.manager.handler.CheckHandler;
 import org.opencloudb.net.handler.FrontendQueryHandler;
 import org.opencloudb.net.mysql.OkPacket;

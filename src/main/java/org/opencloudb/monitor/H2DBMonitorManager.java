@@ -129,6 +129,7 @@ public class H2DBMonitorManager {
              */
             createH2dbTable(conn,TableCreateSQL.T_SYSPARAM,"t_sysparam");
 
+
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         } finally {

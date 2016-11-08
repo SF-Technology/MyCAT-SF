@@ -33,12 +33,10 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
     private long startTime = 0L;
     private long endTime = 0L;
     private final long ttl ;
-
-
+    private long sqlExecTime = 0L;
     public SQLRecord(final long timeout){
         this.ttl = timeout;
     }
-
     public String getOriginalSQL() {
         return originalSQL;
     }
@@ -124,6 +122,13 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
     public void setSchema(String schema) {
         this.schema = schema;
     }
+    public long getSqlExecTime() {
+        return sqlExecTime;
+    }
+
+    public void setSqlExecTime(long sqlExecTime) {
+        this.sqlExecTime = sqlExecTime;
+    }
 
     @Override
     public String toString() {
@@ -139,6 +144,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 ", ttl=" + ttl +
+                ", sqlExecTime=" + sqlExecTime +
                 '}';
     }
 
@@ -156,7 +162,8 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         long exe_times = 0;
 
         try {
-            String sql = "select original_sql,exe_times from t_sqlstat where original_sql = '" + getOriginalSQL() + "'";
+            String sql = "select original_sql,exe_times from t_sqlstat where original_sql = '" + getOriginalSQL().replace("'","") + "'";
+            LOGGER.info("sql === >  " + sql);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
             }
@@ -188,7 +195,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         String sql = null;
 
         if(isAdd){
-            sql = "INSERT INTO t_sqlstat VALUES('" + getOriginalSQL()+ "','" +
+            sql = "INSERT INTO t_sqlstat VALUES('" + getOriginalSQL().replace("'","")+ "','" +
                     getModifiedSQL() + "','"
                     + getUser() + "','"
                     + getHost() + "','"
@@ -197,20 +204,23 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                     + getExecutionTimes().get() + ","
                     + getStartTime() + ","
                     + getEndTime() + ","
+                    + getSqlExecTime() + ","
                     + getLastAccessedTimestamp() + ")";
+
         }else {
-            sql = "UPDATE t_sqlstat SET modified_sql ='" + getModifiedSQL() +"'," +
+            sql = "UPDATE t_sqlstat SET modified_sql ='" + getModifiedSQL().replace("'","") +"'," +
                                         "user ='" + getUser() + "',"  +
                                         "host ='" + getHost() + "',"  +
                                         "schema ='" + getSchema() + "',"  +
                                         "result_rows =" + getResultRows() + ","  +
                                         "exe_times =" + (exe_times+1) + ","  +
                                         "start_time =" + getStartTime() + ","  +
-                                        "end_time =" + getEndTime() +
-                                        " WHERE original_sql = '" + getOriginalSQL() + "'";
+                                        "end_time =" + getEndTime() + "," +
+                                        "sqlexec_time =" + getSqlExecTime() +
+                                        " WHERE original_sql = '" + getOriginalSQL().replace("'","") + "'";
         }
 
-
+        LOGGER.info("sql === >  " + sql);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("sql === >  " + sql);
         }
@@ -245,7 +255,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                 H2DBMonitorManager.getH2DBMonitorManager().getH2DBMonitorConn();
         Statement stmt = null;
         ResultSet rset = null;
-        String  sql = "UPDATE t_sqlstat SET result_rows = " + getResultRows() + " WHERE original_sql = '" + getOriginalSQL() + "'";
+        String  sql = "UPDATE t_sqlstat SET result_rows = " + getResultRows() + " WHERE original_sql = '" + getOriginalSQL().replace("'","") + "'";
         try {
             stmt = h2DBConn.createStatement();
             stmt.executeUpdate(sql);
@@ -284,7 +294,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         ResultSet rset = null;
 
         try {
-            String sql = "select * from t_sqlstat where original_sql = '" + key + "'";
+            String sql = "select * from t_sqlstat where original_sql = '" + key.replace("'","") + "'";
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
@@ -303,7 +313,8 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                 sqlRecord.getExecutionTimes().set(rset.getLong(7));
                 sqlRecord.setStartTime(rset.getLong(8));
                 sqlRecord.setEndTime(rset.getLong(9));
-                sqlRecord.setLastAccessedTimestamp(rset.getLong(10));
+                sqlRecord.setSqlExecTime(rset.getLong(10));
+                sqlRecord.setLastAccessedTimestamp(rset.getLong(11));
             }
 
         } catch (SQLException e) {
@@ -331,8 +342,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         Statement stmt = null;
         ResultSet rset = null;
         try {
-            String sql = "DELETE FROM t_sqlstat WHERE original_sql = '" + getOriginalSQL() + "'";
-
+            String sql = "DELETE FROM t_sqlstat WHERE original_sql = '" + getOriginalSQL().replace("'","") + "'";
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
             }

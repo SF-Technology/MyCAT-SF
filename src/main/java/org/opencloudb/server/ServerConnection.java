@@ -277,12 +277,15 @@ public class ServerConnection extends FrontendConnection {
 		 */
 		if (sqlFirewallServer.sqlMatcher(sql)){
 			if (systemConfig.enableSQLFirewall ==1) {
-				writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, sql + " is sql blacklist....");
+				writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND,"'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
 				return;
 			}if (systemConfig.enableSQLFirewall ==2){
-				sqlFirewallServer.recordSQLReporter(sql,sql + " is blacklist!!");
+				sqlFirewallServer.recordSQLReporter(sql,"sql exists in the blacklist.!".toUpperCase());
+			}if (systemConfig.enableSQLFirewall ==0){
+				LOGGER.warn("'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
 			}
 		}
+
 		if (rrs != null) {
 			// session执行
 			session.execute(rrs, type);

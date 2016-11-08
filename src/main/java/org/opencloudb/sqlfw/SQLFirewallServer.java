@@ -161,7 +161,7 @@ public class SQLFirewallServer {
     /**
      * 加载全部sql黑名单到sqlBackListMap中
      */
-    private void loadSQLBlackList(){
+    public void loadSQLBlackList(){
         final Connection h2DBConn = H2DBManager.getH2DBManager().getH2DBConn();;
         Statement stmt = null;
         ResultSet rset = null;
@@ -171,7 +171,12 @@ public class SQLFirewallServer {
             rset = stmt.executeQuery(sql);
 
             while (rset.next()){
-                sqlBlackListMap.put(rset.getInt(1),rset.getString(2));
+                if (!sqlBlackListMap.containsKey(rset.getInt(1)))
+                        sqlBlackListMap.put(rset.getInt(1),rset.getString(2));
+            }
+
+            for (int key: sqlBlackListMap.keySet()) {
+                LOGGER.error(sqlBlackListMap.get(key));
             }
 
         } catch (SQLException e) {
@@ -189,10 +194,6 @@ public class SQLFirewallServer {
             }
         }
     }
-
-
-
-
 
     /**
      * 添加一条SQL 到 SQL黑名单中
@@ -216,7 +217,7 @@ public class SQLFirewallServer {
             wLock.lock();
             SQLBlackList sqlBackList = new SQLBlackList();
             sqlBackList.setId(id);
-            sqlBackList.setOriginalSQL(sql);
+            sqlBackList.setOriginalSQL(sql.replace("'","\'"));
             updateH2DBService.submit(new Task<SQLBlackList>(sqlBackList,OP_UPATE));
         }finally {
             wLock.unlock();
@@ -233,31 +234,16 @@ public class SQLFirewallServer {
      */
     public boolean removeSqlfromBackList(int id){
         String sql  = null;
-
         if(sqlBlackListMap.containsKey(id)){
             sql = (String) sqlBlackListMap.remove(id);
         }else{
             return false;
         }
 
-        try {
-            wLock.lock();
-            /**
-             * 异步 del
-             */
-            if(!sqlBlackListMap.containsKey(id)){
-                SQLBlackList sqlBackList = new SQLBlackList();
-                sqlBackList.setId(id);
-                sqlBackList.setOriginalSQL(sql);
-                updateH2DBService.submit(new Task<SQLBlackList>(sqlBackList,OP_DEL));
-            }
-
-        }finally {
-            wLock.unlock();
+        for (int key: sqlBlackListMap.keySet()) {
+            LOGGER.error(sqlBlackListMap.get(key));
         }
-
         sqlRecordMap.remove(sql);
-
         return true;
     }
 
@@ -347,7 +333,8 @@ public class SQLFirewallServer {
             /**
              * 单位为s,一条sql执行的时间，超过了 max time, 则动态加入SQL黑名单中
              */
-            long sqlExecuteTime = (sqlRecord.getEndTime() - sqlRecord.getStartTime()) / 1000;
+            //long sqlExecuteTime = (sqlRecord.getEndTime() - sqlRecord.getStartTime());
+            long sqlExecuteTime = sqlRecord.getSqlExecTime();
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("SQL execute time  " + sqlExecuteTime + " s");
@@ -446,15 +433,15 @@ public class SQLFirewallServer {
                  */
                 if(sc instanceof ServerConnection){
                     ((FrontendConnection) sc).writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND,
-                            violation.getMessage() + ",  SQL :" + sql);
+                            violation.getMessage() + ",  sql==> " + sql);
                 }
             }else if(enableSQLFirewall == 2){
                 /**
                  * 不拦截SQL，将sql记录在拦截reporter中
                  */
-                recordSQLReporter(sql,violation.getMessage());
-            }else {
-                LOGGER.warn("check sql :" + violation.getMessage());
+                recordSQLReporter(sql,violation.getMessage().toUpperCase());
+            }else if (enableSQLFirewall ==0){
+                LOGGER.warn("'" + sql.toUpperCase() + "' that is ".toUpperCase() + violation.getMessage().toUpperCase());
             }
 
             falg  = false;
@@ -476,14 +463,11 @@ public class SQLFirewallServer {
         Statement stmt = null;
         ResultSet rset = null;
         try {
-
             stmt = H2DBManager.getH2DBManager().getH2DBConn().createStatement();
             rset = stmt.executeQuery("select max(sql_id) from sql_blacklist");
-
             if (rset.next()){
                 id = rset.getInt(1);
             }
-
         } catch (SQLException e) {
            LOGGER.error("initSqlId 1" + e.getSQLState());
         }finally {

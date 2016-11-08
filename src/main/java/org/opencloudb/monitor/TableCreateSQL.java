@@ -67,6 +67,7 @@ public class TableCreateSQL {
             "exe_times BIGINT," +
             "start_time BIGINT," +
             "end_time BIGINT," +
+            "sqlexec_time BIGINT," +
             "lastaccess_t BIGINT)";
 
     /**
@@ -174,8 +175,6 @@ public class TableCreateSQL {
             "bu_warns INT," +
             "fc_count INT," +
             "bc_count INT)";
-
-
     /**
      * t_sysparam
      */
@@ -183,7 +182,4 @@ public class TableCreateSQL {
             "var_name VARCHAR(32) PRIMARY KEY," +
             "var_value VARCHAR(32)," +
             "describe VARCHAR(255))";
-
-
-
 }

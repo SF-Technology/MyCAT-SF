@@ -26,7 +26,6 @@ public final  class SQLFirewall {
          * 配置druid parser wall功能
          */
 
-
         /**
          * SQL 防火墙配置默认配置
          */

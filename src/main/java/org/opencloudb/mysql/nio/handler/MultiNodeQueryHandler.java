@@ -206,7 +206,9 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 
 	@Override
 	public void okResponse(byte[] data, BackendConnection conn) {
+
 		boolean executeResponse = conn.syncAndExcute();
+		endTime = System.currentTimeMillis();
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("received ok response ,executeResponse:"
 					+ executeResponse + " from " + conn);
@@ -285,7 +287,8 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 						sqlRecord.setHost(session.getSource().getHost());
 						sqlRecord.setSchema(session.getSource().getSchema());
 						sqlRecord.setStartTime(startTime);
-						sqlRecord.setEndTime(System.currentTimeMillis());
+						sqlRecord.setEndTime(endTime);
+						sqlRecord.setSqlExecTime(endTime-startTime);
 						sqlRecord.setResultRows(affectedRows);
 						sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
 						sqlFirewallServer.getUpdateH2DBService().
@@ -517,6 +520,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			/**
 			 * select 统计SQL执行情况
 			 */
+			endTime = System.currentTimeMillis();
 			SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
 			SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
 			if(sqlRecord != null) {
@@ -524,7 +528,8 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 				sqlRecord.setHost(session.getSource().getHost());
 				sqlRecord.setSchema(session.getSource().getSchema());
 				sqlRecord.setStartTime(startTime);
-				sqlRecord.setEndTime(System.currentTimeMillis());
+				sqlRecord.setEndTime(endTime);
+				sqlRecord.setSqlExecTime(endTime-startTime);
 				sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
 				sqlFirewallServer.getUpdateH2DBService().
 						submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE));
@@ -633,7 +638,6 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			buffer = source.writeToBuffer(eof, buffer);
 			source.write(buffer);
 			if (dataMergeSvr != null) {
-				LOGGER.info(dataMergeSvr.toString());
 				dataMergeSvr.onRowMetaData(columToIndx, fieldCount);
 			}
 		} catch (Exception e) {

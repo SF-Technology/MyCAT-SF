@@ -290,7 +290,7 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
             }
 
 			/**
-			 * delete & update执行的结束时间
+			 *TODO delete & update执行的结束时间
 			 */
 			sqlRecord(ok.affectedRows);
 		}
@@ -301,7 +301,7 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 	public void rowEofResponse(byte[] eof, BackendConnection conn) {
 		ServerConnection source = session.getSource();
 		/**
-		 * select 统计SQL执行次数
+		 * TODO select 统计SQL执行次数
 		 */
 		sqlRecord(rows);
 		/**conn.recordSql(source.getHost(), source.getSchema(),node.getStatement());**/
@@ -429,14 +429,15 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 			sqlRecord.setSchema(session.getSource().getSchema());
 			sqlRecord.setStartTime(startTime);
 			sqlRecord.setEndTime(endTime);
+			sqlRecord.setSqlExecTime(endTime-startTime);
 			sqlRecord.setResultRows(rows);
 			sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
 			sqlFirewallServer.getUpdateH2DBService().
 					submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord, OP_UPATE));
+
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug(sqlRecord.toString());
 			}
 		}
 	}
-
 }

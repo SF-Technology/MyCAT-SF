@@ -9,6 +9,7 @@ import org.opencloudb.net.mysql.EOFPacket;
 import org.opencloudb.net.mysql.FieldPacket;
 import org.opencloudb.net.mysql.ResultSetHeaderPacket;
 import org.opencloudb.net.mysql.RowDataPacket;
+import org.opencloudb.sqlfw.H2DBManager;
 import org.opencloudb.util.IntegerUtil;
 import org.opencloudb.util.LongUtil;
 import org.slf4j.Logger;
@@ -45,28 +46,33 @@ public class MonitorHandler {
 
     public static void query(String sql,ManagerConnection c) {
 
-        final Connection h2DBConn = H2DBMonitorManager.
-                getH2DBMonitorManager().getH2DBMonitorConn();
+
+        Connection dbConn = null;
         Statement stmt = null;
         ResultSet rset = null;
 
-        try {
+        if (sql !=null && (sql.indexOf(H2DBManager.getSqlBackListTableName()) !=-1 ||
+                           sql.indexOf(H2DBManager.getSqlReporterTableName()) !=-1)){
+            dbConn = H2DBManager.getH2DBManager().getH2DBConn();
+        }else {
+            dbConn = H2DBMonitorManager.
+                    getH2DBMonitorManager().getH2DBMonitorConn();
+        }
 
+        try {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
             }
-
-            stmt = h2DBConn.createStatement();
+            stmt = dbConn.createStatement();
             rset = stmt.executeQuery(sql);
 
             FIELD_COUNT  = rset.getMetaData().getColumnCount();
 
             /**
-             * 初始化header.....
+             * 初始化 header.....
              */
             byte packetId = 0;
             int n = 0;
-
             header = PacketUtil.getHeader(FIELD_COUNT);
             fields = new FieldPacket[FIELD_COUNT];
             header.packetId = ++packetId;

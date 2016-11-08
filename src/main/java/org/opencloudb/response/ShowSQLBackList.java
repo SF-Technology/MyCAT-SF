@@ -98,11 +98,7 @@ public final class ShowSQLBackList {
 
 
 	public static void addSqlBackList(ManagerConnection c,String sql) {
-
-	    OkPacket ok = new OkPacket();
-
-        LOGGER.error("add sql : " + sql);
-
+        OkPacket ok = new OkPacket();
        SQLFirewallServer sqlFirewallServer =
                 MycatServer.getInstance().getSqlFirewallServer();
 

@@ -60,6 +60,10 @@ public class MonitorServer {
      * sqlInMemDBPeriod
      * sql从第一次执行开始，在H2DB中停留sqlInMemDBPeriod，将被移除H2DB中。
      */
+    private static final ThreadFactory delSqlRecordFactory =
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("async-del-sqlrecord").build();
+    private static final ScheduledExecutorService delSqlRecordExecutor =
+            new ScheduledThreadPoolExecutor(1,delSqlRecordFactory);
 
     /**
      *定时线程2 内存中的数据合并
@@ -68,6 +72,10 @@ public class MonitorServer {
      * bySqlTypeSummaryPeriod
      * 从H2DB中统计四种sql语句执行的次数（精确到表级别）
      */
+    private static final ThreadFactory sqlTypeSummaryFactory =
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("async-sqltype-summary").build();
+    private static final ScheduledExecutorService sqlTypeSummaryFactoryExecutor =
+            new ScheduledThreadPoolExecutor(1,sqlTypeSummaryFactory);
 
     /**
      * 定时线程3，维护TOPN执行结果集，维护TOPN，SQL执行时间
@@ -75,11 +83,12 @@ public class MonitorServer {
      * topExecuteResultN
      * topSqlExecuteTimeN
      */
-    private static final ThreadFactory scheduleFactory =
-            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("async fixed rate").build();
+    private static final ThreadFactory topNSummaryPeriod =
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("async-topn-summary").build();
 
-    private static final ScheduledExecutorService scheduleAtFixedRateExecutor =
-            new ScheduledThreadPoolExecutor(1,scheduleFactory);
+    private static final ScheduledExecutorService topNSummaryPeriodExecutor =
+            new ScheduledThreadPoolExecutor(1,topNSummaryPeriod);
+
 
     private final SystemConfig systemConfig;
 
@@ -92,15 +101,54 @@ public class MonitorServer {
         updataDBInfo();
         updateSystemParam();
 
-        /**
-         * 定时移除sqlRecordMap过期的元素
-         */
-        scheduleAtFixedRateExecutor.scheduleAtFixedRate(new Runnable(){
+
+        delSqlRecordExecutor.scheduleAtFixedRate(new Runnable(){
             @Override
             public void run() {
-
+               // LOGGER.info("delSqlRecordExecutor========>>>>");
+                long delTime = System.currentTimeMillis()-systemConfig.getSqlInMemDBPeriod();
+                /**
+                 * select * from t_sqlstat where lastaccess_t <= delTime.
+                 */
             }
-        },0,systemConfig.getSqlInMemDBPeriod(),TimeUnit.SECONDS);
+        },0,systemConfig.getSqlInMemDBPeriod(),TimeUnit.MILLISECONDS);
+
+
+
+        sqlTypeSummaryFactoryExecutor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                //LOGGER.info("sqlTypeSummaryFactoryExecutor========>>>>");
+                /**
+                 *  select * from t_sqlstat
+                 */
+
+                for (int i = 0; i < 100 ; i++) {
+                    /**
+                     * 对每一条语句通过druid parser 解析出sql类型，涉及到表
+                     * 插入到新的db中.
+                     */
+                }
+            }
+        },0,systemConfig.getBySqlTypeSummaryPeriod(),TimeUnit.MILLISECONDS);
+
+
+
+        topNSummaryPeriodExecutor.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+               // LOGGER.info("topNSummaryPeriodExecutor ========>>>>");
+                /**
+                 * select * from t_sqlstat order by result_rows limit N;
+                 * 内存中维护一个TOPN小根堆，大于N会被淘汰
+                 */
+
+                /**
+                 * select * from t_sqlstat order by sql_exc_time limit N;
+                 * 内存中维护一个TOPN小根堆，大于N会被淘汰
+                 */
+            }
+        },0,systemConfig.getTopNSummaryPeriod(),TimeUnit.MILLISECONDS);
     }
 
     private TimerTask doUpateMonitorInfo() {

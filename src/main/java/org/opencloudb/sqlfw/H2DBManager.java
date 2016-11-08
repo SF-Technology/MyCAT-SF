@@ -18,9 +18,9 @@ public class H2DBManager {
     private final static Logger LOGGER = LoggerFactory.getLogger(H2DBManager.class);
     private static final String h2dbURI = "jdbc:h2:"+SystemConfig.getHomePath()+"/h2db/db_sqlfw";// H2 database;
     private static final String dbName = "db_sqlfw";
-    private final String sqlRecordTableName = "sql_record";
-    private final String sqlBackListTableName = "sql_blacklist";
-    private final String sqlReporterTableName = "sql_reporter";
+    private static  final String sqlRecordTableName = "sql_record";
+    private static  final String sqlBackListTableName = "sql_blacklist";
+    private static final String sqlReporterTableName = "sql_reporter";
     private static  final String user = "sa";
     private static  final String key = "";
     private  Connection h2DBConn;
@@ -52,18 +52,13 @@ public class H2DBManager {
             /**
              * table:sql_backlist
              * DROP TABLE IF EXISTS sql_blacklist;
-             * CREATE TABLE sql_blacklist(sql_id INT PRIMARY KEY, sql VARCHAR(255));
+             * CREATE TABLE sql_blacklist3(sql_id INT auto_increment PRIMARY KEY, sql VARCHAR(255))
              *
              * table:sql_reporter
              * DROP TABLE IF EXISTS sql_reporter;
              * CREATE TABLE sql_reporter(sql VARCHAR(255) PRIMARY KEY, sql_msg VARCHAR(255),count INT);
-             *
-             * table:sql_record
-             * DROP TABLE IF EXISTS sql_record;
-             * CREATE TABLE sql_record(original_sql VARCHAR(255) PRIMARY KEY, modified_sql VARCHAR(255),result_rows
-             *                                           BIGINT,exe_times BIGINT,start_time BIGINT,end_time BIGINT);
              */
-            String createSqlBlacklist = "CREATE TABLE sql_blacklist(sql_id INT PRIMARY KEY, sql VARCHAR(255))";
+            String createSqlBlacklist = "CREATE TABLE sql_blacklist(sql_id INT auto_increment PRIMARY KEY, sql VARCHAR(255) UNIQUE)";
             String createSqlReporter = "CREATE TABLE sql_reporter(sql VARCHAR(255) PRIMARY KEY, sql_msg VARCHAR(255),count INT);";
 
             stmt = conn.createStatement();
@@ -76,9 +71,6 @@ public class H2DBManager {
             }
 
             rs.close();
-
-
-
             rs.close();
 
             rs = stmt.executeQuery("select * from sql_blacklist limit 1");
@@ -123,13 +115,13 @@ public class H2DBManager {
     public  Connection getH2DBConn() {
         return h2DBConn;
     }
-    public String getSqlRecordTableName() {
+    public static String getSqlRecordTableName() {
         return sqlRecordTableName;
     }
-    public String getSqlBackListTableName() {
+    public static  String getSqlBackListTableName() {
         return sqlBackListTableName;
     }
-    public String getSqlReporterTableName() {
+    public static String getSqlReporterTableName() {
         return sqlReporterTableName;
     }
 

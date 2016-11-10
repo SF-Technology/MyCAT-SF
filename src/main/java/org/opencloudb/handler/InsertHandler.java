@@ -30,14 +30,12 @@ public class InsertHandler {
         Statement stmt = null;
         ResultSet rset = null;
 
-        if (sql !=null && (sql.indexOf(H2DBManager.getSqlBackListTableName()) !=-1 ||
-                           sql.indexOf(H2DBManager.getSqlReporterTableName()) !=-1)){
+        if (sql !=null && (sql.indexOf(H2DBManager.getSqlBackListTableName()) !=-1)){
             dbConn = H2DBManager.getH2DBManager().getH2DBConn();
         }else {
-            dbConn = H2DBMonitorManager.
-                    getH2DBMonitorManager().getH2DBMonitorConn();
+            c.writeErrMessage(ErrorCode.ER_YES,"not support insert op !");
+            return;
         }
-
 
         try {
             stmt = dbConn.createStatement();

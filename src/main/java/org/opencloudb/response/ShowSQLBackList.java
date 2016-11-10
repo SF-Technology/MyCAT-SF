@@ -60,7 +60,7 @@ public final class ShowSQLBackList {
         byte packetId = eof.packetId;
 
         ConcurrentHashMap<Integer, String> sqlBlackListMap =
-                MycatServer.getInstance().getSqlFirewallServer().getSqlBackListMap();
+                MycatServer.getInstance().getSqlFirewallServer().getSqlBlackListMap();
 
         for (int key:sqlBlackListMap.keySet()) {
             RowDataPacket row = getRow(key,sqlBlackListMap.get(key),c.getCharset());

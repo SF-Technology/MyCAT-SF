@@ -25,12 +25,17 @@ import org.opencloudb.net.NIOProcessor;
 import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.response.ShowDataNode;
 import org.opencloudb.server.ServerConnection;
+import org.opencloudb.sqlfw.SQLFirewallServer;
 import org.opencloudb.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -101,33 +106,58 @@ public class MonitorServer {
         updataDBInfo();
         updateSystemParam();
 
-
+        /**
+         * 定期清理过期的sql record.
+         */
         delSqlRecordExecutor.scheduleAtFixedRate(new Runnable(){
             @Override
             public void run() {
-               // LOGGER.info("delSqlRecordExecutor========>>>>");
-                long delTime = System.currentTimeMillis()-systemConfig.getSqlInMemDBPeriod();
-                /**
-                 * select * from t_sqlstat where lastaccess_t <= delTime.
-                 */
+                long expiredTime = System.currentTimeMillis()-systemConfig.getSqlInMemDBPeriod();
+                deleteExpiredSqlStat(expiredTime);
             }
         },0,systemConfig.getSqlInMemDBPeriod(),TimeUnit.MILLISECONDS);
 
-
-
+        /**
+         * 根据sql类型，做统计分析
+         */
         sqlTypeSummaryFactoryExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                //LOGGER.info("sqlTypeSummaryFactoryExecutor========>>>>");
-                /**
-                 *  select * from t_sqlstat
-                 */
+                String sql = "select original_sql,host,schema,result_rows,exe_times,sqlexec_time from t_sqlstat";
+                ArrayList<SQLRecordSub> arrayList = bySqlTypeSummaryPeriod(sql);
 
-                for (int i = 0; i < 100 ; i++) {
+                /**
+                 * 执行次数
+                 */
+                long selectCount = 0L;
+                long delectCount = 0L;
+                long updateCount = 0L;
+                long insertCount = 0L;
+
+                /**
+                 * 执行时间
+                 */
+                long selectExecTime = 0L;
+                long delectExecTime = 0L;
+                long updateExecTime = 0L;
+                long insertExecTime = 0L;
+
+                /**
+                 * 执行结果集
+                 */
+                long selectResultRows = 0L;
+                long delectResultRows = 0L;
+                long updateResultRows = 0L;
+                long insertResultRows = 0L;
+
+                for (int i = 0; i < arrayList.size() ; i++) {
                     /**
-                     * 对每一条语句通过druid parser 解析出sql类型，涉及到表
-                     * 插入到新的db中.
+                     * 按照 sqltpye,host,schema分析，
                      */
+                    SQLRecordSub sqlRecordSub = arrayList.get(i);
+                    String sqlType = sqlRecordSub.getOriginalSql();
+                    String host = sqlRecordSub.getHost();
+                    String schema = sqlRecordSub.getSchema();
                 }
             }
         },0,systemConfig.getBySqlTypeSummaryPeriod(),TimeUnit.MILLISECONDS);
@@ -137,16 +167,28 @@ public class MonitorServer {
         topNSummaryPeriodExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-               // LOGGER.info("topNSummaryPeriodExecutor ========>>>>");
+               //LOGGER.info("topNSummaryPeriodExecutor ========>>>>");
                 /**
-                 * select * from t_sqlstat order by result_rows limit N;
+                 * select original_sql,host,schema,result_rows,exe_times,sqlexec_time from t_sqlstat order by result_rows limit N;
                  * 内存中维护一个TOPN小根堆，大于N会被淘汰
                  */
 
+                String sql = "select original_sql,host,schema," +
+                            "result_rows,exe_times,sqlexec_time " +
+                            "from t_sqlstat order by result_rows limit " +  systemConfig.getTopExecuteResultN();
+                ArrayList<SQLRecordSub> topNRowslist = bySqlTypeSummaryPeriod(sql);
+
+
                 /**
-                 * select * from t_sqlstat order by sql_exc_time limit N;
+                 *
                  * 内存中维护一个TOPN小根堆，大于N会被淘汰
                  */
+                sql = "select original_sql,host," +
+                        "schema,result_rows,exe_times," +
+                        "sqlexec_time from t_sqlstat order by sqlexec_time limit " + systemConfig.getTopSqlExecuteTimeN();
+
+                ArrayList<SQLRecordSub> topNExecTimelist = bySqlTypeSummaryPeriod(sql);
+
             }
         },0,systemConfig.getTopNSummaryPeriod(),TimeUnit.MILLISECONDS);
     }
@@ -169,6 +211,80 @@ public class MonitorServer {
             }
         };
     }
+
+    /**
+     * 定期做sql stat 分析汇总入库
+     */
+
+    public ArrayList<SQLRecordSub> bySqlTypeSummaryPeriod(String sql){
+        ArrayList<SQLRecordSub> arrayList = new ArrayList<SQLRecordSub>();
+
+        final Connection h2DBConn =
+                H2DBMonitorManager.getH2DBMonitorManager().getH2DBMonitorConn();
+        Statement stmt = null;
+        ResultSet rset = null;
+        try {
+            rset = stmt.executeQuery(sql);
+
+            while (rset.next()){
+                SQLRecordSub sqlRecord = new SQLRecordSub();
+                sqlRecord.setOriginalSql(rset.getString(1));
+                sqlRecord.setHost(rset.getString(2));
+                sqlRecord.setSchema(rset.getString(3));
+                sqlRecord.setResultRows(rset.getLong(4));
+                sqlRecord.setExeTimes(rset.getLong(5));
+                sqlRecord.setSqlexecTime(rset.getLong(6));
+                arrayList.add(sqlRecord);
+            }
+
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage());
+        }finally {
+            try {
+                if(stmt !=null){
+                    stmt.close();
+                }
+                if (rset !=null){
+                    rset.close();
+                }
+            } catch (SQLException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+        return arrayList;
+    }
+
+
+    /**
+     * 定期调用，删除过期的sql record。
+     * @param expiredTime
+     */
+    private void deleteExpiredSqlStat(long expiredTime){
+            final Connection h2DBConn =
+                    H2DBMonitorManager.getH2DBMonitorManager().getH2DBMonitorConn();
+            Statement stmt = null;
+            ResultSet rset = null;
+            String sql = "select * from t_sqlstat where lastaccess_t <=" +  expiredTime;
+            LOGGER.info("deleteExpiredSqlStat ========>>>>");
+            try {
+                stmt = h2DBConn.createStatement();
+                stmt.execute(sql);
+            } catch (SQLException e) {
+                LOGGER.error(e.getMessage());
+            } finally {
+                try {
+                    if (stmt != null) {
+                        stmt.close();
+                    }
+                    if (rset != null) {
+                        rset.close();
+                    }
+                } catch (SQLException e) {
+                    LOGGER.error(e.getMessage());
+                }
+            }
+    }
+
 
     /**
      * 更新DB信息

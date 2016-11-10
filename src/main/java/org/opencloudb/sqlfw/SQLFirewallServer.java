@@ -42,6 +42,7 @@ public class SQLFirewallServer {
     public static final long DEFAULT_TIMEOUT = 300 * 1000;
 
 
+
     /**
      * SQL黑名单常驻内存，有sql添加进来时，定时刷到保存放到H2DB中
      */
@@ -169,16 +170,10 @@ public class SQLFirewallServer {
             String sql = "select * from sql_blacklist";
             stmt = h2DBConn.createStatement();
             rset = stmt.executeQuery(sql);
-
             while (rset.next()){
                 if (!sqlBlackListMap.containsKey(rset.getInt(1)))
                         sqlBlackListMap.put(rset.getInt(1),rset.getString(2));
             }
-
-            for (int key: sqlBlackListMap.keySet()) {
-                LOGGER.error(sqlBlackListMap.get(key));
-            }
-
         } catch (SQLException e) {
             LOGGER.error("1:" + e.getSQLState());
         }finally {
@@ -238,10 +233,6 @@ public class SQLFirewallServer {
             sql = (String) sqlBlackListMap.remove(id);
         }else{
             return false;
-        }
-
-        for (int key: sqlBlackListMap.keySet()) {
-            LOGGER.error(sqlBlackListMap.get(key));
         }
         sqlRecordMap.remove(sql);
         return true;
@@ -500,7 +491,7 @@ public class SQLFirewallServer {
         return sqlRecordMap;
     }
 
-    public static ConcurrentHashMap<Integer, String> getSqlBackListMap() {
+    public static ConcurrentHashMap<Integer, String> getSqlBlackListMap() {
         return sqlBlackListMap;
     }
 

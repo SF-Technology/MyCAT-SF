@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author zagnix
@@ -33,44 +34,51 @@ public class DeleteHandler {
         Connection dbConn = null;
         Statement stmt = null;
         ResultSet rset = null;
-
-
-
+        boolean isSqlfwdb = false;
+        boolean isMultiDel = false;
+        int affectedRows = 0;
 
         if (sql !=null && (sql.indexOf(H2DBManager.getSqlBackListTableName()) !=-1 ||
                            sql.indexOf(H2DBManager.getSqlReporterTableName()) !=-1)){
             dbConn = H2DBManager.getH2DBManager().getH2DBConn();
         }else {
-            dbConn = H2DBMonitorManager.
-                    getH2DBMonitorManager().getH2DBMonitorConn();
+            c.writeErrMessage(ErrorCode.ER_YES,"not support delete op");
+            return;
         }
 
         int sql_id = 0;
         String id =  ParseUtil.parseString(sql);
+        SQLFirewallServer sqlFirewallServer =
+                MycatServer.getInstance().getSqlFirewallServer();
 
-        if (sql != null && id !=null && StringUtils.isNumber(id)){
+        if (sql != null && id !=null && sql.indexOf("where")==-1){
+            isMultiDel = true;
+        }else if (sql != null && id != null && StringUtils.isNumber(id)){
             sql_id = Integer.valueOf(id);
-        }else {
-            c.writeErrMessage(ErrorCode.ER_YES, "sql id must be number .");
-            return;
+            affectedRows = 1;
         }
 
         try {
             stmt = dbConn.createStatement();
             stmt.execute(sql);
 
+         if(isMultiDel){
+             ConcurrentHashMap<Integer,String> map
+                     = SQLFirewallServer.getSqlBlackListMap();
+             affectedRows = map.size();
+             for (int key: map.keySet()) {
+                 sqlFirewallServer.removeSqlfromBackList(key);
+             }
+         }else {
+             sqlFirewallServer.removeSqlfromBackList(sql_id);
+         }
 
-            SQLFirewallServer sqlFirewallServer =
-                    MycatServer.getInstance().getSqlFirewallServer();
-            if(sqlFirewallServer.removeSqlfromBackList(sql_id)){
-                OkPacket ok = new OkPacket();
-                ok.packetId = 1;
-                ok.affectedRows = 1;
-                ok.serverStatus = 2;
-                ok.write(c);
-            }else {
-                c.writeErrMessage(ErrorCode.ER_YES, "delete blacklist failed.");
-            }
+         OkPacket ok = new OkPacket();
+         ok.packetId = 1;
+         ok.affectedRows = affectedRows;
+         ok.serverStatus = 2;
+         ok.write(c);
+
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
             c.writeErrMessage(ErrorCode.ER_YES, e.getMessage());

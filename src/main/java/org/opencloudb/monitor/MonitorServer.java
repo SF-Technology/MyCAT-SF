@@ -88,11 +88,11 @@ public class MonitorServer {
      * topExecuteResultN
      * topSqlExecuteTimeN
      */
-    private static final ThreadFactory topNSummaryPeriod =
+    private static final ThreadFactory topNSummaryPeriodFactory =
             new ThreadFactoryBuilder().setDaemon(true).setNameFormat("async-topn-summary").build();
 
     private static final ScheduledExecutorService topNSummaryPeriodExecutor =
-            new ScheduledThreadPoolExecutor(1,topNSummaryPeriod);
+            new ScheduledThreadPoolExecutor(1,topNSummaryPeriodFactory);
 
 
     private final SystemConfig systemConfig;
@@ -115,7 +115,7 @@ public class MonitorServer {
                 long expiredTime = System.currentTimeMillis()-systemConfig.getSqlInMemDBPeriod();
                 deleteExpiredSqlStat(expiredTime);
             }
-        },0,systemConfig.getSqlInMemDBPeriod(),TimeUnit.MILLISECONDS);
+        },0,systemConfig.getSqlInMemDBPeriod()/2,TimeUnit.MILLISECONDS);
 
         /**
          * 根据sql类型，做统计分析
@@ -123,9 +123,8 @@ public class MonitorServer {
         sqlTypeSummaryFactoryExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                String sql = "select original_sql,host,schema,result_rows,exe_times,sqlexec_time from t_sqlstat";
+                String sql = "select original_sql,user,host,schema,tables,result_rows,exe_times,sqlexec_time from t_sqlstat";
                 ArrayList<SQLRecordSub> arrayList = bySqlTypeSummaryPeriod(sql);
-
                 /**
                  * 执行次数
                  */
@@ -149,48 +148,56 @@ public class MonitorServer {
                 long delectResultRows = 0L;
                 long updateResultRows = 0L;
                 long insertResultRows = 0L;
-
+                /**
+                 * 按照 sqltpye,host,schema分析，
+                 * */
                 for (int i = 0; i < arrayList.size() ; i++) {
-                    /**
-                     * 按照 sqltpye,host,schema分析，
-                     */
                     SQLRecordSub sqlRecordSub = arrayList.get(i);
                     String sqlType = sqlRecordSub.getOriginalSql();
+                    String user = sqlRecordSub.getUser();
                     String host = sqlRecordSub.getHost();
                     String schema = sqlRecordSub.getSchema();
+                    LOGGER.error("SqlTypeSummaryPeriod  " + sqlRecordSub.toString());
                 }
             }
-        },0,systemConfig.getBySqlTypeSummaryPeriod(),TimeUnit.MILLISECONDS);
+        },0,systemConfig.getBySqlTypeSummaryPeriod()/4,TimeUnit.MILLISECONDS);
 
 
 
         topNSummaryPeriodExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-               //LOGGER.info("topNSummaryPeriodExecutor ========>>>>");
+
                 /**
-                 * select original_sql,host,schema,result_rows,exe_times,sqlexec_time from t_sqlstat order by result_rows limit N;
+                 * select original_sql,user,host,schema,tables,result_rows,exe_times,sqlexec_time from t_sqlstat order by result_rows limit N;
                  * 内存中维护一个TOPN小根堆，大于N会被淘汰
                  */
 
-                String sql = "select original_sql,host,schema," +
-                            "result_rows,exe_times,sqlexec_time " +
+                String sql = "select original_sql,user,host,schema," +
+                            "tables,result_rows,exe_times,sqlexec_time " +
                             "from t_sqlstat order by result_rows limit " +  systemConfig.getTopExecuteResultN();
                 ArrayList<SQLRecordSub> topNRowslist = bySqlTypeSummaryPeriod(sql);
 
+                for (int i = 0; i < topNRowslist.size() ; i++) {
+                    LOGGER.error("topNRowslist:" + topNRowslist.get(i).toString());
+                }
 
                 /**
                  *
                  * 内存中维护一个TOPN小根堆，大于N会被淘汰
                  */
-                sql = "select original_sql,host," +
-                        "schema,result_rows,exe_times," +
+                sql = "select original_sql,user,host," +
+                        "schema,tables,result_rows,exe_times," +
                         "sqlexec_time from t_sqlstat order by sqlexec_time limit " + systemConfig.getTopSqlExecuteTimeN();
 
                 ArrayList<SQLRecordSub> topNExecTimelist = bySqlTypeSummaryPeriod(sql);
 
+                for (int i = 0; i < topNExecTimelist.size() ; i++) {
+                    LOGGER.error("topNExecTimelist:" + topNRowslist.get(i).toString());
+                }
+
             }
-        },0,systemConfig.getTopNSummaryPeriod(),TimeUnit.MILLISECONDS);
+        },0,systemConfig.getTopNSummaryPeriod()/8,TimeUnit.MILLISECONDS);
     }
 
     private TimerTask doUpateMonitorInfo() {
@@ -224,16 +231,19 @@ public class MonitorServer {
         Statement stmt = null;
         ResultSet rset = null;
         try {
+            stmt = h2DBConn.createStatement();
             rset = stmt.executeQuery(sql);
 
             while (rset.next()){
                 SQLRecordSub sqlRecord = new SQLRecordSub();
                 sqlRecord.setOriginalSql(rset.getString(1));
-                sqlRecord.setHost(rset.getString(2));
-                sqlRecord.setSchema(rset.getString(3));
-                sqlRecord.setResultRows(rset.getLong(4));
-                sqlRecord.setExeTimes(rset.getLong(5));
-                sqlRecord.setSqlexecTime(rset.getLong(6));
+                sqlRecord.setUser(rset.getString(2));
+                sqlRecord.setHost(rset.getString(3));
+                sqlRecord.setSchema(rset.getString(4));
+                sqlRecord.setTables(rset.getString(5));
+                sqlRecord.setResultRows(rset.getLong(6));
+                sqlRecord.setExeTimes(rset.getLong(7));
+                sqlRecord.setSqlexecTime(rset.getLong(8));
                 arrayList.add(sqlRecord);
             }
 
@@ -264,8 +274,7 @@ public class MonitorServer {
                     H2DBMonitorManager.getH2DBMonitorManager().getH2DBMonitorConn();
             Statement stmt = null;
             ResultSet rset = null;
-            String sql = "select * from t_sqlstat where lastaccess_t <=" +  expiredTime;
-            LOGGER.info("deleteExpiredSqlStat ========>>>>");
+            String sql = "delete from t_sqlstat where lastaccess_t <=" +  expiredTime;
             try {
                 stmt = h2DBConn.createStatement();
                 stmt.execute(sql);

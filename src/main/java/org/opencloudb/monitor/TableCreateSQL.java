@@ -63,6 +63,7 @@ public class TableCreateSQL {
             "user VARCHAR(32)," +
             "host VARCHAR(64)," +
             "schema VARCHAR(32)," +
+            "tables VARCHAR(32)," +
             "result_rows BIGINT," +
             "exe_times BIGINT," +
             "start_time BIGINT," +

@@ -21,12 +21,12 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
 
     private final static Logger LOGGER =
             LoggerFactory.getLogger(SQLRecord.class);
-
     private String originalSQL = null;
-    private String modifiedSQL = null;
+    private String modifiedSQL = "sql no change";
     private String user = null;
     private String host = null;
     private String schema = null;
+    private String tables = null;
     private long resultRows= 0L;
     private AtomicLong executionTimes= new AtomicLong(0);
     private long lastAccessedTimestamp= 0L;
@@ -50,7 +50,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
     }
 
     public void setModifiedSQL(String modifiedSQL) {
-        this.modifiedSQL = modifiedSQL;
+        this.modifiedSQL = modifiedSQL!=null?this.modifiedSQL:null;
     }
 
     public long getResultRows() {
@@ -130,6 +130,14 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         this.sqlExecTime = sqlExecTime;
     }
 
+    public String getTables() {
+        return tables;
+    }
+
+    public void setTables(String tables) {
+        this.tables = tables;
+    }
+
     @Override
     public String toString() {
         return "SQLRecord{" +
@@ -138,6 +146,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                 ", user='" + user + '\'' +
                 ", host='" + host + '\'' +
                 ", schema='" + schema + '\'' +
+                ", tables='" + tables + '\'' +
                 ", resultRows=" + resultRows +
                 ", executionTimes=" + executionTimes +
                 ", lastAccessedTimestamp=" + lastAccessedTimestamp +
@@ -172,6 +181,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
             if (rset.next()){
                 isAdd = false;
                 exe_times = rset.getLong(2);
+                LOGGER.error("===========>>" + exe_times);
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
@@ -199,7 +209,8 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                     getModifiedSQL() + "','"
                     + getUser() + "','"
                     + getHost() + "','"
-                    + getSchema() + "',"
+                    + getSchema() + "','"
+                    + getTables() + "',"
                     + getResultRows() + ","
                     + getExecutionTimes().get() + ","
                     + getStartTime() + ","
@@ -208,10 +219,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                     + getLastAccessedTimestamp() + ")";
 
         }else {
-            sql = "UPDATE t_sqlstat SET modified_sql ='" + getModifiedSQL().replace("'","") +"'," +
-                                        "user ='" + getUser() + "',"  +
-                                        "host ='" + getHost() + "',"  +
-                                        "schema ='" + getSchema() + "',"  +
+            sql = "UPDATE t_sqlstat SET  tables ='" + getTables() + "',"  +
                                         "result_rows =" + getResultRows() + ","  +
                                         "exe_times =" + (exe_times+1) + ","  +
                                         "start_time =" + getStartTime() + ","  +
@@ -220,11 +228,12 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                                         " WHERE original_sql = '" + getOriginalSQL().replace("'","") + "'";
         }
 
-        LOGGER.info("sql === >  " + sql);
+        LOGGER.error("sql === >  " + sql);
+
+
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("sql === >  " + sql);
         }
-
 
         try {
             stmt = h2DBConn.createStatement();
@@ -256,6 +265,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         Statement stmt = null;
         ResultSet rset = null;
         String  sql = "UPDATE t_sqlstat SET result_rows = " + getResultRows() + " WHERE original_sql = '" + getOriginalSQL().replace("'","") + "'";
+        LOGGER.error(sql);
         try {
             stmt = h2DBConn.createStatement();
             stmt.executeUpdate(sql);
@@ -309,12 +319,13 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                 sqlRecord.setUser(rset.getString(3));
                 sqlRecord.setHost(rset.getString(4));
                 sqlRecord.setSchema(rset.getString(5));
-                sqlRecord.setResultRows(rset.getLong(6));
-                sqlRecord.getExecutionTimes().set(rset.getLong(7));
-                sqlRecord.setStartTime(rset.getLong(8));
-                sqlRecord.setEndTime(rset.getLong(9));
-                sqlRecord.setSqlExecTime(rset.getLong(10));
-                sqlRecord.setLastAccessedTimestamp(rset.getLong(11));
+                sqlRecord.setTables(rset.getString(6));
+                sqlRecord.setResultRows(rset.getLong(7));
+                sqlRecord.getExecutionTimes().set(rset.getLong(8));
+                sqlRecord.setStartTime(rset.getLong(9));
+                sqlRecord.setEndTime(rset.getLong(10));
+                sqlRecord.setSqlExecTime(rset.getLong(11));
+                sqlRecord.setLastAccessedTimestamp(rset.getLong(12));
             }
 
         } catch (SQLException e) {

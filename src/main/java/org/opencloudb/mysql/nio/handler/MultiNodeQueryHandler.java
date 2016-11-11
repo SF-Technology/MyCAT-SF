@@ -280,23 +280,8 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 					/**
 					 * delete & update 统计SQL执行次数
 					 */
-					SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
-					SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
-					if(sqlRecord != null) {
-						sqlRecord.setUser(session.getSource().getUser());
-						sqlRecord.setHost(session.getSource().getHost());
-						sqlRecord.setSchema(session.getSource().getSchema());
-						sqlRecord.setStartTime(startTime);
-						sqlRecord.setEndTime(endTime);
-						sqlRecord.setSqlExecTime(endTime-startTime);
-						sqlRecord.setResultRows(affectedRows);
-						sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
-						sqlFirewallServer.getUpdateH2DBService().
-								submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE));
-						if (LOGGER.isDebugEnabled()){
-							LOGGER.debug(sqlRecord.toString());
-						}
-					}
+					endTime = System.currentTimeMillis();
+					sqlRecord(affectedRows);
 				} catch (Exception e) {
 					handleDataProcessException(e);
 				} finally {
@@ -361,29 +346,9 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 					lock.unlock();
 				}
 				/**
-				 * select --- >更新rows
+				 * 处理select 没有merge情况，更新rows
 				 */
-				SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
-				SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
-				if(sqlRecord != null) {
-					sqlRecord.setResultRows(index);
-					sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
-					sqlFirewallServer.getUpdateH2DBService().
-							submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
-					if (LOGGER.isDebugEnabled()){
-						LOGGER.debug(sqlRecord.toString());
-					}
-				}else {
-					sqlRecord = new SQLRecord(SQLFirewallServer.DEFAULT_TIMEOUT);
-					sqlRecord = sqlRecord.query(rrs.getStatement());
-					sqlRecord.setResultRows(index);
-					sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
-					sqlFirewallServer.getUpdateH2DBService().
-							submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
-					if (LOGGER.isDebugEnabled()){
-						LOGGER.debug(sqlRecord.toString());
-					}
-				}
+				updateResultRows(index);
 			}
 		}
 	}
@@ -437,28 +402,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			/**
 			 * select --- > 更新rows
 			 */
-			SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
-			SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
-			if(sqlRecord != null) {
-				sqlRecord.setResultRows(index);
-				sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
-				sqlFirewallServer.getUpdateH2DBService().
-						submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
-				if (LOGGER.isDebugEnabled()){
-					LOGGER.debug(sqlRecord.toString());
-				}
-			}else {
-				sqlRecord = new SQLRecord(SQLFirewallServer.DEFAULT_TIMEOUT);
-				sqlRecord = sqlRecord.query(rrs.getStatement());
-				sqlRecord.setResultRows(index);
-				sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
-				sqlFirewallServer.getUpdateH2DBService().
-						submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
-
-				if (LOGGER.isDebugEnabled()){
-					LOGGER.debug(sqlRecord.toString());
-				}
-			}
+			updateResultRows(index);
 
 
 			/**
@@ -518,26 +462,10 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 		execCount++;
 		if (execCount == rrs.getNodes().length) {
 			/**
-			 * select 统计SQL执行情况
+			 * select 统计SQL执行情况,影响行数，在结果集输出时候记录
 			 */
 			endTime = System.currentTimeMillis();
-			SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
-			SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
-			if(sqlRecord != null) {
-				sqlRecord.setUser(session.getSource().getUser());
-				sqlRecord.setHost(session.getSource().getHost());
-				sqlRecord.setSchema(session.getSource().getSchema());
-				sqlRecord.setStartTime(startTime);
-				sqlRecord.setEndTime(endTime);
-				sqlRecord.setSqlExecTime(endTime-startTime);
-				sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
-				sqlFirewallServer.getUpdateH2DBService().
-						submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE));
-				LOGGER.info(sqlRecord.toString());
-				if (LOGGER.isDebugEnabled()){
-					LOGGER.debug(sqlRecord.toString());
-				}
-			}
+			sqlRecord(0);
 		}
 		if (fieldsReturned) {
 			return;
@@ -722,6 +650,75 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 	@Override
 	public void requestDataResponse(byte[] data, BackendConnection conn) {
 		LoadDataUtil.requestFileDataResponse(data, conn);
+	}
+
+	/**
+	 * 记录SQL执行情况
+	 * @param rows sql操作影响rows
+	 */
+	public void sqlRecord(long rows){
+		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+		SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
+		if(sqlRecord != null) {
+			sqlRecord.setUser(session.getSource().getUser());
+			sqlRecord.setHost(session.getSource().getHost());
+			sqlRecord.setSchema(session.getSource().getSchema());
+			String tables = null;
+			int size = rrs.getTables().size();
+			for (int i = 0; i <size; i++) {
+				if(i == size-1){
+					tables = rrs.getTables().get(i).toLowerCase();
+				}else {
+					tables = rrs.getTables().get(i).toLowerCase() + ",";
+				}
+			}
+			sqlRecord.setTables(tables);
+			sqlRecord.setStartTime(startTime);
+			sqlRecord.setEndTime(endTime);
+			sqlRecord.setSqlExecTime(endTime-startTime);
+			sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
+			sqlFirewallServer.getUpdateH2DBService().
+					submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE));
+
+			LOGGER.info(sqlRecord.toString());
+
+
+			if (LOGGER.isDebugEnabled()){
+				LOGGER.debug(sqlRecord.toString());
+			}
+		}
+	}
+
+	/**
+	 * 最后更新affectedRows到sqlRecord中
+	 * @param affectedRows sql操作影响rows
+	 */
+	public void updateResultRows(int affectedRows){
+		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+		SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
+
+
+		if(sqlRecord != null) {
+			sqlRecord.setResultRows(affectedRows);
+			sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
+			sqlFirewallServer.getUpdateH2DBService().
+					submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
+			if (LOGGER.isDebugEnabled()){
+				LOGGER.debug(sqlRecord.toString());
+			}
+		}else {
+			sqlRecord = new SQLRecord(SQLFirewallServer.DEFAULT_TIMEOUT);
+			sqlRecord = sqlRecord.query(rrs.getStatement());
+			sqlRecord.setResultRows(affectedRows);
+			sqlFirewallServer.updateSqlRecord(rrs.getStatement(),sqlRecord);
+			sqlFirewallServer.getUpdateH2DBService().
+					submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE_ROW));
+
+			if (LOGGER.isDebugEnabled()){
+				LOGGER.debug(sqlRecord.toString());
+			}
+		}
+
 	}
 
 }

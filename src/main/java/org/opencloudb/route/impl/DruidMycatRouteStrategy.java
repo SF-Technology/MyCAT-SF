@@ -61,21 +61,12 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		 */
 		checkUnSupportedStatement(statement);
 
-
 		DruidParser druidParser = DruidParserFactory.create(schema, statement, visitor);
 		druidParser.parser(schema, rrs, statement, stmt,cachePool,visitor);
 
-
 		DruidShardingParseInfo ctx=  druidParser.getCtx() ;
 
-
-		/**
-		 * SQL 语句拦截
-		 */
-
-		//if(SQLNewInterceptor.interceptSQL(schema,statement,ctx,stmt,sc)){
-		//	return null;
-		//}
+		rrs.setTables(ctx.getTables());
 
 		/**
 		 * DruidParser 解析过程中已完成了路由的直接返回
@@ -113,7 +104,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 			nodes[i] = iterator.next();
 			i++;
 		}		
-		rrs.setNodes(nodes);		
+		rrs.setNodes(nodes);
 
 		return rrs;
 	}

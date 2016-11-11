@@ -10,12 +10,22 @@ package org.opencloudb.monitor;
 public class SQLRecordSub {
 
     private String originalSql;
+    private String user;
     private String host;
+    private String tables;
     private String schema;
     private long resultRows;
     private long exeTimes;
     private long sqlexecTime;
 
+
+    public String getTables() {
+        return tables;
+    }
+
+    public void setTables(String tables) {
+        this.tables = tables;
+    }
 
     public String getOriginalSql() {
         return originalSql;
@@ -65,16 +75,26 @@ public class SQLRecordSub {
         this.sqlexecTime = sqlexecTime;
     }
 
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
 
     @Override
     public String toString() {
         return "SQLRecordSub{" +
                 "originalSql='" + originalSql + '\'' +
+                ", user='" + user + '\'' +
                 ", host='" + host + '\'' +
                 ", schema='" + schema + '\'' +
-                ", resultRows='" + resultRows + '\'' +
-                ", exeTimes='" + exeTimes + '\'' +
-                ", sqlexecTime='" + sqlexecTime + '\'' +
+                ", tables='" + tables + '\'' +
+                ", resultRows=" + resultRows +
+                ", exeTimes=" + exeTimes +
+                ", sqlexecTime=" + sqlexecTime +
                 '}';
     }
+
 }

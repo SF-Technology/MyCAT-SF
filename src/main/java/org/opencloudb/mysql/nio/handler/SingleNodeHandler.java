@@ -292,6 +292,7 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 			/**
 			 *TODO delete & update执行的结束时间
 			 */
+			endTime = System.currentTimeMillis();
 			sqlRecord(ok.affectedRows);
 		}
 	}
@@ -427,6 +428,19 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 			sqlRecord.setUser(session.getSource().getUser());
 			sqlRecord.setHost(session.getSource().getHost());
 			sqlRecord.setSchema(session.getSource().getSchema());
+			String tables = null;
+
+			int size = rrs.getTables().size();
+
+			for (int i = 0; i <size; i++) {
+				if(i == size-1){
+					tables = rrs.getTables().get(i).toLowerCase();
+				}else {
+					tables = rrs.getTables().get(i).toLowerCase() + ",";
+				}
+			}
+
+			sqlRecord.setTables(tables);
 			sqlRecord.setStartTime(startTime);
 			sqlRecord.setEndTime(endTime);
 			sqlRecord.setSqlExecTime(endTime-startTime);
@@ -434,6 +448,8 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 			sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
 			sqlFirewallServer.getUpdateH2DBService().
 					submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord, OP_UPATE));
+
+			LOGGER.info(sqlRecord.toString());
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug(sqlRecord.toString());

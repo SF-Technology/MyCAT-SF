@@ -441,6 +441,7 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 			}
 
 			sqlRecord.setTables(tables);
+			sqlRecord.setSqlType(rrs.getSqlType());
 			sqlRecord.setStartTime(startTime);
 			sqlRecord.setEndTime(endTime);
 			sqlRecord.setSqlExecTime(endTime-startTime);

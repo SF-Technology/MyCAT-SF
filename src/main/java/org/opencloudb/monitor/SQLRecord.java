@@ -27,6 +27,13 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
     private String host = null;
     private String schema = null;
     private String tables = null;
+    /**
+     DELETE = 3;
+     INSERT = 4;
+     SELECT = 7;
+     UPDATE = 11;
+     */
+    private int sqlType = 0;
     private long resultRows= 0L;
     private AtomicLong executionTimes= new AtomicLong(0);
     private long lastAccessedTimestamp= 0L;
@@ -138,6 +145,14 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         this.tables = tables;
     }
 
+    public int getSqlType() {
+        return sqlType;
+    }
+
+    public void setSqlType(int sqlType) {
+        this.sqlType = sqlType;
+    }
+
     @Override
     public String toString() {
         return "SQLRecord{" +
@@ -147,6 +162,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                 ", host='" + host + '\'' +
                 ", schema='" + schema + '\'' +
                 ", tables='" + tables + '\'' +
+                ", sqlType=" + sqlType +
                 ", resultRows=" + resultRows +
                 ", executionTimes=" + executionTimes +
                 ", lastAccessedTimestamp=" + lastAccessedTimestamp +
@@ -211,6 +227,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                     + getHost() + "','"
                     + getSchema() + "','"
                     + getTables() + "',"
+                    + getSqlType() + ","
                     + getResultRows() + ","
                     + getExecutionTimes().get() + ","
                     + getStartTime() + ","

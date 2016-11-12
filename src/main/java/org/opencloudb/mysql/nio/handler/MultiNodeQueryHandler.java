@@ -673,6 +673,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 				}
 			}
 			sqlRecord.setTables(tables);
+			sqlRecord.setSqlType(rrs.getSqlType());
 			sqlRecord.setStartTime(startTime);
 			sqlRecord.setEndTime(endTime);
 			sqlRecord.setSqlExecTime(endTime-startTime);

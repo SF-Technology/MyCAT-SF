@@ -61,12 +61,12 @@ public class ServerQueryHandler implements FrontendQueryHandler {
 		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
 
 		/**
-		 * 记录SQL执行情况
+		 * TODO 记录SQL执行情况
 		 */
 		sqlFirewallServer.AddSQLRecord(sql,null);
 
 		/**
-		 * 使用druid sql wall 模块 做 SQL check，不允许sql执行
+		 * TODO 使用druid sql wall 模块 做 SQL check，不允许sql执行
 		 */
 		SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
 		int enableSQLFirewall = systemConfig.getEnableSQLFirewall();

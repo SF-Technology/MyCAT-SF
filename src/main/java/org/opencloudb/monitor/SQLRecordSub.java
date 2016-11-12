@@ -14,6 +14,7 @@ public class SQLRecordSub {
     private String host;
     private String tables;
     private String schema;
+    private int sqlType;
     private long resultRows;
     private long exeTimes;
     private long sqlexecTime;
@@ -82,6 +83,13 @@ public class SQLRecordSub {
     public void setUser(String user) {
         this.user = user;
     }
+    public int getSqlType() {
+        return sqlType;
+    }
+
+    public void setSqlType(int sqlType) {
+        this.sqlType = sqlType;
+    }
 
     @Override
     public String toString() {
@@ -89,12 +97,12 @@ public class SQLRecordSub {
                 "originalSql='" + originalSql + '\'' +
                 ", user='" + user + '\'' +
                 ", host='" + host + '\'' +
-                ", schema='" + schema + '\'' +
                 ", tables='" + tables + '\'' +
+                ", schema='" + schema + '\'' +
+                ", sqlType=" + sqlType +
                 ", resultRows=" + resultRows +
                 ", exeTimes=" + exeTimes +
                 ", sqlexecTime=" + sqlexecTime +
                 '}';
     }
-
 }

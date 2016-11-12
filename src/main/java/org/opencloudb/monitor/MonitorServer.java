@@ -123,7 +123,9 @@ public class MonitorServer {
         sqlTypeSummaryFactoryExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                String sql = "select original_sql,user,host,schema,tables,result_rows,exe_times,sqlexec_time from t_sqlstat";
+                String sql = "select original_sql,user,host," +
+                             "schema,tables,sqltype" +
+                             ",result_rows,exe_times,sqlexec_time from t_sqlstat";
                 ArrayList<SQLRecordSub> arrayList = bySqlTypeSummaryPeriod(sql);
                 /**
                  * 执行次数
@@ -153,7 +155,7 @@ public class MonitorServer {
                  * */
                 for (int i = 0; i < arrayList.size() ; i++) {
                     SQLRecordSub sqlRecordSub = arrayList.get(i);
-                    String sqlType = sqlRecordSub.getOriginalSql();
+                    int sqlType = sqlRecordSub.getSqlType();
                     String user = sqlRecordSub.getUser();
                     String host = sqlRecordSub.getHost();
                     String schema = sqlRecordSub.getSchema();
@@ -161,7 +163,6 @@ public class MonitorServer {
                 }
             }
         },0,systemConfig.getBySqlTypeSummaryPeriod()/4,TimeUnit.MILLISECONDS);
-
 
 
         topNSummaryPeriodExecutor.scheduleAtFixedRate(new Runnable() {
@@ -174,8 +175,9 @@ public class MonitorServer {
                  */
 
                 String sql = "select original_sql,user,host,schema," +
-                            "tables,result_rows,exe_times,sqlexec_time " +
-                            "from t_sqlstat order by result_rows limit " +  systemConfig.getTopExecuteResultN();
+                             "tables,sqltype,result_rows,exe_times,sqlexec_time " +
+                             "from t_sqlstat order by result_rows limit " +  systemConfig.getTopExecuteResultN();
+
                 ArrayList<SQLRecordSub> topNRowslist = bySqlTypeSummaryPeriod(sql);
 
                 for (int i = 0; i < topNRowslist.size() ; i++) {
@@ -187,7 +189,7 @@ public class MonitorServer {
                  * 内存中维护一个TOPN小根堆，大于N会被淘汰
                  */
                 sql = "select original_sql,user,host," +
-                        "schema,tables,result_rows,exe_times," +
+                        "schema,tables,sqltype,result_rows,exe_times," +
                         "sqlexec_time from t_sqlstat order by sqlexec_time limit " + systemConfig.getTopSqlExecuteTimeN();
 
                 ArrayList<SQLRecordSub> topNExecTimelist = bySqlTypeSummaryPeriod(sql);
@@ -219,10 +221,9 @@ public class MonitorServer {
         };
     }
 
-    /**
+     /**
      * 定期做sql stat 分析汇总入库
      */
-
     public ArrayList<SQLRecordSub> bySqlTypeSummaryPeriod(String sql){
         ArrayList<SQLRecordSub> arrayList = new ArrayList<SQLRecordSub>();
 
@@ -241,9 +242,10 @@ public class MonitorServer {
                 sqlRecord.setHost(rset.getString(3));
                 sqlRecord.setSchema(rset.getString(4));
                 sqlRecord.setTables(rset.getString(5));
-                sqlRecord.setResultRows(rset.getLong(6));
-                sqlRecord.setExeTimes(rset.getLong(7));
-                sqlRecord.setSqlexecTime(rset.getLong(8));
+                sqlRecord.setSqlType(rset.getInt(6));
+                sqlRecord.setResultRows(rset.getLong(7));
+                sqlRecord.setExeTimes(rset.getLong(8));
+                sqlRecord.setSqlexecTime(rset.getLong(9));
                 arrayList.add(sqlRecord);
             }
 

@@ -33,8 +33,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * implement group function select a,count(*),sum(*) from A group by a
@@ -177,7 +179,7 @@ public class RowDataPacketGrouper {
 			return;
 		}
 
-
+		Set<Integer> rmFieldIndexSet = new HashSet<Integer>();
 		for (MergeCol merg : mergCols) {
 			if(merg.mergeType==MergeCol.MERGE_AVG)
 			{
@@ -188,14 +190,20 @@ public class RowDataPacketGrouper {
 				if (result != null)
 				{
 					toRow.fieldValues.set(merg.colMeta.avgSumIndex, result);
-					toRow.fieldValues.remove(merg.colMeta.avgCountIndex) ;
-					toRow.fieldCount=toRow.fieldCount-1;
+					// 当avg列有多个的情况下, 在for循环中remove会导致java.lang.IndexOutOfBoundsException
+//					toRow.fieldValues.remove(merg.colMeta.avgCountIndex) ;
+//					toRow.fieldCount=toRow.fieldCount-1;
+					// 记录需要删除的列的下表索引
+					rmFieldIndexSet.add(merg.colMeta.avgCountIndex);
 				}
 			}
 		}
-
-
-
+		// 删除多余的列
+		for(Integer rmFieldIndex : rmFieldIndexSet) {
+			toRow.fieldValues.remove(rmFieldIndex);
+			toRow.fieldCount = toRow.fieldCount - 1;
+		}
+		
 	}
 
 	private byte[] mertFields(byte[] bs, byte[] bs2, int colType, int mergeType) {

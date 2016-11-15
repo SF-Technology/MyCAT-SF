@@ -25,7 +25,9 @@ import org.opencloudb.net.NIOProcessor;
 import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.response.ShowDataNode;
 import org.opencloudb.server.ServerConnection;
+import org.opencloudb.sqlfw.H2DBManager;
 import org.opencloudb.sqlfw.SQLFirewallServer;
+import org.opencloudb.sqlfw.SQLReporter;
 import org.opencloudb.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +45,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
+import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE;
 
 /**
  * 监控服务，对外提供统统一接口
@@ -105,7 +109,6 @@ public class MonitorServer {
         timer.schedule(doUpateMonitorInfo(),0L,systemConfig.getMonitorUpdatePeriod());
         updataDBInfo();
         updateSystemParam();
-
         /**
          * 定期清理过期的sql record.
          */
@@ -113,6 +116,7 @@ public class MonitorServer {
             @Override
             public void run() {
                 long expiredTime = System.currentTimeMillis()-systemConfig.getSqlInMemDBPeriod();
+                dumpToDiskDb(expiredTime);
                 deleteExpiredSqlStat(expiredTime);
             }
         },0,systemConfig.getSqlInMemDBPeriod()/2,TimeUnit.MILLISECONDS);
@@ -159,8 +163,10 @@ public class MonitorServer {
                     String user = sqlRecordSub.getUser();
                     String host = sqlRecordSub.getHost();
                     String schema = sqlRecordSub.getSchema();
+
                     LOGGER.error("SqlTypeSummaryPeriod  " + sqlRecordSub.toString());
                 }
+
             }
         },0,systemConfig.getBySqlTypeSummaryPeriod()/4,TimeUnit.MILLISECONDS);
 
@@ -168,7 +174,6 @@ public class MonitorServer {
         topNSummaryPeriodExecutor.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-
                 /**
                  * select original_sql,user,host,schema,tables,result_rows,exe_times,sqlexec_time from t_sqlstat order by result_rows limit N;
                  * 内存中维护一个TOPN小根堆，大于N会被淘汰
@@ -197,7 +202,6 @@ public class MonitorServer {
                 for (int i = 0; i < topNExecTimelist.size() ; i++) {
                     LOGGER.error("topNExecTimelist:" + topNRowslist.get(i).toString());
                 }
-
             }
         },0,systemConfig.getTopNSummaryPeriod()/8,TimeUnit.MILLISECONDS);
     }
@@ -234,7 +238,6 @@ public class MonitorServer {
         try {
             stmt = h2DBConn.createStatement();
             rset = stmt.executeQuery(sql);
-
             while (rset.next()){
                 SQLRecordSub sqlRecord = new SQLRecordSub();
                 sqlRecord.setOriginalSql(rset.getString(1));
@@ -248,7 +251,6 @@ public class MonitorServer {
                 sqlRecord.setSqlexecTime(rset.getLong(9));
                 arrayList.add(sqlRecord);
             }
-
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }finally {
@@ -266,6 +268,62 @@ public class MonitorServer {
         return arrayList;
     }
 
+    /**
+     * 定期转存数据到磁盘db中
+     * @param expiredTime
+     */
+    private void dumpToDiskDb(long expiredTime){
+        /**
+         * 内存源数据库连接
+         */
+        final Connection h2DBConnSrc =
+                H2DBMonitorManager.getH2DBMonitorManager().getH2DBMonitorConn();
+
+        Statement stmt = null;
+        ResultSet rset = null;
+        String sql = "select * from t_sqlstat where lastaccess_t <=" +  expiredTime;
+
+        try {
+
+            stmt = h2DBConnSrc.createStatement();
+            rset = stmt.executeQuery(sql);
+
+            while (rset.next()){
+
+                SQLHistoryRecord sqlHistoryRecord = new SQLHistoryRecord();
+                sqlHistoryRecord.setOriginalSQL(rset.getString(1));
+                sqlHistoryRecord.setModifiedSQL(rset.getString(2));
+                sqlHistoryRecord.setUser(rset.getString(3));
+                sqlHistoryRecord.setHost(rset.getString(4));
+                sqlHistoryRecord.setSchema(rset.getString(5));
+                sqlHistoryRecord.setTables(rset.getString(6));
+                sqlHistoryRecord.setSqlType(rset.getInt(7));
+                sqlHistoryRecord.setResultRows(rset.getLong(8));
+                sqlHistoryRecord.getExecutionTimes().set(rset.getLong(9));
+                sqlHistoryRecord.setStartTime(rset.getLong(10));
+                sqlHistoryRecord.setEndTime(rset.getLong(11));
+                sqlHistoryRecord.setSqlExecTime(rset.getLong(12));
+                sqlHistoryRecord.setLastAccessedTimestamp(rset.getLong(13));
+                SQLFirewallServer.getUpdateH2DBService().
+                        submit(new SQLFirewallServer.Task<SQLHistoryRecord>(sqlHistoryRecord,OP_UPATE));
+            }
+
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage());
+        }finally {
+            try {
+                if(stmt !=null){
+                    stmt.close();
+                }
+                if (rset !=null){
+                    rset.close();
+                }
+            } catch (SQLException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+        return;
+    }
 
     /**
      * 定期调用，删除过期的sql record。
@@ -284,12 +342,15 @@ public class MonitorServer {
                 LOGGER.error(e.getMessage());
             } finally {
                 try {
+
                     if (stmt != null) {
                         stmt.close();
                     }
+
                     if (rset != null) {
                         rset.close();
                     }
+
                 } catch (SQLException e) {
                     LOGGER.error(e.getMessage());
                 }

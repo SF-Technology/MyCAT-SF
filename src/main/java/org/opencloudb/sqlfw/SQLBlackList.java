@@ -77,9 +77,8 @@ public class SQLBlackList implements H2DBInterface<SQLBlackList> {
         Statement stmt = null;
         ResultSet rset = null;
 
-
         try {
-            String sql = "select sql_id from sql_blacklist where sql_id = " +getId();
+            String sql = "select sql_id from t_sqlblacklist where sql_id = " +getId();
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
@@ -91,21 +90,16 @@ public class SQLBlackList implements H2DBInterface<SQLBlackList> {
                 isAdd = false;
             }
 
-
         } catch (SQLException e) {
             e.printStackTrace();
         }finally {
-
                try {
-
                    if(stmt !=null){
                     stmt.close();
                    }
-
                    if (rset !=null){
                        rset.close();
                    }
-
                } catch (SQLException e) {
                    e.printStackTrace();
 
@@ -119,9 +113,9 @@ public class SQLBlackList implements H2DBInterface<SQLBlackList> {
         String sql = null;
 
         if(isAdd){
-            sql = "INSERT INTO sql_blacklist VALUES("+getId()+ ",'" + getOriginalSQL() + "')";
+            sql = "INSERT INTO t_sqlblacklist VALUES("+getId()+ ",'" + getOriginalSQL() + "')";
         }else {
-            sql = "UPDATE sql_blacklist SET sql='" +getOriginalSQL() +"' WHERE sql_id = " + getId();
+            sql = "UPDATE t_sqlblacklist SET sql='" +getOriginalSQL() +"' WHERE sql_id = " + getId();
         }
 
         if (LOGGER.isDebugEnabled()) {
@@ -134,16 +128,13 @@ public class SQLBlackList implements H2DBInterface<SQLBlackList> {
         } catch (SQLException e) {
             e.printStackTrace();
         }finally {
-
             try {
                 if(stmt !=null){
                     stmt.close();
                 }
-
                 if (rset !=null){
                     rset.close();
                 }
-
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -173,7 +164,7 @@ public class SQLBlackList implements H2DBInterface<SQLBlackList> {
 
         try {
 
-            String sql  = "DELETE FROM sql_blacklist WHERE sql_id = " + getId();
+            String sql  = "DELETE FROM t_sqlblacklist WHERE sql_id = " + getId();
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);

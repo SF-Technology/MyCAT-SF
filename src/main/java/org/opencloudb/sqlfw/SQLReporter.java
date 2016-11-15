@@ -91,7 +91,7 @@ public class SQLReporter implements H2DBInterface<SQLReporter> {
         ResultSet rset = null;
 
         try {
-            String sql = "select sql,count from sql_reporter where sql = '" + getSql() + "'";
+            String sql = "select sql,count from t_sqlreporter where sql = '" + getSql() + "'";
             stmt = h2DBConn.createStatement();
             rset = stmt.executeQuery(sql);
             if (rset.next()) {
@@ -120,9 +120,9 @@ public class SQLReporter implements H2DBInterface<SQLReporter> {
         String sql = null;
 
         if (isAdd) {
-            sql = "INSERT INTO sql_reporter VALUES('" + getSql() + "','" + getSqlMsg() + "'," + sqlCount +")";
+            sql = "INSERT INTO t_sqlreporter VALUES('" + getSql() + "','" + getSqlMsg() + "'," + sqlCount +")";
         } else {
-            sql = "UPDATE sql_reporter SET count= " + sqlCount + " WHERE sql = '" + getSql() + "'";
+            sql = "UPDATE t_sqlreporter SET count= " + sqlCount + " WHERE sql = '" + getSql() + "'";
         }
 
         if (LOGGER.isDebugEnabled()) {
@@ -169,7 +169,7 @@ public class SQLReporter implements H2DBInterface<SQLReporter> {
         Statement stmt = null;
         ResultSet rset = null;
         try {
-            String sql = "DELETE FROM sql_reporter WHERE sql = '" + getSql() + "'";
+            String sql = "DELETE FROM t_sqlreporter WHERE sql = '" + getSql() + "'";
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
             }

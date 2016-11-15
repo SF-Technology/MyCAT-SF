@@ -72,6 +72,27 @@ public class TableCreateSQL {
             "sqlexec_time BIGINT," +
             "lastaccess_t BIGINT)";
 
+
+    /**
+     * t_sqlrecord
+     */
+    public final static String T_SQLHISTORYRECORD= "CREATE TABLE t_sqlrecord(" +
+            "original_sql VARCHAR(255)," +
+            "modified_sql VARCHAR(255)," +
+            "user VARCHAR(32)," +
+            "host VARCHAR(64)," +
+            "schema VARCHAR(32)," +
+            "tables VARCHAR(32)," +
+            "sqltype INT," +
+            "result_rows BIGINT," +
+            "exe_times BIGINT," +
+            "start_time BIGINT," +
+            "end_time BIGINT," +
+            "sqlexec_time BIGINT," +
+            "lastaccess_t BIGINT PRIMARY KEY)";
+
+
+
     /**
      * t_connection_cli
      */
@@ -91,7 +112,6 @@ public class TableCreateSQL {
             "send_queue BIGINT," +
             "txLevel VARCHAR(32)," +
             "autoCommit VARCHAR(32)" + ")";
-
     /**
      * t_database
      */
@@ -184,4 +204,21 @@ public class TableCreateSQL {
             "var_name VARCHAR(32) PRIMARY KEY," +
             "var_value VARCHAR(32)," +
             "describe VARCHAR(255))";
+
+
+    /**
+     * t_sqlblacklist
+     */
+    public final static String T_SQLBLACKLIST = "CREATE TABLE t_sqlblacklist(" +
+            "sql_id INT auto_increment PRIMARY KEY, " +
+            "sql VARCHAR(255) UNIQUE)";
+
+    /**
+     * t_sqlreporter
+     */
+    public final static String  T_SQLREPORTER = "CREATE TABLE t_sqlreporter(" +
+            "sql VARCHAR(255) PRIMARY KEY, " +
+            "sql_msg VARCHAR(255)," +
+            "count INT);";
+
 }

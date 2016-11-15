@@ -1,5 +1,6 @@
 package org.opencloudb.sqlfw;
 import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.monitor.TableCreateSQL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,9 +19,9 @@ public class H2DBManager {
     private final static Logger LOGGER = LoggerFactory.getLogger(H2DBManager.class);
     private static final String h2dbURI = "jdbc:h2:"+SystemConfig.getHomePath()+"/h2db/db_sqlfw";// H2 database;
     private static final String dbName = "db_sqlfw";
-    private static  final String sqlRecordTableName = "sql_record";
-    private static  final String sqlBackListTableName = "sql_blacklist";
-    private static final String sqlReporterTableName = "sql_reporter";
+    private static  final String sqlRecordTableName = "t_sqlrecord";
+    private static  final String sqlBackListTableName = "t_sqlblacklist";
+    private static final String sqlReporterTableName = "t_sqlreporter";
     private static  final String user = "sa";
     private static  final String key = "";
     private  Connection h2DBConn;
@@ -45,48 +46,44 @@ public class H2DBManager {
             }
             conn = DriverManager.getConnection(h2dbURI, user, key);
 
-            /**
-             * 判断表是否存在，存在就不执行创建了。
-             */
-
-            /**
-             * table:sql_backlist
-             * DROP TABLE IF EXISTS sql_blacklist;
-             * CREATE TABLE sql_blacklist3(sql_id INT auto_increment PRIMARY KEY, sql VARCHAR(255))
-             *
-             * table:sql_reporter
-             * DROP TABLE IF EXISTS sql_reporter;
-             * CREATE TABLE sql_reporter(sql VARCHAR(255) PRIMARY KEY, sql_msg VARCHAR(255),count INT);
-             */
-            String createSqlBlacklist = "CREATE TABLE sql_blacklist(sql_id INT auto_increment PRIMARY KEY, sql VARCHAR(255) UNIQUE)";
-            String createSqlReporter = "CREATE TABLE sql_reporter(sql VARCHAR(255) PRIMARY KEY, sql_msg VARCHAR(255),count INT);";
 
             stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("show tables");
 
 
             if(!rs.next()){
-                stmt.execute(createSqlBlacklist);
-                stmt.execute(createSqlReporter);
+                stmt.execute(TableCreateSQL.T_SQLBLACKLIST);
+                stmt.execute(TableCreateSQL.T_SQLREPORTER);
+                stmt.execute(TableCreateSQL.T_SQLHISTORYRECORD);
             }
 
             rs.close();
             rs.close();
 
-            rs = stmt.executeQuery("select * from sql_blacklist limit 1");
+            rs = stmt.executeQuery("select * from t_sqlblacklist limit 1");
 
             if (!rs.next()){
-                stmt.execute("DROP TABLE IF EXISTS sql_blacklist");
-                stmt.execute(createSqlBlacklist);
+                stmt.execute("DROP TABLE IF EXISTS t_sqlblacklist");
+                stmt.execute(TableCreateSQL.T_SQLBLACKLIST);
             }
 
             rs.close();
-            rs = stmt.executeQuery("select * from sql_reporter limit 1");
+            rs = stmt.executeQuery("select * from t_sqlreporter limit 1");
             if (!rs.next()){
-                stmt.execute("DROP TABLE IF EXISTS sql_reporter");
-                stmt.execute(createSqlReporter);
+                stmt.execute("DROP TABLE IF EXISTS t_sqlreporter");
+                stmt.execute(TableCreateSQL.T_SQLREPORTER);
             }
             rs.close();
+
+            rs = stmt.executeQuery("select * from t_sqlrecord limit 1");
+
+            if (!rs.next()){
+                stmt.execute("DROP TABLE IF EXISTS t_sqlrecord");
+                stmt.execute(TableCreateSQL.T_SQLHISTORYRECORD);
+            }
+
+            rs.close();
+
         }catch (SQLException sqle) {
             LOGGER.error(sqle.getMessage());
         }finally {
@@ -137,8 +134,6 @@ public class H2DBManager {
             }
         }
     }
-
-
     /**
      * 执行H2DB数据库删除操作
      * @param sql

@@ -39,7 +39,8 @@ public class DeleteHandler {
         int affectedRows = 0;
 
         if (sql !=null && (sql.indexOf(H2DBManager.getSqlBackListTableName()) !=-1 ||
-                           sql.indexOf(H2DBManager.getSqlReporterTableName()) !=-1)){
+                           sql.indexOf(H2DBManager.getSqlReporterTableName()) !=-1 ||
+                           sql.indexOf(H2DBManager.getSqlRecordTableName()) !=-1 )){
             dbConn = H2DBManager.getH2DBManager().getH2DBConn();
         }else {
             c.writeErrMessage(ErrorCode.ER_YES,"not support delete op");

@@ -155,8 +155,6 @@ public class SQLHistoryRecord implements H2DBInterface<SQLHistoryRecord> {
                 + getEndTime() + ","
                 + getSqlExecTime() + ","
                 + getLastAccessedTimestamp() + ")";
-
-        LOGGER.error(sql);
         try {
             stmt = h2DBConn.createStatement();
             stmt.executeUpdate(sql);

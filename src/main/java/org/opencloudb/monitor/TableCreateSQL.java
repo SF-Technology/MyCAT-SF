@@ -76,7 +76,7 @@ public class TableCreateSQL {
     /**
      * t_sqlrecord
      */
-    public final static String T_SQLHISTORYRECORD= "CREATE TABLE t_sqlrecord(" +
+    public final static String T_SQLRECORD= "CREATE TABLE t_sqlrecord(" +
             "original_sql VARCHAR(255)," +
             "modified_sql VARCHAR(255)," +
             "user VARCHAR(32)," +
@@ -221,4 +221,51 @@ public class TableCreateSQL {
             "sql_msg VARCHAR(255)," +
             "count INT);";
 
+
+    /**
+     * t_sqlsummary
+     */
+    public final static String  T_SQLSUMMARY = "CREATE TABLE t_sqlsummary(" +
+            "pkey VARCHAR(255) PRIMARY KEY, " +
+            "sql_type VARCHAR(16)," +
+            "user VARCHAR(32)," +
+            "host VARCHAR(32)," +
+            "schema VARCHAR(32)," +
+            "tables VARCHAR(255)," +
+            "exec_count BIGINT," +
+            "exec_time BIGINT," +
+            "exec_rows BIGINT);";
+
+    /**
+     * t_topnrows
+     */
+    public final static String  T_TOPNROWS= "CREATE TABLE t_topnrows(" +
+            "sql VARCHAR(255) PRIMARY KEY, " +
+            "user VARCHAR(32)," +
+            "host VARCHAR(32)," +
+            "schema VARCHAR(32)," +
+            "tables VARCHAR(255)," +
+            "exec_rows BIGINT);";
+
+    /**
+     * t_topntime
+     */
+    public final static String  T_TOPNTIME= "CREATE TABLE t_topntime(" +
+            "sql VARCHAR(255) PRIMARY KEY, " +
+            "user VARCHAR(32)," +
+            "host VARCHAR(32)," +
+            "schema VARCHAR(32)," +
+            "tables VARCHAR(255)," +
+            "exec_time BIGINT);";
+
+    /**
+     * t_topncount
+     */
+    public final static String  T_TOPNCOUNT= "CREATE TABLE t_topncount(" +
+            "sql VARCHAR(255) PRIMARY KEY, " +
+            "user VARCHAR(32)," +
+            "host VARCHAR(32)," +
+            "schema VARCHAR(32)," +
+            "tables VARCHAR(255)," +
+            "exec_count BIGINT);";
 }

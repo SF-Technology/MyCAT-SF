@@ -36,6 +36,19 @@
 		<!--Mycat 系统预留内存,单位为m -->
 		<property name="systemReserveMemorySize">384m</property>
 
+		<!--SQL STAT相关参数配置 -->
+		<!--后台线程定时采集信息入H2DB库 单位ms-->
+		<property name="monitorUpdatePeriod">60000</property>
+		<!--sql stat 在内存驻留的时间 单位ms-->
+		<property name="sqlInMemDBPeriod">60000</property>
+		<!--到当前时间 SQL 执行结果集 TOP N ，sqlInMemDBPeriod/8周期汇聚一次-->
+		<property name="topExecuteResultN">100</property>
+		<!--到当前时间 SQL 执行时间 TOP N ，sqlInMemDBPeriod/8周期汇聚一次-->
+		<property name="topSqlExecuteTimeN">100</property>
+		<!--到当前时间 SQL 执行次数 TOP N ，sqlInMemDBPeriod/8周期汇聚一次-->
+		<property name="topSqlExecuteCountN">100</property>
+		<!--每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位-->
+		<property name="sqlRecordInDiskPeriod">1</property>
 	</system>
 
 	<user name="test">

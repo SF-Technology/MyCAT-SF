@@ -54,8 +54,6 @@ public class MonitorHandler {
         query(sql,c);
     }
 
-
-
     /**
      * 从H2DB中查询用户创建的表
      */

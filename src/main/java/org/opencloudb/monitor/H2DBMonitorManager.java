@@ -129,6 +129,32 @@ public class H2DBMonitorManager {
              */
             createH2dbTable(conn,TableCreateSQL.T_SYSPARAM,"t_sysparam");
 
+            /**
+             * sql summary 信息
+             * table:t_sqlsummary
+             */
+            createH2dbTable(conn,TableCreateSQL.T_SQLSUMMARY,"t_sqlsummary");
+
+
+            /**
+             * topN exec time 信息
+             * table:t_topntime
+             */
+            createH2dbTable(conn,TableCreateSQL.T_TOPNTIME,"t_topntime");
+
+
+            /**
+             * topN exec count 信息
+             * table:t_topncount
+             */
+            createH2dbTable(conn,TableCreateSQL.T_TOPNCOUNT,"t_topncount");
+
+
+            /**
+             * topN exec rows
+             * table:t_topnrows
+             */
+            createH2dbTable(conn,TableCreateSQL.T_TOPNROWS,"t_topnrows");
 
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());

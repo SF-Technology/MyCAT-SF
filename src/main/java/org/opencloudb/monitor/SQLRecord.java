@@ -188,7 +188,6 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
 
         try {
             String sql = "select original_sql,exe_times from t_sqlstat where original_sql = '" + getOriginalSQL().replace("'","") + "'";
-            LOGGER.info("sql === >  " + sql);
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
             }
@@ -197,7 +196,6 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
             if (rset.next()){
                 isAdd = false;
                 exe_times = rset.getLong(2);
-                LOGGER.error("===========>>" + exe_times);
             }
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
@@ -245,9 +243,6 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                                         " WHERE original_sql = '" + getOriginalSQL().replace("'","") + "'";
         }
 
-        LOGGER.error("sql === >  " + sql);
-
-
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("sql === >  " + sql);
         }
@@ -272,7 +267,6 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
                 LOGGER.error(e.getMessage());
             }
         }
-
     }
 
     @Override

@@ -115,7 +115,6 @@ public class ThreadPoolInfo {
 
 
     public void update() {
-
         /**
          * 1.查询是已经存在
          */

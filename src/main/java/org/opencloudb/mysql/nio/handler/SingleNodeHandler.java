@@ -450,8 +450,6 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 			sqlFirewallServer.getUpdateH2DBService().
 					submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord, OP_UPATE));
 
-			LOGGER.info(sqlRecord.toString());
-
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug(sqlRecord.toString());
 			}

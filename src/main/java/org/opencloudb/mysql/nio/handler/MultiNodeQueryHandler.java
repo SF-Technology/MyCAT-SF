@@ -681,9 +681,6 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			sqlFirewallServer.getUpdateH2DBService().
 					submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord,OP_UPATE));
 
-			LOGGER.info(sqlRecord.toString());
-
-
 			if (LOGGER.isDebugEnabled()){
 				LOGGER.debug(sqlRecord.toString());
 			}

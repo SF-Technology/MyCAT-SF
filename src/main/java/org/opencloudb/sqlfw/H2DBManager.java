@@ -54,7 +54,7 @@ public class H2DBManager {
             if(!rs.next()){
                 stmt.execute(TableCreateSQL.T_SQLBLACKLIST);
                 stmt.execute(TableCreateSQL.T_SQLREPORTER);
-                stmt.execute(TableCreateSQL.T_SQLHISTORYRECORD);
+                stmt.execute(TableCreateSQL.T_SQLRECORD);
             }
 
             rs.close();
@@ -79,7 +79,7 @@ public class H2DBManager {
 
             if (!rs.next()){
                 stmt.execute("DROP TABLE IF EXISTS t_sqlrecord");
-                stmt.execute(TableCreateSQL.T_SQLHISTORYRECORD);
+                stmt.execute(TableCreateSQL.T_SQLRECORD);
             }
 
             rs.close();

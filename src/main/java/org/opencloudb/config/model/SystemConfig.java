@@ -59,9 +59,10 @@ public final class SystemConfig {
 	private int backSocketNoDelay = 1; // 1=true
 	public static final int DEFAULT_POOL_SIZE = 128;// 保持后端数据通道的默认最大值
 	public static final long DEFAULT_IDLE_TIMEOUT = 30 * 60 * 1000L;
+	public static final long DEFAULT_DAY_MILLISECONDS = 86400000; // 1*24*60*60*1000;
 	private static final long DEFAULT_PROCESSOR_CHECK_PERIOD = 1 * 1000L;
-	private static final long DEFAULT_MONITOR_UPDATE_PERIOD = 2 * 1000L;
-	private static final long DEFAULT_SQL_INMEMDB_PERIOD = 30 * 1000L;
+	private static final long DEFAULT_MONITOR_UPDATE_PERIOD = 60 * 1000L;
+	private static final long DEFAULT_SQL_INMEMDB_PERIOD = 10 * 1000L;
 	private static final long DEFAULT_DATANODE_IDLE_CHECK_PERIOD = 5 * 60 * 1000L;
 	private static final long DEFAULT_DATANODE_HEARTBEAT_PERIOD = 10 * 1000L;
 	private static final long DEFAULT_CLUSTER_HEARTBEAT_PERIOD = 5 * 1000L;
@@ -283,6 +284,16 @@ public final class SystemConfig {
 	public long topSqlExecuteTimeN;
 
 
+	/**
+	 * 某条SQL执行次数 TOP N
+	 */
+	public long topSqlExecuteCountN;
+
+	/**
+	 * 每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位
+	 */
+	public long sqlRecordInDiskPeriod;
+
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -298,8 +309,7 @@ public final class SystemConfig {
 		this.processors = DEFAULT_PROCESSORS;
 
 		processorBufferChunk = DEFAULT_BUFFER_CHUNK_SIZE;
-		this.processorExecutor = (DEFAULT_PROCESSORS != 1) ? DEFAULT_PROCESSORS * 2
-				: 4;
+		this.processorExecutor = (DEFAULT_PROCESSORS != 1) ? DEFAULT_PROCESSORS * 2 : 4;
 		this.managerExecutor = 2;
 		/**
 		 * 大结果集时 需增大 network buffer pool pages.
@@ -372,12 +382,33 @@ public final class SystemConfig {
         this.limitZeroAllow = false;
 
 		this.monitorUpdatePeriod = DEFAULT_MONITOR_UPDATE_PERIOD;
-		this.sqlInMemDBPeriod = DEFAULT_SQL_INMEMDB_PERIOD;
-		this.bySqlTypeSummaryPeriod = DEFAULT_SQL_INMEMDB_PERIOD;
+
+		this.sqlInMemDBPeriod = 4*DEFAULT_SQL_INMEMDB_PERIOD;
+		this.bySqlTypeSummaryPeriod = 2*DEFAULT_SQL_INMEMDB_PERIOD;
 		this.topNSummaryPeriod = DEFAULT_SQL_INMEMDB_PERIOD;
 		this.topExecuteResultN = 100;
 		this.topSqlExecuteTimeN = 100;
+		this.topSqlExecuteCountN = 100;
+		this.sqlRecordInDiskPeriod = 1; //1 day
 	}
+
+
+	public long getSqlRecordInDiskPeriod() {
+		return sqlRecordInDiskPeriod;
+	}
+
+	public void setSqlRecordInDiskPeriod(long sqlRecordInDiskPeriod) {
+		this.sqlRecordInDiskPeriod = sqlRecordInDiskPeriod;
+	}
+
+	public long getTopSqlExecuteCountN() {
+		return topSqlExecuteCountN;
+	}
+
+	public void setTopSqlExecuteCountN(long topSqlExecuteCountN) {
+		this.topSqlExecuteCountN = topSqlExecuteCountN;
+	}
+
 
 
 	public long getTopExecuteResultN() {

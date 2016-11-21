@@ -40,6 +40,7 @@ public class PrefixComparators {
       // Negative floats compare backwards due to their sign-magnitude representation, so flip
       // all the bits in this case.
       long mask = -(bits >>> 63) | 0x8000000000000000L;
+
       return bits ^ mask;
     }
   }

@@ -38,7 +38,7 @@ public final class MycatStartup {
 
     public static void main(String[] args) {
         //是否启用zk配置，/myid.properties中的loadZk属性决定，默认不启用，从本地xml文件中读取配置
-        ZkConfig.instance().initZk();
+        //ZkConfig.instance().initZk();
 
         try {
             String home = SystemConfig.getHomePath();

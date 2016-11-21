@@ -95,6 +95,7 @@ public class XMLServerLoader {
             Element root = ConfigUtil.getDocument(dtd, xml).getDocumentElement();
             loadSystem(root);
             loadUsers(root);
+            loadSqlWall(root);
             this.cluster = new ClusterConfig(root, system.getServerPort());
             loadQuarantine(root);
         } catch (ConfigException e) {
@@ -240,6 +241,17 @@ public class XMLServerLoader {
             } else {
                 throw new ConfigException("The specified MySQL Version (" + system.getFakeMySQLVersion()
                         + ") is not valid.");
+            }
+        }
+    }
+
+    private void loadSqlWall(Element root) throws IllegalAccessException, InvocationTargetException{
+        NodeList list = root.getElementsByTagName("sqlwall");
+        for (int i = 0, n = list.getLength(); i < n; i++) {
+            Node node = list.item(i);
+            if (node instanceof Element) {
+                Map<String, Object> props = ConfigUtil.loadElements((Element) node);
+                ParameterMapping.mapping(system, props);
             }
         }
     }

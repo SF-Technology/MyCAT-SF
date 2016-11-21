@@ -9,6 +9,19 @@
 	under the License. -->
 <!DOCTYPE mycat:rule SYSTEM "rule.dtd">
 <mycat:rule xmlns:mycat="http://org.opencloudb/">
+	<tableRule name="hash-mod-4_id">
+		<rule>
+			<columns>id</columns>
+			<algorithm>hash-mod-4</algorithm>
+		</rule>
+	</tableRule>
+
+	<tableRule name="mod-4_id">
+		<rule>
+			<columns>id</columns>
+			<algorithm>mod-4</algorithm>
+		</rule>
+	</tableRule>
 	<tableRule name="rule1">
 		<rule>
 			<columns>id</columns>
@@ -127,5 +140,14 @@
 	
 	<function name="jump-consistent-hash" class="org.opencloudb.route.function.PartitionByJumpConsistentHash">
 		<property name="totalBuckets">3</property>
+	</function>
+	<function name="hash-mod-4" class="org.opencloudb.route.function.PartitionByHashMod">
+		<!-- how many data nodes -->
+		<property name="count">4</property>
+	</function>
+
+	<function name="mod-4" class="org.opencloudb.route.function.PartitionByMod">
+		<!-- how many data nodes -->
+		<property name="count">4</property>
 	</function>
 </mycat:rule>

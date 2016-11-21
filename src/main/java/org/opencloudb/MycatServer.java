@@ -49,6 +49,7 @@ import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.interceptor.SQLInterceptor;
 import org.opencloudb.manager.ManagerConnectionFactory;
 import org.opencloudb.memory.MyCatMemory;
+import org.opencloudb.monitor.MonitorServer;
 import org.opencloudb.net.AIOAcceptor;
 import org.opencloudb.net.AIOConnector;
 import org.opencloudb.net.NIOAcceptor;
@@ -62,6 +63,7 @@ import org.opencloudb.route.MyCATSequnceProcessor;
 import org.opencloudb.route.RouteService;
 import org.opencloudb.server.ServerConnectionFactory;
 import org.opencloudb.sqlengine.SQLQueryResultListener;
+import org.opencloudb.sqlfw.SQLFirewallServer;
 import org.opencloudb.statistic.SQLRecorder;
 import org.opencloudb.util.ExecutorUtil;
 import org.opencloudb.util.NameableExecutor;
@@ -79,6 +81,8 @@ public class MycatServer {
 	private static final Logger LOGGER = Logger.getLogger("MycatServer");
 	private final RouteService routerService;
 	private final CacheService cacheService;
+	private SQLFirewallServer sqlFirewallServer;
+	private MonitorServer monitorServer;
 	private Properties dnIndexProperties;
 	private AsynchronousChannelGroup[] asyncChannelGroups;
 	private volatile int channelIndex = 0;
@@ -107,6 +111,7 @@ public class MycatServer {
 	private SocketConnector connector;
 	private NameableExecutor businessExecutor;
 	private NameableExecutor timerExecutor;
+	private NameableExecutor updateMonitorInfoExecutor;
 	private ListeningExecutorService listeningExecutorService;
 
 	public MycatServer() {
@@ -138,6 +143,14 @@ public class MycatServer {
 
 	public NameableExecutor getTimerExecutor() {
 		return timerExecutor;
+	}
+
+	public NameableExecutor getUpdateMonitorInfoExecutor() {
+		return updateMonitorInfoExecutor;
+	}
+
+	public void setUpdateMonitorInfoExecutor(NameableExecutor updateMonitorInfoExecutor) {
+		this.updateMonitorInfoExecutor = updateMonitorInfoExecutor;
 	}
 
 	public DynaClassLoader getCatletClassLoader() {
@@ -255,6 +268,7 @@ public class MycatServer {
 		businessExecutor = ExecutorUtil.create("BusinessExecutor",
 				threadPoolSize);
 		timerExecutor = ExecutorUtil.create("Timer", system.getTimerExecutor());
+		updateMonitorInfoExecutor = ExecutorUtil.create("UpdateMonitorInfo",1);
 		listeningExecutorService = MoreExecutors.listeningDecorator(businessExecutor);
 
 		for (int i = 0; i < processors.length; i++) {
@@ -319,6 +333,8 @@ public class MycatServer {
 		LOGGER.info(server.getName() + " is started and listening on "
 				+ server.getPort());
 		LOGGER.info("===============================================");
+		sqlFirewallServer = new SQLFirewallServer();
+		monitorServer = new MonitorServer(Thread.currentThread().getId(),timer,updateMonitorInfoExecutor);
 		// init datahost
 		Map<String, PhysicalDBPool> dataHosts = config.getDataHosts();
 		LOGGER.info("Initialize dataHost ...");
@@ -433,6 +449,12 @@ public class MycatServer {
 		return cacheService;
 	}
 
+	public SQLFirewallServer getSqlFirewallServer() {
+		return sqlFirewallServer;
+	}
+	public MonitorServer getMonitorServer() {
+		return monitorServer;
+	}
 	public NameableExecutor getBusinessExecutor() {
 		return businessExecutor;
 	}

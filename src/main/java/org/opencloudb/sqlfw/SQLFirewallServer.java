@@ -167,7 +167,7 @@ public class SQLFirewallServer {
         Statement stmt = null;
         ResultSet rset = null;
         try {
-            String sql = "select * from t_sqlblacklist";
+            String sql = "select * from sql_blacklist";
             stmt = h2DBConn.createStatement();
             rset = stmt.executeQuery(sql);
             while (rset.next()){
@@ -455,7 +455,7 @@ public class SQLFirewallServer {
         ResultSet rset = null;
         try {
             stmt = H2DBManager.getH2DBManager().getH2DBConn().createStatement();
-            rset = stmt.executeQuery("select max(sql_id) from t_sqlblacklist");
+            rset = stmt.executeQuery("select max(sql_id) from sql_blacklist");
             if (rset.next()){
                 id = rset.getInt(1);
             }

@@ -24,7 +24,8 @@ public class TableCreateSQL {
      * T_THREADPOOL
      */
 
-    public final static String T_THREADPOOL = "CREATE TABLE t_threadpool(thread_name VARCHAR(255) PRIMARY KEY," +
+    public final static String T_THREADPOOL = "CREATE TABLE t_threadpool(" +
+            "thread_name VARCHAR(255) PRIMARY KEY," +
             "pool_size BIGINT," +
             "active_count BIGINT," +
             "task_queue_size BIGINT," +
@@ -207,16 +208,16 @@ public class TableCreateSQL {
 
 
     /**
-     * t_sqlblacklist
+     * sql_blacklist
      */
-    public final static String T_SQLBLACKLIST = "CREATE TABLE t_sqlblacklist(" +
+    public final static String T_SQLBLACKLIST = "CREATE TABLE sql_blacklist(" +
             "sql_id INT auto_increment PRIMARY KEY, " +
             "sql VARCHAR(255) UNIQUE)";
 
     /**
-     * t_sqlreporter
+     * sql_reporter
      */
-    public final static String  T_SQLREPORTER = "CREATE TABLE t_sqlreporter(" +
+    public final static String  T_SQLREPORTER = "CREATE TABLE sql_reporter(" +
             "sql VARCHAR(255) PRIMARY KEY, " +
             "sql_msg VARCHAR(255)," +
             "count INT);";

@@ -84,7 +84,7 @@ public class ShowInterceptSQL {
 
         try {
 
-            String sql = "select * from t_sqlreporter";
+            String sql = "select * from sql_reporter";
             stmt = h2DBConn.createStatement();
             rset = stmt.executeQuery(sql);
 

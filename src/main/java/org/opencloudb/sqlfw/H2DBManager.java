@@ -20,8 +20,8 @@ public class H2DBManager {
     private static final String h2dbURI = "jdbc:h2:"+SystemConfig.getHomePath()+"/h2db/db_sqlfw";// H2 database;
     private static final String dbName = "db_sqlfw";
     private static  final String sqlRecordTableName = "t_sqlrecord";
-    private static  final String sqlBackListTableName = "t_sqlblacklist";
-    private static final String sqlReporterTableName = "t_sqlreporter";
+    private static  final String sqlBackListTableName = "sql_blacklist";
+    private static final String sqlReporterTableName = "sql_reporter";
     private static  final String user = "sa";
     private static  final String key = "";
     private  Connection h2DBConn;
@@ -60,17 +60,17 @@ public class H2DBManager {
             rs.close();
             rs.close();
 
-            rs = stmt.executeQuery("select * from t_sqlblacklist limit 1");
+            rs = stmt.executeQuery("select * from sql_blacklist limit 1");
 
             if (!rs.next()){
-                stmt.execute("DROP TABLE IF EXISTS t_sqlblacklist");
+                stmt.execute("DROP TABLE IF EXISTS sql_blacklist");
                 stmt.execute(TableCreateSQL.T_SQLBLACKLIST);
             }
 
             rs.close();
-            rs = stmt.executeQuery("select * from t_sqlreporter limit 1");
+            rs = stmt.executeQuery("select * from sql_reporter limit 1");
             if (!rs.next()){
-                stmt.execute("DROP TABLE IF EXISTS t_sqlreporter");
+                stmt.execute("DROP TABLE IF EXISTS sql_reporter");
                 stmt.execute(TableCreateSQL.T_SQLREPORTER);
             }
             rs.close();

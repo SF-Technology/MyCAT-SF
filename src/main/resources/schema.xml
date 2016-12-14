@@ -2,40 +2,20 @@
 <!DOCTYPE mycat:schema SYSTEM "schema.dtd">
 <mycat:schema xmlns:mycat="http://org.opencloudb/" >
 
-	<schema name="TESTDB" checkSQLschema="false" sqlMaxLimit="100">
-		<!-- auto sharding by id (long) -->
-		<table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long" />
-
-		<!-- global table is auto cloned to all defined data nodes ,so can join 
-			with any table whose sharding node is in the same data node -->
-		<table name="company" primaryKey="ID" dataNode="dn3,dn2,dn1" rule="mod-long"/>
-		<table name="goods" primaryKey="ID" type="global" dataNode="dn1,dn2" />
-		<!-- random sharding using mod sharind rule -->
-		<table name="hotnews" primaryKey="ID" dataNode="dn1,dn2,dn3"
-			rule="mod-long" />
-		<!-- <table name="dual" primaryKey="ID" dataNode="dnx,dnoracle2" type="global" 
-			needAddLimit="false"/> <table name="worker" primaryKey="ID" dataNode="jdbc_dn1,jdbc_dn2,jdbc_dn3" 
-			rule="mod-long" /> -->
-		<table name="employee" primaryKey="ID" dataNode="dn1,dn2"
-			rule="sharding-by-intfile" />
-		<table name="customer" primaryKey="ID" dataNode="dn1,dn2"
-			rule="sharding-by-intfile">
-			<childTable name="orders" primaryKey="ID" joinKey="customer_id"
-				parentKey="id">
-				<childTable name="order_items" joinKey="order_id"
-					parentKey="id" />
-			</childTable>
-			<childTable name="customer_addr" primaryKey="ID" joinKey="customer_id"
-				parentKey="id" />
+	<schema name="testdb" checkSQLschema="false" sqlMaxLimit="10000">
+		<table name="customer" primaryKey="id" dataNode="testdb$1-4" rule="mod-4_id">
+			<childTable name="orderlist" primaryKey="id" joinKey="customer_id" parentKey="id" />
 		</table>
-		<!-- <table name="oc_call" primaryKey="ID" dataNode="dn1$0-743" rule="latest-month-calldate" 
-			/> -->
-	</schema>
-	<!-- 配置获取后端mysql info schema信息>
+		
+		<table name="product" primaryKey="id" dataNode="testdb$1-4" rule="hash-mod-4_id" />
+		<table name="product1" primaryKey="id" dataNode="testdb1" />
+		<table name="company" type="global" primaryKey="id" dataNode="testdb$1-4" />
+		<table name="company_address" type="global" primaryKey="id" dataNode="testdb$1-4" />
+		
+		<table name="t_yace" primaryKey="id" dataNode="testdb$1-4" rule="hash-mod-4_id" />
+		<table name="ddltest" primaryKey="id" dataNode="testdb$1-4" rule="hash-mod-4_id" />
+		<table name="ext_select_test1" primaryKey="id" dataNode="testdb$1-4" rule="mod-4_id" />
 	
-	<schema name="information_schema" checkSQLschema="false" sqlMaxLimit="10000">
-		<table name="COLUMNS"    type="global" dataNode="info_schema1,info_schema2,info_schema3,info_schema4"></table>
-		<table name="STATISTICS" type="global" dataNode="info_schema1,info_schema2,info_schema3,info_schema4"></table>
 	</schema>
 	
 </mycat:schema>

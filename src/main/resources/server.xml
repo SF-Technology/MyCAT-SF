@@ -10,6 +10,7 @@
 <!DOCTYPE mycat:server SYSTEM "server.dtd">
 <mycat:server xmlns:mycat="http://org.opencloudb/">
 	<system>
+	<!-- <property name="sqlExecuteTimeout">3</property> -->
 	<property name="defaultSqlParser">druidparser</property>
 		<property name="handleDistributedTransactions">2</property>
 	<property name="useSqlStat">0</property> <!-- 0表示不开启sqlstat功能,该功能很影响tps,需要优化,默认先关闭,1表示开启 -->
@@ -33,6 +34,7 @@
 			<property name="idleTimeout">300000</property> <property name="bindIp">0.0.0.0</property> 
 			<property name="frontWriteQueueSize">4096</property> <property name="processors">32</property> -->
 	<!--是否开启结果集流式输出,0不开启，1开启-->
+	
         <property name="useStreamOutput">0</property>
 
 	<!--off heap for merge/order/group/limit -->
@@ -44,16 +46,12 @@
 	<!--Mycat 系统预留内存,单位为m -->
 		<property name="systemReserveMemorySize">384m</property>
 	</system>
+	
 	<user name="test">
 		<property name="password">test</property>
-		<property name="schemas">TESTDB</property>
+		<property name="schemas">testdb</property>
 	</user>
-
-	<user name="user">
-		<property name="password">user</property>
-		<property name="schemas">TESTDB</property>
-		<property name="readOnly">true</property>
-	</user>
+	
 	<!-- 
 	<quarantine> 
 	   <whitehost>

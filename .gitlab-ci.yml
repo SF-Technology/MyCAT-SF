@@ -20,7 +20,7 @@ before_script:
 test:
   script:
     # Execute your project's tests
-    #- mvn clean install
     #- mvn surefire-report:report
+    - mvn clean install
     - ls -la
     - cp /home/gitlab-runner/builds/4e269bda/0/root/sf-mycat/target/Mycat-server-1.5.2-RELEASE-*-linux.tar.gz /home/gitlab-runner/mycat

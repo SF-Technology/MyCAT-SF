@@ -23,3 +23,4 @@ test:
     - mvn clean install
     - mvn surefire-report:report
     - ls -la
+    - cp ./target/ Mycat-server-1.5.2-RELEASE-*-linux.tar.gz /opt/mycat

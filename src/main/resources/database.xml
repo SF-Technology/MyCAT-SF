@@ -6,13 +6,11 @@
 	<dataNode name="testdb2" dataHost="localhost" database="testdb2" />
 	<dataNode name="testdb3" dataHost="localhost" database="testdb3" />
 	<dataNode name="testdb4" dataHost="localhost" database="testdb4" />
-
-	<!-- 配置获取后端mysql info schema信息 -->
-	<dataNode name="info_schema1" dataHost="localhost" database="information_schema" />
-
+	
 	<dataHost name="localhost" maxCon="2000" minCon="10" balance="0" dbType="mysql" dbDriver="native" switchType="-1">
 		<heartbeat>select user()</heartbeat>
-		<writeHost host="hostM1" url="localhost:3306" user="root" password="mysql"></writeHost>
+		<writeHost host="hostM1" url="localhost:3306" user="root" password="123456">
+		</writeHost>
 	</dataHost>
 
 </mycat:database>

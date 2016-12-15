@@ -22,7 +22,6 @@
  *
  */
 package org.opencloudb.config.model;
-
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Set;

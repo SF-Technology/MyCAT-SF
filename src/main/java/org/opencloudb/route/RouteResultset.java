@@ -31,9 +31,7 @@ import org.opencloudb.parser.util.PageSQLUtil;
 import org.opencloudb.util.FormatUtil;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author mycat
@@ -70,6 +68,13 @@ public final class RouteResultset implements Serializable {
 
     private Procedure procedure;
 
+
+
+    /**
+     * 方便统计相关表的DML情况
+     */
+    private List<String> tables = new ArrayList<String>();
+
     public Procedure getProcedure()
     {
         return procedure;
@@ -105,6 +110,15 @@ public final class RouteResultset implements Serializable {
     public void setGlobalTable(boolean globalTableFlag) {
         this.globalTableFlag = globalTableFlag;
     }
+
+    public List<String> getTables() {
+        return tables;
+    }
+
+    public void setTables(List<String> tables) {
+        this.tables = tables;
+    }
+
 
     public RouteResultset(String stmt, int sqlType) {
         this.statement = stmt;

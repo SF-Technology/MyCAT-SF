@@ -131,6 +131,7 @@ public final class ShowThreadPool {
 		List<NameableExecutor> list = new LinkedList<NameableExecutor>();
 		MycatServer server = MycatServer.getInstance();
 		list.add(server.getTimerExecutor());
+		list.add(server.getUpdateMonitorInfoExecutor());
 		// list.add(server.getAioExecutor());
 		list.add(server.getBusinessExecutor());
 		// for (NIOProcessor pros : server.getProcessors()) {

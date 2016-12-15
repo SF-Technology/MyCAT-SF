@@ -46,6 +46,9 @@ public final class ManagerParse {
 	public static final int CONFIGFILE = 12;
 	public static final int LOGFILE = 13;
 	public static final int CHECK = 14;
+	public static final int UPDATE = 15;
+	public static final int INSERT= 16;
+	public static final int DELETE= 17;
 
 	public static int parse(String stmt) {
 		for (int i = 0; i < stmt.length(); i++) {
@@ -77,6 +80,15 @@ public final class ManagerParse {
 			case 'R':
 			case 'r':
 				return rCheck(stmt, i);
+			case 'u':
+			case 'U':
+				return uCheck(stmt, i);
+			case 'i':
+			case 'I':
+				return iCheck(stmt, i);
+			case 'D':
+			case 'd':
+				return dCheck(stmt, i);
 			default:
 				return OTHER;
 			}
@@ -84,6 +96,81 @@ public final class ManagerParse {
 		return OTHER;
 	}
 
+
+
+
+	/**
+	 * SQL update
+	 * @param stmt
+	 * @param offset
+	 * @return
+	 */
+	private static int dCheck(String stmt, int offset) {
+		if (stmt.length() > offset + "ELETE ".length()) {
+			char c1 = stmt.charAt(++offset);
+			char c2 = stmt.charAt(++offset);
+			char c3 = stmt.charAt(++offset);
+			char c4 = stmt.charAt(++offset);
+			char c5 = stmt.charAt(++offset);
+			if ((c1 == 'E' || c1 == 'e')
+					&& (c2 == 'L' || c2 == 'l')
+					&& (c3 == 'E' || c3 == 'e')
+					&& (c4 == 'T' || c4 == 't')
+					&& (c5 == 'E' || c5 == 'e')) {
+				return (offset << 8) | DELETE;
+			}
+		}
+		return OTHER;
+	}
+
+	/**
+	 * SQL update
+	 * @param stmt
+	 * @param offset
+	 * @return
+	 */
+	private static int uCheck(String stmt, int offset) {
+		if (stmt.length() > offset + "PDATE ".length()) {
+			char c1 = stmt.charAt(++offset);
+			char c2 = stmt.charAt(++offset);
+			char c3 = stmt.charAt(++offset);
+			char c4 = stmt.charAt(++offset);
+			char c5 = stmt.charAt(++offset);
+			if ((c1 == 'P' || c1 == 'p')
+					&& (c2 == 'D' || c2 == 'd')
+					&& (c3 == 'A' || c3 == 'a')
+					&& (c4 == 'T' || c4 == 't')
+					&& (c5 == 'E' || c5 == 'e')) {
+				return (offset << 8) | UPDATE;
+			}
+		}
+		return OTHER;
+	}
+
+	/**
+	 * SQL insert
+	 * @param stmt
+	 * @param offset
+	 * @return
+	 */
+
+	private static int iCheck(String stmt, int offset) {
+		if (stmt.length() > offset + "NSERT ".length()) {
+			char c1 = stmt.charAt(++offset);
+			char c2 = stmt.charAt(++offset);
+			char c3 = stmt.charAt(++offset);
+			char c4 = stmt.charAt(++offset);
+			char c5 = stmt.charAt(++offset);
+			if ((c1 == 'N' || c1 == 'n')
+					&& (c2 == 'S' || c2 == 's')
+					&& (c3 == 'E' || c3 == 'e')
+					&& (c4 == 'R' || c4 == 'r')
+					&& (c5 == 'T' || c5 == 't')) {
+				return (offset << 8) | INSERT;
+			}
+		}
+		return OTHER;
+	}
 	// show LOG check
 	private static int lCheck(String stmt, int offset) {
 		String thePart = stmt.substring(offset).toUpperCase();

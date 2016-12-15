@@ -117,7 +117,6 @@ public final class ShowServer {
 		EOFPacket lastEof = new EOFPacket();
 		lastEof.packetId = ++packetId;
 		buffer = lastEof.write(buffer, c, true);
-
 		// write buffer
 		c.write(buffer);
 	}

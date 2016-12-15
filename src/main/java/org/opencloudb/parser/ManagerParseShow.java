@@ -74,6 +74,10 @@ public final class ManagerParseShow {
 
     public static final int WHITE_HOST=42;
     public static final int WHITE_HOST_SET=43;
+    public static final int SQL_BACKLIST=44;
+    public static final int SQL_BACKLIST_SET=45;
+    public static final int SQL_BACKLIST_REMOVE=46;
+    public static final int SQL_INTERCEPT_REPORTER=47;
     
     public static int parse(String stmt, int offset) {
         int i = offset;
@@ -1219,6 +1223,12 @@ public final class ManagerParseShow {
             case 'C':
             case 'c':
             	return show2SqlCCheck(stmt, offset);
+            case 'B':
+            case 'b':
+                return show2SqlBCheck(stmt, offset);
+            case 'I':
+            case 'i':
+                return show2SqlInterceptCheck(stmt, offset);
             default:
                 return OTHER;
             }
@@ -1343,6 +1353,148 @@ public final class ManagerParseShow {
         return OTHER;
     }
     
+    //SHOW @@sql.intercept
+    static int show2SqlInterceptCheck(String stmt, int offset){
+        if (stmt.length() > offset + "NTERCEPT".length()) {
+            char c1 = stmt.charAt(++offset);
+            char c2 = stmt.charAt(++offset);
+            char c3 = stmt.charAt(++offset);
+            char c4 = stmt.charAt(++offset);
+            char c5 = stmt.charAt(++offset);
+            char c6 = stmt.charAt(++offset);
+            char c7 = stmt.charAt(++offset);
+            char c8 = stmt.charAt(++offset);
+
+            if ( (c1 == 'N' || c1 == 'n') &&
+                    (c2 == 'T' || c2 == 't') &&
+                    (c3 == 'E' || c3 == 'e') &&
+                    (c4 == 'R' || c4 == 'r') &&
+                    (c5 == 'C' || c5 == 'c') &&
+                    (c6 == 'E' || c6 == 'e') &&
+                    (c7 == 'P' || c7 == 'p') &&
+                    (c8 == 'T' || c8 == 't') ) {
+                if (stmt.length() > ++offset && stmt.charAt(offset) == '.') {
+                    switch (stmt.charAt(++offset)) {
+                        case 'R':
+                        case 'r':
+                            return show2SQLReporterCheck(stmt,offset);
+                        default:
+                            return OTHER;
+                    }
+                }
+                return OTHER;
+            }
+        }
+        return OTHER;
+    }
+
+
+    //SHOW @@sql.intercept.reporter
+    static int show2SQLReporterCheck(String stmt, int offset) {
+        if (stmt.length() > offset + "eporter".length()) {
+            char c1 = stmt.charAt(++offset);
+            char c2 = stmt.charAt(++offset);
+            char c3 = stmt.charAt(++offset);
+            char c4 = stmt.charAt(++offset);
+            char c5 = stmt.charAt(++offset);
+            char c6 = stmt.charAt(++offset);
+            char c7 = stmt.charAt(++offset);
+
+            if ( (c1 == 'E' || c1 == 'e') &&
+                    (c2 == 'P' || c2 == 'p') &&
+                    (c3 == 'O' || c3 == 'o') &&
+                    (c4 == 'R' || c4 == 'r') &&
+                    (c5 == 'T' || c5 == 't') &&
+                    (c6 == 'E' || c6 == 'e') &&
+                    (c7 == 'R' || c7 == 'r')) {
+                    return SQL_INTERCEPT_REPORTER;
+            }
+        }
+        return OTHER;
+    }
+
+    //SHOW @@sql.blacklist
+    static int show2SqlBCheck(String stmt, int offset){
+
+        if (stmt.length() > offset + "LACKLIST".length()) {
+
+            char c1 = stmt.charAt(++offset);
+            char c2 = stmt.charAt(++offset);
+            char c3 = stmt.charAt(++offset);
+            char c4 = stmt.charAt(++offset);
+            char c5 = stmt.charAt(++offset);
+            char c6 = stmt.charAt(++offset);
+            char c7 = stmt.charAt(++offset);
+            char c8 = stmt.charAt(++offset);
+
+            if ( (c1 == 'L' || c1 == 'l') &&
+                    (c2 == 'A' || c2 == 'a') &&
+                    (c3 == 'C' || c3 == 'c') &&
+                    (c4 == 'K' || c4 == 'k') &&
+                    (c5 == 'L' || c5 == 'l') &&
+                    (c6 == 'I' || c6 == 'i') &&
+                    (c7 == 'S' || c7 == 's') &&
+                    (c8 == 'T' || c8 == 't')) {
+                if (stmt.length() > ++offset && stmt.charAt(offset) == '.') {
+                    switch (stmt.charAt(++offset)) {
+                        case 'S':
+                        case 's':
+                            return show2SQLSetBlackListCheck(stmt,offset);
+                        case 'R':
+                        case 'r':
+                            return show2SQLRemoveBlackListCheck(stmt,offset);
+                        default:
+                            return OTHER;
+                    }
+                }
+                return SQL_BACKLIST;
+            }
+        }
+        return OTHER;
+    }
+
+    //SHOW @@sql.blacklist.set=?
+    static int show2SQLSetBlackListCheck(String stmt, int offset) {
+        if (stmt.length() > offset + "et".length()) {
+            char c1 = stmt.charAt(++offset);
+            char c2 = stmt.charAt(++offset);
+
+            if ((c1 == 'E' || c1 == 'e') &&
+                    (c2 == 'T' || c2 == 't')) {
+                if (stmt.length() > ++offset && stmt.charAt(offset) == '=') {
+                    return SQL_BACKLIST_SET;
+                }
+
+            }
+        }
+
+        return OTHER;
+    }
+
+    //SHOW @@sql.blacklist.remove=?
+    static int show2SQLRemoveBlackListCheck(String stmt, int offset) {
+        if (stmt.length() > offset + "emove".length()) {
+
+            char c2 = stmt.charAt(++offset);
+            char c3 = stmt.charAt(++offset);
+            char c4 = stmt.charAt(++offset);
+            char c5 = stmt.charAt(++offset);
+            char c6 = stmt.charAt(++offset);
+
+            if ((c2 == 'E' || c2 == 'e') &&
+                    (c3 == 'M' || c3 == 'm') &&
+                    (c4 == 'O' || c4 == 'o') &&
+                    (c5 == 'V' || c5 == 'v') &&
+                    (c6 == 'E' || c6 == 'e')) {
+                if (stmt.length() > ++offset && stmt.charAt(offset) == '=') {
+                    return SQL_BACKLIST_REMOVE;
+                }
+                return OTHER;
+            }
+        }
+
+        return OTHER;
+    }
     // SHOW @@sql.condition
     static int show2SqlCCheck(String stmt, int offset) {
     	

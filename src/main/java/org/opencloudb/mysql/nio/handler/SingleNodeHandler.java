@@ -49,11 +49,16 @@ import org.opencloudb.server.parser.ServerParseShow;
 import org.opencloudb.server.response.ShowFullTables;
 import org.opencloudb.server.response.ShowTables;
 
+import org.opencloudb.sqlfw.SQLBlackList;
+import org.opencloudb.sqlfw.SQLFirewallServer;
+import org.opencloudb.monitor.SQLRecord;
 import org.opencloudb.stat.QueryResult;
 import org.opencloudb.stat.QueryResultDispatcher;
 
 import org.opencloudb.util.StringUtil;
 
+import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE;
+import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE_ROW;
 /**
  * @author mycat
  */
@@ -69,11 +74,13 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 	private volatile ByteBuffer buffer;
 	private volatile boolean isRunning;
 	private Runnable terminateCallBack;
-	private long startTime;
+	private long startTime = 0L;
+	private long endTime = 0L;
 
     private volatile boolean isDefaultNodeShowTable;
     private volatile boolean isDefaultNodeShowFullTable;
     private  Set<String> shardingTablesSet;
+	private volatile long rows = 0;
 	
 	public SingleNodeHandler(RouteResultset rrs, NonBlockingSession session) {
 		this.rrs = rrs;
@@ -270,15 +277,16 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 			recycleResources();
 
             if(isCanClose2Client)
-            {  source.setLastInsertId(ok.insertId);
+            {
+            	source.setLastInsertId(ok.insertId);
                 ok.write(source);
             }
-			//TODO: add by zhuam
-			//查询结果派发
-			QueryResult queryResult = new QueryResult(session.getSource().getUser(), session.getSource().getHost(),
-					rrs.getSqlType(), rrs.getStatement(), startTime, System.currentTimeMillis());
-			QueryResultDispatcher.dispatchQuery( queryResult );
- 
+
+			/**
+			 *TODO delete & update执行的结束时间
+			 */
+			endTime = System.currentTimeMillis();
+			sqlRecord(ok.affectedRows);
 		}
 	}
 
@@ -286,13 +294,15 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 	@Override
 	public void rowEofResponse(byte[] eof, BackendConnection conn) {
 		ServerConnection source = session.getSource();
-		conn.recordSql(source.getHost(), source.getSchema(),
-                node.getStatement());
+		/**
+		 * TODO select 统计SQL执行次数
+		 */
+		sqlRecord(rows);
+		/**conn.recordSql(source.getHost(), source.getSchema(),node.getStatement());**/
         // 判断是调用存储过程的话不能在这里释放链接
 		if (!rrs.isCallStatement()||(rrs.isCallStatement()&&rrs.getProcedure().isResultSimpleValue()))
         {
-			session.releaseConnectionIfSafe(conn, LOGGER.isDebugEnabled(),
-					false);
+			session.releaseConnectionIfSafe(conn,LOGGER.isDebugEnabled(),false);
 			endRunning();
 		}
 
@@ -315,15 +325,11 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 	}
 
 	@Override
-	public void fieldEofResponse(byte[] header, List<byte[]> fields,
-			byte[] eof, BackendConnection conn) {
-		
-		
-			//TODO: add by zhuam
-			//查询结果派发
-			QueryResult queryResult = new QueryResult(session.getSource().getUser(), session.getSource().getHost(),
-					rrs.getSqlType(), rrs.getStatement(), startTime, System.currentTimeMillis());
-			QueryResultDispatcher.dispatchQuery( queryResult );
+	public void fieldEofResponse(byte[] header, List<byte[]> fields,byte[] eof, BackendConnection conn) {
+			/**
+			 * select SQL执行的结束时间
+			 */
+			endTime = System.currentTimeMillis();
 
             header[3] = ++packetId;
             ServerConnection source = session.getSource();
@@ -367,8 +373,9 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
         }
         RowDataPacket rowDataPacket =new RowDataPacket(1);
         rowDataPacket.read(row);
-            row[3] = ++packetId;
-            buffer = session.getSource().writeToBuffer(row, allocBuffer());
+		row[3] = ++packetId;
+		++rows;
+		buffer = session.getSource().writeToBuffer(row, allocBuffer());
 
 	}
 
@@ -403,4 +410,42 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 				+ "]";
 	}
 
+	/**
+	 * 记录SQL执行情况
+	 * @param rows sql操作影响rows
+	 */
+	public void sqlRecord(long rows){
+		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+		SQLRecord sqlRecord = sqlFirewallServer.getSQLRecord(rrs.getStatement());
+		if(sqlRecord != null) {
+			sqlRecord.setUser(session.getSource().getUser());
+			sqlRecord.setHost(session.getSource().getHost());
+			sqlRecord.setSchema(session.getSource().getSchema());
+			String tables = null;
+
+			int size = rrs.getTables().size();
+
+			for (int i = 0; i <size; i++) {
+				if(i == size-1){
+					tables = rrs.getTables().get(i).toLowerCase();
+				}else {
+					tables = rrs.getTables().get(i).toLowerCase() + ",";
+				}
+			}
+
+			sqlRecord.setTables(tables);
+			sqlRecord.setSqlType(rrs.getSqlType());
+			sqlRecord.setStartTime(startTime);
+			sqlRecord.setEndTime(endTime);
+			sqlRecord.setSqlExecTime(endTime-startTime);
+			sqlRecord.setResultRows(rows);
+			sqlFirewallServer.updateSqlRecord(rrs.getStatement(), sqlRecord);
+			sqlFirewallServer.getUpdateH2DBService().
+					submit(new SQLFirewallServer.Task<SQLRecord>(sqlRecord, OP_UPATE));
+
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(sqlRecord.toString());
+			}
+		}
+	}
 }

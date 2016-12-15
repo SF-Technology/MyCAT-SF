@@ -23,9 +23,10 @@
 		<property name="idleTimeout">300000</property>
 		<property name="bindIp">0.0.0.0</property> 
 		<property name="frontWriteQueueSize">40960</property>
+	
 
        	 	<!--是否开启结果集流式输出,0不开启，1开启-->
-       		 <property name="useStreamOutput">0</property>
+       		<property name="useStreamOutput">0</property>
 
 		<!--off heap for merge/order/group/limit -->
 		<property name="useOffHeapForMerge">1</property>
@@ -55,8 +56,6 @@
 		<property name="password">test</property>
 		<property name="schemas">testdb</property>
 	</user>
-
-
 
 	<sqlwall>
 		<!-- SQL 防火墙总开关 0 关闭，不记录直接打印警告信息，1开启，2 关闭，并记录拦截信息-->

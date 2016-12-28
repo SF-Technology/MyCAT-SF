@@ -32,6 +32,8 @@ public final  class SQLFirewall {
         //selectAllColumnAllow = true;
         wallConfig.setSelectAllColumnAllow(systemConfig.isSelectAllColumnAllow());
 
+        //noneBaseStatementAllow=true;
+        wallConfig.setNoneBaseStatementAllow(systemConfig.isNoneBaseStatementAllow());
 
         /**
          * 拦截配置－永真条件

@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -12,15 +13,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.statement.SQLInsertStatement;
+import com.alibaba.druid.sql.ast.statement.SQLUpdateStatement;
+import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlSchemaStatVisitor;
+import com.alibaba.druid.stat.TableStat;
 import com.alibaba.druid.wall.Violation;
 import com.alibaba.druid.wall.WallCheckResult;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.monitor.SQLRecord;
 import org.opencloudb.net.AbstractConnection;
 import org.opencloudb.net.FrontendConnection;
+import org.opencloudb.parser.druid.DruidShardingParseInfo;
 import org.opencloudb.server.ServerConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -515,6 +524,54 @@ public class SQLFirewallServer {
         }
         return flag;
     }
+
+
+    /**
+     * 告警 没有分片字段的 SQL
+     * @param schema
+     * @param statement
+     * @param ctx
+     * @param sql
+     * */
+    public void interceptSQL(SchemaConfig schema, SQLStatement statement,
+                                       DruidShardingParseInfo ctx, String sql) {
+        Map<String, String> tableAliasMap = new HashMap<String, String>();
+        Set<String> colSets = new LinkedHashSet<String>();
+        Set<String> conditionColSets = new LinkedHashSet<String>();
+
+        if (ctx != null) {
+            tableAliasMap = ctx.getTableAliasMap();
+        }
+
+        MySqlSchemaStatVisitor mySQLKVisitor = new MySqlSchemaStatVisitor();
+        statement.accept(mySQLKVisitor);
+
+        Iterator<TableStat.Column> c = mySQLKVisitor.getColumns().iterator();
+
+        while (c.hasNext()) {
+            TableStat.Column col = c.next();
+            colSets.add(col.getName());
+        }
+
+        if (statement instanceof SQLInsertStatement
+                || statement instanceof SQLUpdateStatement) {
+            String tName = mySQLKVisitor.getCurrentTable();
+            if (tableAliasMap.size() > 0 && tableAliasMap.containsKey(tName)) {
+                tName = tableAliasMap.get(tName);
+            }
+            if (schema != null) {
+                Map<String, TableConfig> map = schema.getTables();
+                TableConfig tableConfig = map.get(tName.toUpperCase());
+                if (tableConfig != null) {
+                    String partitionColumn = tableConfig.getPartitionColumn();
+                    if (partitionColumn != null && !conditionColSets.contains(partitionColumn)) {
+                        recordSQLReporter(sql.replace("'",""),"no sharding key!!!!!");
+                    }
+                }
+            }
+        }
+    }
+
 
     /**
      * 异步执行线程

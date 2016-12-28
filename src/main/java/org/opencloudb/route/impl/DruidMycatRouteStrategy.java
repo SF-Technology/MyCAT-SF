@@ -7,15 +7,16 @@ import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
 import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
+import org.opencloudb.MycatServer;
 import org.opencloudb.cache.LayerCachePool;
 import org.opencloudb.config.model.SchemaConfig;
-import org.opencloudb.interceptor.SQLNewInterceptor;
 import org.opencloudb.parser.druid.*;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.route.util.RouterUtil;
 import org.opencloudb.server.ServerConnection;
 import org.opencloudb.server.parser.ServerParse;
+import org.opencloudb.sqlfw.SQLFirewallServer;
 
 import java.sql.SQLNonTransientException;
 import java.sql.SQLSyntaxErrorException;
@@ -61,21 +62,20 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		 */
 		checkUnSupportedStatement(statement);
 
-
 		DruidParser druidParser = DruidParserFactory.create(schema, statement, visitor);
 		druidParser.parser(schema, rrs, statement, stmt,cachePool,visitor);
 
-
 		DruidShardingParseInfo ctx=  druidParser.getCtx() ;
 
+		rrs.setTables(ctx.getTables());
 
-		/**
-		 * SQL 语句拦截
-		 */
 
-		//if(SQLNewInterceptor.interceptSQL(schema,statement,ctx,stmt,sc)){
-		//	return null;
-		//}
+
+		//添加sql没有分片字段警告信息
+		SQLFirewallServer sqlFirewallServer =
+				MycatServer.getInstance().getSqlFirewallServer();
+        if (sqlFirewallServer!=null)
+		    sqlFirewallServer.interceptSQL(schema,statement,ctx,stmt);
 
 		/**
 		 * DruidParser 解析过程中已完成了路由的直接返回
@@ -113,7 +113,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 			nodes[i] = iterator.next();
 			i++;
 		}		
-		rrs.setNodes(nodes);		
+		rrs.setNodes(nodes);
 
 		return rrs;
 	}

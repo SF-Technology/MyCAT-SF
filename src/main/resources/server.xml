@@ -10,58 +10,73 @@
 <!DOCTYPE mycat:server SYSTEM "server.dtd">
 <mycat:server xmlns:mycat="http://org.opencloudb/">
 	<system>
-	<property name="defaultSqlParser">druidparser</property>
+	
+		<property name="defaultSqlParser">druidparser</property>
 		<property name="handleDistributedTransactions">2</property>
-	<property name="useSqlStat">0</property> <!-- 0表示不开启sqlstat功能,该功能很影响tps,需要优化,默认先关闭,1表示开启 -->
-      <!--  <property name="useCompression">1</property>--> <!--1为开启mysql压缩协议-->
-	<!-- <property name="processorBufferChunk">40960</property> -->
-	<!-- 
-	<property name="processors">1</property> 
-	<property name="processorExecutor">32</property> 
-	 -->
-		<!--默认是65535 64K 用于sql解析时最大文本长度 -->
-		<!--<property name="maxStringLiteralLength">65535</property>-->
-		<!--<property name="sequnceHandlerType">0</property>-->
-		<!--<property name="backSocketNoDelay">1</property>-->
-		<!--<property name="frontSocketNoDelay">1</property>-->
-		<!--<property name="processorExecutor">16</property>-->
-		<!-- 
-			<property name="mutiNodeLimitType">1</property> 0：开启小数量级（默认） ；1：开启亿级数据排序
-	    	<property name="mutiNodePatchSize">100</property> 亿级数量排序批量
-			<property name="processors">32</property> <property name="processorExecutor">32</property> 
-			<property name="serverPort">8066</property> <property name="managerPort">9066</property> 
-			<property name="idleTimeout">300000</property> <property name="bindIp">0.0.0.0</property> 
-			<property name="frontWriteQueueSize">4096</property> <property name="processors">32</property> -->
-	<!--是否开启结果集流式输出,0不开启，1开启-->
-        <property name="useStreamOutput">0</property>
+		<property name="useSqlStat">0</property> <!-- 0表示不开启sqlstat功能,该功能很影响tps,需要优化,默认先关闭,1表示开启 -->
+     
+		<property name="processorBufferChunk">40960</property>
+		<property name="processors">8</property> 
+		<property name="processorExecutor">8</property> 
+		<property name="serverPort">8066</property> 
+		<property name="managerPort">9066</property> 
+		<property name="idleTimeout">300000</property>
+		<property name="bindIp">0.0.0.0</property> 
+		<property name="frontWriteQueueSize">40960</property>
+	
 
-	<!--off heap for merge/order/group/limit -->
+       	 	<!--是否开启结果集流式输出,0不开启，1开启-->
+		<property name="useStreamOutput">0</property>
+
+		<!--off heap for merge/order/group/limit -->
 		<property name="useOffHeapForMerge">1</property>
-	<!--内存页大小,单位为m-->
+		<!--内存页大小,单位为m-->
 		<property name="memoryPageSize">1m</property>
-	<!--写文件临时buffer大小,单位为k -->
+		<!--写文件临时buffer大小,单位为k -->
 		<property name="spillsFileBufferSize">1k</property>
-	<!--Mycat 系统预留内存,单位为m -->
+		<!--Mycat 系统预留内存,单位为m -->
 		<property name="systemReserveMemorySize">384m</property>
+
+		<!--SQL STAT相关参数配置 -->
+		<!--后台线程定时采集信息入H2DB库 单位ms-->
+		<property name="monitorUpdatePeriod">60000</property>
+		<!--sql stat 在内存驻留的时间 单位ms-->
+		<property name="sqlInMemDBPeriod">60000</property>
+		<!--到当前时间 SQL 执行结果集 TOP N ，sqlInMemDBPeriod/8周期汇聚一次-->
+		<property name="topExecuteResultN">100</property>
+		<!--到当前时间 SQL 执行时间 TOP N ，sqlInMemDBPeriod/8周期汇聚一次-->
+		<property name="topSqlExecuteTimeN">100</property>
+		<!--到当前时间 SQL 执行次数 TOP N ，sqlInMemDBPeriod/8周期汇聚一次-->
+		<property name="topSqlExecuteCountN">100</property>
+		<!--每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位-->
+		<property name="sqlRecordInDiskPeriod">1</property>
 	</system>
+
 	<user name="test">
 		<property name="password">test</property>
-		<property name="schemas">TESTDB</property>
+		<property name="schemas">testdb</property>
 	</user>
 
-	<user name="user">
-		<property name="password">user</property>
-		<property name="schemas">TESTDB</property>
-		<property name="readOnly">true</property>
-	</user>
-	<!-- 
-	<quarantine> 
-	   <whitehost>
-	      <host host="127.0.0.1" user="mycat"/>
-	      <host host="127.0.0.2" user="mycat"/>
-	   </whitehost>
-       <blacklist check="false"></blacklist>
-	</quarantine>
-	-->
+	<sqlwall>
+		<!-- SQL 防火墙总开关 0 关闭，不记录直接打印警告信息，1开启，2 关闭，并记录拦截信息-->
+		<property name="enableSQLFirewall">1</property>
+		<!-- 是否启用正则表达式匹配SQL-->
+		<property name="enableRegEx">false</property>
+		<!-- 允许结果集，超过了maxAllowResultRow 动态添加到SQL黑名单中 -->
+		<property name="maxAllowResultRow">1000000</property>
+		<!-- maxAllowExecuteUnitTime s 内最大允许执行次数，超过了动态添加到SQL黑名单中 -->
+		<property name="maxAllowExecuteTimes">20000</property>
+		<!-- 单位为s 默认配置1s-->
+		<property name="maxAllowExecuteUnitTime">1</property>
+		<!-- 单位为ms,一条sql执行的时间，超过了, 则动态加入SQL黑名单中 -->
+		<property name="maxAllowExecuteSqlTime">2000</property>
+
+
+		<property name="selectAllColumnAllow">true</property>
+		<property name="strictSyntaxCheck">true</property>
+		<property name="deleteWhereNoneCheck">true</property>
+		<property name="noneBaseStatementAllow">true</property>
+	</sqlwall>
+
 
 </mycat:server>

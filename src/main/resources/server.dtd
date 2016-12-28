@@ -13,10 +13,11 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-<!ELEMENT mycat:server (system?,user+,cluster?,quarantine?)>
+<!ELEMENT mycat:server (system?,user+,cluster?,quarantine?,sqlwall?)>
 <!ATTLIST mycat:server xmlns:mycat CDATA #FIXED "http://org.opencloudb/">
 
 <!ELEMENT system (property*) >
+<!ELEMENT sqlwall (property*) >
 
 <!ELEMENT user (property+)>
 <!ATTLIST user name NMTOKEN #REQUIRED>

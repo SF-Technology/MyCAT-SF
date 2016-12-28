@@ -27,8 +27,8 @@ import static org.opencloudb.parser.ManagerParseSelect.SESSION_AUTO_INCREMENT;
 import static org.opencloudb.parser.ManagerParseSelect.VERSION_COMMENT;
 import static org.opencloudb.parser.ManagerParseSelect.SESSION_TX_READ_ONLY;
 
-import org.opencloudb.config.ErrorCode;
 import org.opencloudb.manager.ManagerConnection;
+import org.opencloudb.monitor.MonitorHandler;
 import org.opencloudb.parser.ManagerParseSelect;
 import org.opencloudb.response.SelectSessionAutoIncrement;
 import org.opencloudb.response.SelectTxReadOnly;
@@ -41,18 +41,18 @@ public final class SelectHandler {
 
     public static void handle(String stmt, ManagerConnection c, int offset) {
         switch (ManagerParseSelect.parse(stmt, offset)) {
-        case VERSION_COMMENT:
-            SelectVersionComment.execute(c);
-            break;
-        case SESSION_AUTO_INCREMENT:
-            SelectSessionAutoIncrement.execute(c);
-            break;
-        case SESSION_TX_READ_ONLY:
-            SelectTxReadOnly.response(c);
-            break;
-        default:
-            c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
+            case VERSION_COMMENT:
+                SelectVersionComment.execute(c);
+                break;
+            case SESSION_AUTO_INCREMENT:
+                SelectSessionAutoIncrement.execute(c);
+                break;
+            case SESSION_TX_READ_ONLY:
+                SelectTxReadOnly.response(c);
+                break;
+            default:
+                MonitorHandler.execute(c,stmt);
+                break;
         }
     }
-
 }

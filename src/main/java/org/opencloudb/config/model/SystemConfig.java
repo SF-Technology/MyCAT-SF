@@ -175,10 +175,10 @@ public final class SystemConfig {
 	 * 写入到临时目录
 	 */
 	private String dataNodeSortedTempDir;
+
 	/**
 	 * SQL 防火墙功能配置选项 from druid 项目
 	 */
-
 
 	/**
 	 *  SQL 防火墙开关 1开启，2 关闭，并记录拦截信息
@@ -212,11 +212,31 @@ public final class SystemConfig {
 	 */
 	public int maxAllowExecuteUnitTime;
 
-    /**
+	/**
 	 * 拦截配置－语句
 	 */
-	public boolean selectAllColumnAllow;   // true 是否允许执行SELECT * FROM T这样的语句。如果设置为false，不允许执行select * from t，但select * from (select id, name from t) a。这个选项是防御程序通过调用select *获得数据表的结构信息。
-
+	public boolean selelctAllow;	//true	是否允许执行SELECT语句
+	public boolean selectAllColumnAllow;	//true	是否允许执行SELECT * FROM T这样的语句。如果设置为false，不允许执行select * from t，但select * from (select id, name from t) a。这个选项是防御程序通过调用select *获得数据表的结构信息。
+	public boolean selectIntoAllow;	//true	SELECT查询中是否允许INTO字句
+	public boolean deleteAllow;	//true	是否允许执行DELETE语句
+	public boolean updateAllow;	//true	是否允许执行UPDATE语句
+	public boolean insertAllow;	//true	是否允许执行INSERT语句
+	public boolean replaceAllow;	//true	是否允许执行REPLACE语句
+	public boolean mergeAllow;	//true	是否允许执行MERGE语句，这个只在Oracle中有用
+	public boolean callAllow;	//true	是否允许通过jdbc的call语法调用存储过程
+	public boolean setAllow;	//true	是否允许使用SET语法
+	public boolean truncateAllow;	//true	truncate语句是危险，缺省打开，若需要自行关闭
+	public boolean createTableAllow;	//true	是否允许创建表
+	public boolean alterTableAllow;	//true	是否允许执行Alter Table语句
+	public boolean dropTableAllow;	//true	是否允许修改表
+	public boolean commentAllow;	//false	是否允许语句中存在注释，Oracle的用户不用担心，Wall能够识别hints和注释的区别
+	public boolean noneBaseStatementAllow;//false	是否允许非以上基本语句的其他语句，缺省关闭，通过这个选项就能够屏蔽DDL。
+	public boolean multiStatementAllow;	//false	是否允许一次执行多条语句，缺省关闭
+	public boolean useAllow;	//true	是否允许执行mysql的use语句，缺省打开
+	public boolean describeAllow;	//true	是否允许执行mysql的describe语句，缺省打开
+	public boolean showAllow;	//true	是否允许执行mysql的show语句，缺省打开
+	public boolean commitAllow;	//true	是否允许执行commit操作
+	public boolean rollbackAllow;	//true	是否允许执行roll back操作
 
 	/**
 	 * 拦截配置－永真条件
@@ -342,13 +362,34 @@ public final class SystemConfig {
 		 * SQL 防火墙配置默认配置
 		 */
 		this.enableSQLFirewall = 1;
-		this.selectAllColumnAllow = true;
 		this.maxAllowResultRow = 1000000;
 		this.maxAllowExecuteTimes = 100000;
 		this.maxAllowExecuteSqlTime = 3;
 		this.maxAllowExecuteUnitTime = 1;
 		this.enableRegEx = false;
 
+		this.selelctAllow=true;
+		this.selectAllColumnAllow=true;
+		this.selectIntoAllow=true;
+		this.deleteAllow=true;
+		this.updateAllow=true;
+		this.insertAllow=true;
+		this.replaceAllow=true;
+		this.mergeAllow=true;
+		this.callAllow=true;
+		this.setAllow=true;
+		this.truncateAllow=true;
+		this.createTableAllow=true;
+		this.alterTableAllow=true;
+		this.dropTableAllow=true;
+		this.commentAllow=true;
+		this.noneBaseStatementAllow=true;
+		this.multiStatementAllow=false;
+		this.useAllow=true;
+		this.describeAllow=true;
+		this.showAllow=true;
+		this.commitAllow=true;
+		this.rollbackAllow=true;
 
         /**
          * 拦截配置－永真条件
@@ -1060,13 +1101,181 @@ public final class SystemConfig {
 		this.useSqlStat = useSqlStat;
 	}
 
-    public boolean isSelectAllColumnAllow() {
-        return selectAllColumnAllow;
-    }
+	public boolean isSelelctAllow() {
+		return selelctAllow;
+	}
 
-    public void setSelectAllColumnAllow(boolean selectAllColumnAllow) {
-        this.selectAllColumnAllow = selectAllColumnAllow;
-    }
+	public void setSelelctAllow(boolean selelctAllow) {
+		this.selelctAllow = selelctAllow;
+	}
+
+	public boolean isSelectAllColumnAllow() {
+		return selectAllColumnAllow;
+	}
+
+	public void setSelectAllColumnAllow(boolean selectAllColumnAllow) {
+		this.selectAllColumnAllow = selectAllColumnAllow;
+	}
+
+	public boolean isSelectIntoAllow() {
+		return selectIntoAllow;
+	}
+
+	public void setSelectIntoAllow(boolean selectIntoAllow) {
+		this.selectIntoAllow = selectIntoAllow;
+	}
+
+	public boolean isDeleteAllow() {
+		return deleteAllow;
+	}
+
+	public void setDeleteAllow(boolean deleteAllow) {
+		this.deleteAllow = deleteAllow;
+	}
+
+	public boolean isUpdateAllow() {
+		return updateAllow;
+	}
+
+	public void setUpdateAllow(boolean updateAllow) {
+		this.updateAllow = updateAllow;
+	}
+
+	public boolean isInsertAllow() {
+		return insertAllow;
+	}
+
+	public void setInsertAllow(boolean insertAllow) {
+		this.insertAllow = insertAllow;
+	}
+
+	public boolean isReplaceAllow() {
+		return replaceAllow;
+	}
+
+	public void setReplaceAllow(boolean replaceAllow) {
+		this.replaceAllow = replaceAllow;
+	}
+
+	public boolean isMergeAllow() {
+		return mergeAllow;
+	}
+
+	public void setMergeAllow(boolean mergeAllow) {
+		this.mergeAllow = mergeAllow;
+	}
+
+	public boolean isCallAllow() {
+		return callAllow;
+	}
+
+	public void setCallAllow(boolean callAllow) {
+		this.callAllow = callAllow;
+	}
+
+	public boolean isSetAllow() {
+		return setAllow;
+	}
+
+	public void setSetAllow(boolean setAllow) {
+		this.setAllow = setAllow;
+	}
+
+	public boolean isTruncateAllow() {
+		return truncateAllow;
+	}
+
+	public void setTruncateAllow(boolean truncateAllow) {
+		this.truncateAllow = truncateAllow;
+	}
+
+	public boolean isCreateTableAllow() {
+		return createTableAllow;
+	}
+
+	public void setCreateTableAllow(boolean createTableAllow) {
+		this.createTableAllow = createTableAllow;
+	}
+
+	public boolean isAlterTableAllow() {
+		return alterTableAllow;
+	}
+
+	public void setAlterTableAllow(boolean alterTableAllow) {
+		this.alterTableAllow = alterTableAllow;
+	}
+
+	public boolean isDropTableAllow() {
+		return dropTableAllow;
+	}
+
+	public void setDropTableAllow(boolean dropTableAllow) {
+		this.dropTableAllow = dropTableAllow;
+	}
+
+	public boolean isCommentAllow() {
+		return commentAllow;
+	}
+
+	public void setCommentAllow(boolean commentAllow) {
+		this.commentAllow = commentAllow;
+	}
+
+	public boolean isNoneBaseStatementAllow() {
+		return noneBaseStatementAllow;
+	}
+
+	public void setNoneBaseStatementAllow(boolean noneBaseStatementAllow) {
+		this.noneBaseStatementAllow = noneBaseStatementAllow;
+	}
+
+	public boolean isMultiStatementAllow() {
+		return multiStatementAllow;
+	}
+
+	public void setMultiStatementAllow(boolean multiStatementAllow) {
+		this.multiStatementAllow = multiStatementAllow;
+	}
+
+	public boolean isUseAllow() {
+		return useAllow;
+	}
+
+	public void setUseAllow(boolean useAllow) {
+		this.useAllow = useAllow;
+	}
+
+	public boolean isDescribeAllow() {
+		return describeAllow;
+	}
+
+	public void setDescribeAllow(boolean describeAllow) {
+		this.describeAllow = describeAllow;
+	}
+
+	public boolean isShowAllow() {
+		return showAllow;
+	}
+
+	public void setShowAllow(boolean showAllow) {
+		this.showAllow = showAllow;
+	}
+
+	public boolean isCommitAllow() {
+		return commitAllow;
+	}
+
+	public void setCommitAllow(boolean commitAllow) {
+		this.commitAllow = commitAllow;
+	}
+
+	public boolean isRollbackAllow() {
+		return rollbackAllow;
+	}
+
+	public void setRollbackAllow(boolean rollbackAllow) {
+		this.rollbackAllow = rollbackAllow;
+	}
 
     public boolean isSelectWhereAlwayTrueCheck() {
         return selectWhereAlwayTrueCheck;

@@ -25,6 +25,9 @@ package org.opencloudb.config.model;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.opencloudb.config.model.rule.RuleConfig;
 import org.opencloudb.util.SplitUtil;
@@ -54,6 +57,11 @@ public class TableConfig {
 	private final boolean secondLevel;
 	private final boolean partionKeyIsPrimaryKey;
 	private final Random rand = new Random();
+	
+	// 只有 checksum table会使用到
+	private Lock lock = new ReentrantLock();
+	private Condition waitForChecksumCond = lock.newCondition();
+	private volatile boolean isChecksuming = false;
 
 	public TableConfig(String name, String primaryKey, boolean autoIncrement,boolean needAddLimit, int tableType,
 			String dataNode,Set<String> dbType, RuleConfig rule, boolean ruleRequired,
@@ -236,5 +244,36 @@ public class TableConfig {
 	public boolean primaryKeyIsPartionKey() {
 		return partionKeyIsPrimaryKey;
 	}
-
+	
+	public boolean isChecksuming() {
+		return isChecksuming;
+	}
+	
+	public void startChecksum() {
+		isChecksuming = true;
+	}
+	
+	public void waitForChecksum() {
+		lock.lock();
+		try {
+			while(isChecksuming) {
+				waitForChecksumCond.await();
+			}
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	public void endChecksum() {
+		lock.lock();
+		try {
+			isChecksuming = false;
+			waitForChecksumCond.signalAll();
+		} finally {
+			lock.unlock();
+		}
+	}
+	
 }

@@ -245,7 +245,7 @@ public final class ManagerParse {
 	}
 	
 	private static int checksumCheck(String stmt, int offset) {
-		if(stmt.length() >= "CHECKSUM".length()) {
+		if(stmt.length() > "CHECKSUM".length()) {
 			char c1 = stmt.charAt(offset); // S
 			char c2 = stmt.charAt(++offset); // U
 			char c3 = stmt.charAt(++offset); // M

@@ -8,9 +8,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.Fields;
 import org.opencloudb.config.model.TableConfig;
+import org.opencloudb.lock.GlobalTableLockHolder;
 import org.opencloudb.mysql.PacketUtil;
 import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.net.mysql.EOFPacket;
@@ -51,6 +53,7 @@ public class ChecksumTableHandler implements AllJobFinishedListener {
 	
     private String schemaName;
     private TableConfig gTableConf;
+    private GlobalTableLockHolder tableLockHolder;
 	private FrontendConnection frontendConn;
 	private Map<String, String> checksumMap = new ConcurrentHashMap<String, String>();
 	private EngineCtx engineCtx;
@@ -130,7 +133,8 @@ public class ChecksumTableHandler implements AllJobFinishedListener {
 		
 		String sql = "checksum table " + gTableConf.getName();
 		// 设置isChecksuming标志位为true, 标识checksum的开始
-		this.gTableConf.startChecksum();
+		tableLockHolder = MycatServer.getInstance().getTableLockManager().getGlobalTableLockHolder(schemaName, gTableConf.getName());
+		tableLockHolder.startChecksum();
 		// 并发执行 [Warning]:并发执行会占用业务线程池
 		engineCtx.executeNativeSQLParallJob(dataNodes, sql, sqlJobHandler);
 		
@@ -140,7 +144,7 @@ public class ChecksumTableHandler implements AllJobFinishedListener {
 	public void onAllJobFinished(EngineCtx ctx) {
 		
 		// 设置isChecksuming为false, 并唤醒其他阻塞在全局表上的线程
-		this.gTableConf.endChecksum();
+		tableLockHolder.endChecksum();
 		
 		// 异常处理
 		if(fail) {

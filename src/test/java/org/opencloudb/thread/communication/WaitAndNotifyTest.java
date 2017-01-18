@@ -3,7 +3,7 @@ package org.opencloudb.thread.communication;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.Test;
-import org.opencloudb.config.model.TableConfig;
+import org.opencloudb.lock.GlobalTableLockHolder;
 
 import junit.framework.Assert;
 
@@ -21,8 +21,7 @@ public class WaitAndNotifyTest {
 	@Test
 	public void testWaitAndNotify() {
 		
-		final TableConfig tableConf = new TableConfig("tb_test", "id", true, false, 
-				TableConfig.TYPE_GLOBAL_TABLE, "db1,dn2,dn3", null, null, false, null, false, null, null);
+		final GlobalTableLockHolder gTableLockHolder = new GlobalTableLockHolder("testdb", "tb_test_cs");
 		
 		final AtomicBoolean flag = new AtomicBoolean(false);
 		
@@ -30,15 +29,15 @@ public class WaitAndNotifyTest {
 			
 			@Override
 			public void run() {
-				tableConf.startChecksum();
+				gTableLockHolder.startChecksum();
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(3000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 				flag.set(true);
 				// System.out.println("end checksum");
-				tableConf.endChecksum();
+				gTableLockHolder.endChecksum();
 			}
 		});
 		
@@ -56,8 +55,8 @@ public class WaitAndNotifyTest {
 				
 				@Override
 				public void run() {
-					if(tableConf.isChecksuming()) {
-						tableConf.waitForChecksum();
+					if(gTableLockHolder.isChecksuming()) {
+						gTableLockHolder.waitForChecksum();
 						// System.out.println("finished wait for checksum");
 					}
 					Assert.assertEquals(true, flag.get());

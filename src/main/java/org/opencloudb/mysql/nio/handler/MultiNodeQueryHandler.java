@@ -220,6 +220,11 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 	@Override
 	public void okResponse(byte[] data, BackendConnection conn) {
 
+		/**并发查询信号量释放*/
+		if (limitsqlExecute != null) {
+			limitsqlExecute.release();
+		}
+		
 		boolean executeResponse = conn.syncAndExcute();
 		endTime = System.currentTimeMillis();
 		if (LOGGER.isDebugEnabled()) {

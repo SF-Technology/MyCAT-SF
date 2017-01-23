@@ -50,6 +50,8 @@
 		<property name="topSqlExecuteCountN">100</property>
 		<!--每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位-->
 		<property name="sqlRecordInDiskPeriod">1</property>
+		<!--限制并发查询，控制CPU消耗 1开启,0关闭-->
+		<property name="limitConcurrentQuery">1</property>
 	</system>
 
 	<user name="test">

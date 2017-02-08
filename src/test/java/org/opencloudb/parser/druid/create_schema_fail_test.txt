@@ -1,0 +1,5 @@
+create schema TESTDB sqlMaxLimit = abc;
+
+create schema TESTDB checkSQLschema = fdsf;
+
+create schema TESTDB fdsfdsf;

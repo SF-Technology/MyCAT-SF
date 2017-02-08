@@ -1,0 +1,13 @@
+create table shard_tb1 in db1
+primaryKey = 'id'
+dataNode = 'dn1,dn2,dn3'
+global = false
+rule = 'mod3';
+
+create table global_tb1 in db1
+dataNode = 'dn1,dn2'
+global = true
+primaryKey = 'id';
+
+create table tb1 in db1
+dataNode = 'dn1';

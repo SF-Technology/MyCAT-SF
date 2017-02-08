@@ -1,5 +1,6 @@
 package org.opencloudb.manager.parser.druid.statement;
 
+import org.opencloudb.MycatServer;
 import org.opencloudb.manager.parser.druid.MycatASTVisitor;
 import org.opencloudb.manager.parser.druid.MycatOutputVisitor;
 
@@ -10,7 +11,7 @@ import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 public abstract class MycatStatementImpl extends SQLStatementImpl implements MycatStatement {
 
 	public MycatStatementImpl() {
-        super("mycat");
+        super(MycatServer.NAME);
     }
 	
 	@Override

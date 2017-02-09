@@ -23,6 +23,17 @@
  */
 package org.opencloudb.parser.util;
 
+import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
+import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
+import com.alibaba.druid.sql.ast.statement.SQLJoinTableSource;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
+import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock;
+
 /**
  * @author mycat
  */
@@ -358,6 +369,27 @@ public final class ParseUtil {
             return true;
         }
         return false;
+    }
+    
+    /**
+     * 从字符序列s的offset位置找到第一个非空字符，如果这个非空字符和c匹配，返回字符的下标，如果不匹配返回-1
+     * @param s
+     * @param offset
+     * @param c
+     * @return
+     */
+    public static int findCharIgnoreBlank(String s, int offset, char c){
+    	if(s.length() > offset && offset >= 0){
+    		for (int i = offset ; i < s.length(); i ++){
+    			if(s.charAt(i) == ' ' || s.charAt(i) == '\t' || s.charAt(i) == '\n'){
+    				continue;
+    			}
+    			
+    			return s.charAt(i) == c ? ++i : -1;
+    		}
+    	}
+    	
+    	return -1;
     }
 
 }

@@ -391,5 +391,25 @@ public final class ParseUtil {
     	
     	return -1;
     }
+    
+    /**
+     * 如果是dual表的select语句，那么去掉解析结果中的表信息
+     * @param statement
+     */
+    public static void modifySelectDualStament(SQLStatement statement){
+		if (statement instanceof SQLSelectStatement){
+			SQLSelectQuery query = ((SQLSelectStatement) statement).getSelect().getQuery();
+			if(query instanceof SQLSelectQueryBlock){
+				SQLTableSource from = ((SQLSelectQueryBlock) query).getFrom();
+  				if(from instanceof SQLExprTableSource){
+    				SQLExpr expr = ((SQLExprTableSource)from).getExpr();
+   					if(expr instanceof SQLIdentifierExpr &&
+						((SQLIdentifierExpr)expr).getName().equalsIgnoreCase("dual")){
+    					((SQLExprTableSource)from).setExpr(null);
+    				}
+    			}
+    		}
+    	}
+    }
 
 }

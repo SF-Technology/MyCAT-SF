@@ -1,7 +1,13 @@
 package org.opencloudb.route.impl;
 
+import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
+import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
+import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlReplaceStatement;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
@@ -9,8 +15,10 @@ import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.cache.LayerCachePool;
+import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.parser.druid.*;
+import org.opencloudb.parser.util.ParseUtil;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.route.util.RouterUtil;
@@ -56,6 +64,9 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 	        LOGGER.error("DruidMycatRouteStrategyError", t);
 			throw new SQLSyntaxErrorException(t);
 		}
+		
+		// 如果是dual表的select语句，那么去掉解析结果中的表信息
+		ParseUtil.modifySelectDualStament(statement);
 
 		/**
 		 * 检验unsupported statement

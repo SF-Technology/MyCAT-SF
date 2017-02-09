@@ -54,7 +54,6 @@ public final class ManagerParse {
 	public static final int CREATE = 100;
 	public static final int DROP = 101;
 	public static final int LIST = 102;
-	public static final int USE = 103;
 	
 	public static int parse(String stmt) {
 		for (int i = 0; i < stmt.length(); i++) {
@@ -136,18 +135,6 @@ public final class ManagerParse {
 	 * @return
 	 */
 	private static int uCheck(String stmt, int offset) {
-		switch(offset + 1) {
-		case 'P':
-		case 'p':
-			return updateCheck(stmt, offset);
-		case 'S':
-		case 's':
-			return useCheck(stmt, offset);
-		}
-		return OTHER;
-	}
-	
-	private static int updateCheck(String stmt, int offset) {
 		if (stmt.length() > offset + "PDATE ".length()) {
 			char c1 = stmt.charAt(++offset);
 			char c2 = stmt.charAt(++offset);
@@ -165,19 +152,6 @@ public final class ManagerParse {
 		return OTHER;
 	}
 	
-	private static int useCheck(String stmt, int offset) {
-		if(stmt.length() > "SE ".length()) {
-			char c1 = stmt.charAt(++offset); // S
-			char c2 = stmt.charAt(++offset); // E
-			char c3 = stmt.charAt(++offset);
-			if((c1 == 'S' || c1 == 's') && (c2 == 'E' || c2 == 'e')
-					&& (c3 == ' ' || c3 == '\t' || c3 == '\r' || c3 == '\n')) {
-				return (offset << 8) | USE;
-			}
-		}
-		return OTHER;
-	}
-
 	/**
 	 * SQL insert
 	 * @param stmt

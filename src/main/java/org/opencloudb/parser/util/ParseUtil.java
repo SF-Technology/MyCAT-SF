@@ -411,5 +411,27 @@ public final class ParseUtil {
     		}
     	}
     }
+    
+    /**
+     * 判断查询语句有没有涉及多表的行锁
+     * @param statement
+     * @return
+     */
+    public static boolean isSelectLockForMultiTable(SQLStatement statement){
+    	if (statement instanceof SQLSelectStatement){
+			SQLSelectQuery query = ((SQLSelectStatement) statement).getSelect().getQuery();
+			if(query instanceof MySqlSelectQueryBlock){
+				MySqlSelectQueryBlock mysqlQuery = (MySqlSelectQueryBlock)query;
+				SQLTableSource from = mysqlQuery.getFrom();
+				
+  				if(from instanceof SQLJoinTableSource && 
+  						(mysqlQuery.isForUpdate() || mysqlQuery.isLockInShareMode())){
+    				return true;
+    			}
+    		}
+    	}
+    	
+    	return false;
+    }
 
 }

@@ -1,13 +1,7 @@
 package org.opencloudb.route.impl;
 
-import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
-import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
-import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlReplaceStatement;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
@@ -67,6 +61,12 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		
 		// 如果是dual表的select语句，那么去掉解析结果中的表信息
 		ParseUtil.modifySelectDualStament(statement);
+		
+		// 如果如果多表查询涉及行锁，则返回错误信息
+		if(ParseUtil.isSelectLockForMultiTable(statement)){
+			sc.writeErrMessage(ErrorCode.ER_YES, "Row lock for multiple tables is not supported.");
+			return null;
+		}
 
 		/**
 		 * 检验unsupported statement

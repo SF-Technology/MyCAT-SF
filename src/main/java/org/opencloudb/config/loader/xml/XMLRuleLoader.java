@@ -121,6 +121,7 @@ public class XMLRuleLoader {
 							+ name);
 				}
 				RuleConfig rule = loadRule((Element) ruleNodes.item(0));
+				rule.setName(name);
 				String funName = rule.getFunctionName();
 				AbstractPartitionAlgorithm func = functions.get(funName);
 				if (func == null) {

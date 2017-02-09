@@ -54,6 +54,8 @@ public class TableConfig {
 	private final boolean secondLevel;
 	private final boolean partionKeyIsPrimaryKey;
 	private final Random rand = new Random();
+	
+	private final String dataNode;
 
 	public TableConfig(String name, String primaryKey, boolean autoIncrement,boolean needAddLimit, int tableType,
 			String dataNode,Set<String> dbType, RuleConfig rule, boolean ruleRequired,
@@ -74,6 +76,7 @@ public class TableConfig {
 		}
 
 		this.name = name.toUpperCase();
+		this.dataNode = dataNode;
 		String theDataNodes[] = SplitUtil.split(dataNode, ',', '$', '-');
 
 
@@ -237,4 +240,8 @@ public class TableConfig {
 		return partionKeyIsPrimaryKey;
 	}
 
+	public String getDataNode() {
+		return dataNode;
+	}
+	
 }

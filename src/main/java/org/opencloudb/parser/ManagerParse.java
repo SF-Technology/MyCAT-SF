@@ -50,6 +50,12 @@ public final class ManagerParse {
 	public static final int INSERT= 16;
 	public static final int DELETE= 17;
 
+	
+	public static final int CREATE = 100;
+	public static final int DROP = 101;
+	public static final int LIST = 102;
+	public static final int USE = 103;
+	
 	public static int parse(String stmt) {
 		for (int i = 0; i < stmt.length(); i++) {
 			switch (stmt.charAt(i)) {
@@ -130,6 +136,18 @@ public final class ManagerParse {
 	 * @return
 	 */
 	private static int uCheck(String stmt, int offset) {
+		switch(offset + 1) {
+		case 'P':
+		case 'p':
+			return updateCheck(stmt, offset);
+		case 'S':
+		case 's':
+			return useCheck(stmt, offset);
+		}
+		return OTHER;
+	}
+	
+	private static int updateCheck(String stmt, int offset) {
 		if (stmt.length() > offset + "PDATE ".length()) {
 			char c1 = stmt.charAt(++offset);
 			char c2 = stmt.charAt(++offset);
@@ -142,6 +160,19 @@ public final class ManagerParse {
 					&& (c4 == 'T' || c4 == 't')
 					&& (c5 == 'E' || c5 == 'e')) {
 				return (offset << 8) | UPDATE;
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int useCheck(String stmt, int offset) {
+		if(stmt.length() > "SE ".length()) {
+			char c1 = stmt.charAt(++offset); // S
+			char c2 = stmt.charAt(++offset); // E
+			char c3 = stmt.charAt(++offset);
+			if((c1 == 'S' || c1 == 's') && (c2 == 'E' || c2 == 'e')
+					&& (c3 == ' ' || c3 == '\t' || c3 == '\r' || c3 == '\n')) {
+				return (offset << 8) | USE;
 			}
 		}
 		return OTHER;
@@ -177,8 +208,23 @@ public final class ManagerParse {
 		if (thePart.startsWith("LOG @@")) {
 			return LOGFILE;
 		} else {
-			return OTHER;
+			return listCheck(stmt, offset);
 		}
+	}
+	
+	private static int listCheck(String stmt, int offset) {
+		if(stmt.length() > "IST".length() + offset) {
+			char c1 = stmt.charAt(++offset); // I
+			char c2 = stmt.charAt(++offset); // S
+			char c3 = stmt.charAt(++offset); // T
+			char c4 = stmt.charAt(++offset);
+			if((c1 == 'I' || c1 == 'i')
+					&& (c2 == 'S' || c2 == 's') && (c3 == 'T' || c3 == 't')
+					&& (c4 == ' ' || c4 == '\t' || c4 == '\r' || c4 == '\n')) {
+				return LIST;
+			}
+		}
+		return OTHER;
 	}
 
 	// config file check
@@ -200,6 +246,9 @@ public final class ManagerParse {
 				case 'H':
 				case 'h':
 					return checkCheck(stmt, offset);
+				case 'R':
+				case 'r':
+					return createCheck(stmt, offset);
 				default:
 					return OTHER;
 			}
@@ -235,6 +284,24 @@ public final class ManagerParse {
 					&& (c3 == 'C' || c3 == 'c') && (c4 == 'K' || c4 == 'k')
 					&& (c5 == ' ' || c5 == '\t' || c5 == '\r' || c5 == '\n')) {
 				return (offset << 8) | CHECK;
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int createCheck(String stmt, int offset) {
+		if(stmt.length() > offset + "REATE ".length()) {
+			char c1 = stmt.charAt(++offset); // R
+			char c2 = stmt.charAt(++offset); // E
+			char c3 = stmt.charAt(++offset); // A
+			char c4 = stmt.charAt(++offset); // T
+			char c5 = stmt.charAt(++offset); // E
+			char c6 = stmt.charAt(++offset);
+			if((c1 == 'R' || c1 == 'r') && (c2 == 'E' || c2 == 'e')
+					&& (c3 == 'A' || c3 == 'a') && (c4 == 'T' || c4 == 't')
+					&& (c5 == 'E' || c5 == 'e')
+					&& (c6 == ' ' || c6 == '\t' || c6 == '\r' || c6 == '\n')) {
+				return CREATE;
 			}
 		}
 		return OTHER;

@@ -35,12 +35,12 @@ import org.opencloudb.config.model.DBHostConfig;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.DataNodeConfig;
 import org.opencloudb.config.model.SchemaConfig;
-import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.config.model.TableConfigMap;
 import org.opencloudb.config.model.rule.TableRuleConfig;
 import org.opencloudb.config.util.ConfigException;
 import org.opencloudb.config.util.ConfigUtil;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 import org.opencloudb.util.DecryptUtil;
 import org.opencloudb.util.SplitUtil;
 import org.w3c.dom.Element;
@@ -61,6 +61,7 @@ public class XMLSchemaLoader implements SchemaLoader {
 	private final static String DEFAULT_DATABASE_XML = "/database.xml";
 	
 	private final Map<String, TableRuleConfig> tableRules;
+	private final Map<String, AbstractPartitionAlgorithm> functions;
 	private final Map<String, DataHostConfig> dataHosts;
 	private final Map<String, DataNodeConfig> dataNodes;
 	private final Map<String, SchemaConfig> schemas;
@@ -68,6 +69,7 @@ public class XMLSchemaLoader implements SchemaLoader {
 	public XMLSchemaLoader(String schemaFile, String databaseFile, String ruleFile) {
 		XMLRuleLoader ruleLoader = new XMLRuleLoader(ruleFile);
 		this.tableRules = ruleLoader.getTableRules();
+		this.functions = ruleLoader.getFunctions();
 		ruleLoader = null;
 		this.dataHosts = new HashMap<String, DataHostConfig>();
 		this.dataNodes = new HashMap<String, DataNodeConfig>();
@@ -82,6 +84,11 @@ public class XMLSchemaLoader implements SchemaLoader {
 	@Override
 	public Map<String, TableRuleConfig> getTableRules() {
 		return tableRules;
+	}
+	
+	@Override
+	public Map<String, AbstractPartitionAlgorithm> getFunctions() {
+		return functions;
 	}
 
 	@Override
@@ -426,16 +433,16 @@ public class XMLSchemaLoader implements SchemaLoader {
 		return dbTypes;
 	}
 
-	private Set<String> getDataNodeDbTypeMap(String dataNode) {
-		Set<String> dbTypes = new HashSet<>();
-		String[] dataNodeArr = SplitUtil.split(dataNode, ',', '$', '-');
-		for (String node : dataNodeArr) {
-			DataNodeConfig datanode = dataNodes.get(node);
-			DataHostConfig datahost = dataHosts.get(datanode.getDataHost());
-			dbTypes.add(datahost.getDbType());
-		}
-		return dbTypes;
-	}
+//	private Set<String> getDataNodeDbTypeMap(String dataNode) {
+//		Set<String> dbTypes = new HashSet<>();
+//		String[] dataNodeArr = SplitUtil.split(dataNode, ',', '$', '-');
+//		for (String node : dataNodeArr) {
+//			DataNodeConfig datanode = dataNodes.get(node);
+//			DataHostConfig datahost = dataHosts.get(datanode.getDataHost());
+//			dbTypes.add(datahost.getDbType());
+//		}
+//		return dbTypes;
+//	}
 
 	private boolean isHasMultiDbType(TableConfig table) {
 		Set<String> dbTypes = table.getDbTypes();

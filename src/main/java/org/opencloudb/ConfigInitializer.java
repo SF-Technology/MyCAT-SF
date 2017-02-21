@@ -41,9 +41,11 @@ import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
 import org.opencloudb.config.util.ConfigException;
 import org.opencloudb.jdbc.JDBCDatasource;
 import org.opencloudb.mysql.nio.MySQLDataSource;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 import org.opencloudb.sequence.handler.IncrSequenceTimeHandler;
 import org.opencloudb.sequence.handler.IncrSequenceMySQLHandler;
 
@@ -58,6 +60,9 @@ public class ConfigInitializer {
 	private volatile Map<String, SchemaConfig> schemas;
 	private volatile Map<String, PhysicalDBNode> dataNodes;
 	private volatile Map<String, PhysicalDBPool> dataHosts;
+	
+	private Map<String, TableRuleConfig> tableRules;
+	private Map<String, AbstractPartitionAlgorithm> functions;
 
 	public ConfigInitializer(boolean loadDataHost) {
 		SchemaLoader schemaLoader = new XMLSchemaLoader();
@@ -79,7 +84,10 @@ public class ConfigInitializer {
 		if(system.getSequnceHandlerType()==SystemConfig.SEQUENCEHANDLER_LOCAL_TIME){
 			IncrSequenceTimeHandler.getInstance().load();
         }
-
+		
+		this.tableRules = configLoader.getTableRules();
+		this.functions = configLoader.getFunctions();
+		
 		this.checkConfig();
 	}
 
@@ -136,6 +144,14 @@ public class ConfigInitializer {
 
 	public Map<String, PhysicalDBPool> getDataHosts() {
 		return this.dataHosts;
+	}
+	
+	public Map<String, TableRuleConfig> getTableRules() {
+		return tableRules;
+	}
+
+	public Map<String, AbstractPartitionAlgorithm> getFunctions() {
+		return functions;
 	}
 
 	private MycatCluster initCobarCluster(ConfigLoader configLoader) {

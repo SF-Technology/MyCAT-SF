@@ -174,6 +174,12 @@ public class XMLServerLoader {
             if (node instanceof Element) {
                 Element e = (Element) node;
                 String name = e.getAttribute("name");
+                if(system.getRootUser().equalsIgnoreCase(name)) {
+                	throw new ConfigException("user '" + name + "' has been defined as built-in root user, "
+                			+ "if your need to use this user, "
+                			+ "change the built-in root user defined in server.xml ,"
+                			+ "using system property : <rootUser>${root_username}</rootUser>");
+                }
                 UserConfig user = new UserConfig();
                 Map<String, Object> props = ConfigUtil.loadElements(e);
                 String password = (String)props.get("password");

@@ -32,6 +32,8 @@ import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 
 /**
  * @author mycat
@@ -54,4 +56,8 @@ public interface ConfigLoader {
 	QuarantineConfig getQuarantineConfig();
 
 	ClusterConfig getClusterConfig();
+	
+	Map<String, TableRuleConfig> getTableRules();
+	
+	Map<String, AbstractPartitionAlgorithm> getFunctions();
 }

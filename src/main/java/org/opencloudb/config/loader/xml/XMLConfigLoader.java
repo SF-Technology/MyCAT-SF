@@ -34,6 +34,8 @@ import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 
 /**
  * @author mycat
@@ -51,6 +53,9 @@ public class XMLConfigLoader implements ConfigLoader {
     private final Map<String, UserConfig> users;
     private final QuarantineConfig quarantine;
     private final ClusterConfig cluster;
+    
+    private final Map<String, TableRuleConfig> tableRules;
+    private final Map<String, AbstractPartitionAlgorithm> functions;
 
     public XMLConfigLoader(SchemaLoader schemaLoader) {
         XMLServerLoader serverLoader = new XMLServerLoader();
@@ -61,6 +66,8 @@ public class XMLConfigLoader implements ConfigLoader {
         this.dataHosts = schemaLoader.getDataHosts();
         this.dataNodes = schemaLoader.getDataNodes();
         this.schemas = schemaLoader.getSchemas();
+        this.tableRules = schemaLoader.getTableRules();
+        this.functions = schemaLoader.getFunctions();
         schemaLoader = null;
     }
 
@@ -107,5 +114,15 @@ public class XMLConfigLoader implements ConfigLoader {
     public SchemaConfig getSchemaConfig(String schema) {
         return schemas.get(schema);
     }
+
+	@Override
+	public Map<String, TableRuleConfig> getTableRules() {
+		return tableRules;
+	}
+
+	@Override
+	public Map<String, AbstractPartitionAlgorithm> getFunctions() {
+		return functions;
+	}
 
 }

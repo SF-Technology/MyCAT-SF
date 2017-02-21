@@ -52,10 +52,11 @@
 		<property name="sqlRecordInDiskPeriod">1</property>
 	</system>
 
-	<user name="test">
+	<!-- 定义迁移到 user.xml -->
+	<!-- <user name="test">
 		<property name="password">test</property>
 		<property name="schemas">testdb</property>
-	</user>
+	</user> -->
 
 	<sqlwall>
 		<!-- SQL 防火墙总开关 0 关闭，不记录直接打印警告信息，1开启，2 关闭，并记录拦截信息-->

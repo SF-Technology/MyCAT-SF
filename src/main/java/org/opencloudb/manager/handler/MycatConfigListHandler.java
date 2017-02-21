@@ -16,7 +16,7 @@ import com.alibaba.druid.sql.ast.SQLStatement;
  * @since 2017-02-08
  *
  */
-public class ListHandler {
+public class MycatConfigListHandler {
 	
 	public static void handle(String sql, ManagerConnection c) {
 		

@@ -11,7 +11,13 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 
-public class CreateHandler {
+/**
+ * 
+ * @author CrazyPig
+ * @since 2017-02-21
+ *
+ */
+public class MycatConfigCreateHandler {
 	
 	public static void handle(String sql, ManagerConnection c) {
 		MycatManageStatementParser parser = new MycatManageStatementParser(sql);

@@ -2,8 +2,10 @@ package org.opencloudb.manager.response;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
+import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.Fields;
 import org.opencloudb.config.model.SchemaConfig;
@@ -65,11 +67,13 @@ public class ListSchemas {
 
 		byte packetId = eof.packetId;
 		// write rows
-		Map<String, SchemaConfig> schemas = MycatServer.getInstance().getConfig().getSchemas();
-		for (String schemaName : new TreeSet<String>(schemas.keySet())) {
-			SchemaConfig schemaConf = schemas.get(schemaName);
+		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
+		Map<String, SchemaConfig> schemas = mycatConf.getSchemas();
+		Set<String> userSchemas = mycatConf.getUsers().get(c.getUser()).getSchemas();
+		for (String userSchema : new TreeSet<String>(userSchemas)) {
+			SchemaConfig schemaConf = schemas.get(userSchema);
 			RowDataPacket row = new RowDataPacket(FIELD_COUNT);
-			row.add(StringUtil.encode(schemaName, c.getCharset()));
+			row.add(StringUtil.encode(userSchema, c.getCharset()));
 			row.add(StringUtil.encode(String.valueOf(schemaConf.isCheckSQLSchema()), c.getCharset()));
 			row.add(StringUtil.encode(String.valueOf(schemaConf.getDefaultMaxLimit()), c.getCharset()));
 			row.packetId = ++packetId;

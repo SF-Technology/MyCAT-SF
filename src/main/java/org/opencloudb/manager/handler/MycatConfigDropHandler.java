@@ -24,9 +24,9 @@ public class MycatConfigDropHandler {
 		try {
 			SQLStatement stmt = parser.parseStatement();
 			if(stmt instanceof MycatDropSchemaStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop schema stmt");
+				DropSchemaHandler.handle(c, (MycatDropSchemaStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropTableStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop table stmt");
+				DropTableHandler.handle(c, (MycatDropTableStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropDataNodeStatement) {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop datanode stmt");
 			} else if(stmt instanceof MycatDropDataHostStatement) {
@@ -35,6 +35,7 @@ public class MycatConfigDropHandler {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			}
 		} catch(Exception e) {
+			e.printStackTrace();
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		}
 	}

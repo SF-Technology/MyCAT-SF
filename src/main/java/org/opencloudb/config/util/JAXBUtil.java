@@ -77,7 +77,7 @@ public class JAXBUtil {
 		
 	}
 	
-	public static void flushRule(MycatConfig mycatConfig) throws Exception {
+	public static void flushUser(MycatConfig mycatConfig) throws Exception {
 		
 		UserJAXB userJAXB = new UserJAXB();
 		

@@ -53,7 +53,7 @@ public class DropSchemaHandler {
 			
 			// 刷新 user.xml
 			if(needFlushRule) {
-				JAXBUtil.flushRule(mycatConf);
+				JAXBUtil.flushUser(mycatConf);
 			}
 			
 			if(schemaName.equals(c.getSchema())) {

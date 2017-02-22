@@ -8,6 +8,7 @@ import org.opencloudb.manager.response.ListDataHosts;
 import org.opencloudb.manager.response.ListDataNodes;
 import org.opencloudb.manager.response.ListSchemas;
 import org.opencloudb.manager.response.ListTables;
+import org.opencloudb.manager.response.ListUsers;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 
@@ -45,7 +46,7 @@ public class MycatConfigListHandler {
 					// TODO
 					break;
 				case USERS:
-					// TODO
+					handleListUsers(c);
 					break;
 				default:
 					break;
@@ -73,6 +74,10 @@ public class MycatConfigListHandler {
 	
 	public static void handleListDataHost(ManagerConnection c) {
 		ListDataHosts.response(c);
+	}
+	
+	public static void handleListUsers(ManagerConnection c) {
+		ListUsers.response(c);
 	}
 
 }

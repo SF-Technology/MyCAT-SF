@@ -34,6 +34,7 @@ import java.util.Map;
 
 import org.opencloudb.config.Versions;
 import org.opencloudb.config.model.ClusterConfig;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
@@ -52,12 +53,14 @@ import com.alibaba.druid.wall.WallConfig;
 @SuppressWarnings("unchecked")
 public class XMLServerLoader {
     private final SystemConfig system;
+    private final FirewallConfig firewall;
     private final Map<String, UserConfig> users;
     private final QuarantineConfig quarantine;
     private ClusterConfig cluster;
 
     public XMLServerLoader() {
         this.system = new SystemConfig();
+        this.firewall = new FirewallConfig();
         this.users = new HashMap<String, UserConfig>();
         this.quarantine = new QuarantineConfig();
         this.load();
@@ -65,6 +68,10 @@ public class XMLServerLoader {
 
     public SystemConfig getSystem() {
         return system;
+    }
+    
+    public FirewallConfig getFirewall() {
+    	return firewall;
     }
 
     public Map<String, UserConfig> getUsers() {
@@ -255,7 +262,7 @@ public class XMLServerLoader {
             Node node = list.item(i);
             if (node instanceof Element) {
                 Map<String, Object> props = ConfigUtil.loadElements((Element) node);
-                ParameterMapping.mapping(system, props);
+                ParameterMapping.mapping(firewall, props);
             }
         }
     }

@@ -36,6 +36,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.backend.PhysicalDBPool;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
@@ -54,6 +55,7 @@ public class MycatConfig {
     private static final int RELOAD_ALL = 3;
 
 	private volatile SystemConfig system;
+	private volatile FirewallConfig firewall;
 	private volatile MycatCluster cluster;
 	private volatile MycatCluster _cluster;
 	private volatile QuarantineConfig quarantine;
@@ -81,6 +83,7 @@ public class MycatConfig {
 	public MycatConfig() {
 		ConfigInitializer confInit = new ConfigInitializer(true);
 		this.system = confInit.getSystem();
+		this.firewall = confInit.getFirewall();
 		this.users = new HashMap<String, UserConfig>(confInit.getUsers());
 		this.schemas = new HashMap<String, SchemaConfig>(confInit.getSchemas());
 		this.dataHosts = new HashMap<String, PhysicalDBPool>(confInit.getDataHosts());
@@ -118,6 +121,10 @@ public class MycatConfig {
 	
 	public SystemConfig getSystem() {
 		return system;
+	}
+	
+	public FirewallConfig getFirewall() {
+		return firewall;
 	}
 
 	public ConcurrentHashMap<String,Map<String,String>> getTableIndexMap() {

@@ -37,6 +37,7 @@ import org.opencloudb.config.loader.xml.XMLSchemaLoader;
 import org.opencloudb.config.model.DBHostConfig;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.DataNodeConfig;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
@@ -54,6 +55,7 @@ import org.opencloudb.sequence.handler.IncrSequenceMySQLHandler;
  */
 public class ConfigInitializer {
 	private volatile SystemConfig system;
+	private volatile FirewallConfig firewall;
 	private volatile MycatCluster cluster;
 	private volatile QuarantineConfig quarantine;
 	private volatile Map<String, UserConfig> users;
@@ -69,6 +71,7 @@ public class ConfigInitializer {
 		XMLConfigLoader configLoader = new XMLConfigLoader(schemaLoader);
 		schemaLoader = null;
 		this.system = configLoader.getSystemConfig();
+		this.firewall = configLoader.getFirewallConfig();
 		this.users = configLoader.getUserConfigs();
 		this.schemas = configLoader.getSchemaConfigs();
         if(loadDataHost)
@@ -120,6 +123,10 @@ public class ConfigInitializer {
 
 	public SystemConfig getSystem() {
 		return system;
+	}
+	
+	public FirewallConfig getFirewall() {
+		return firewall;
 	}
 
 	public MycatCluster getCluster() {

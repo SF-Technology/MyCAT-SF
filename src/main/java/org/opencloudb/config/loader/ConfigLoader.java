@@ -28,6 +28,7 @@ import java.util.Map;
 import org.opencloudb.config.model.ClusterConfig;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.DataNodeConfig;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
@@ -48,6 +49,8 @@ public interface ConfigLoader {
 	Map<String, DataHostConfig> getDataHosts();
 
 	SystemConfig getSystemConfig();
+	
+	FirewallConfig getFirewallConfig();
 
 	UserConfig getUserConfig(String user);
 

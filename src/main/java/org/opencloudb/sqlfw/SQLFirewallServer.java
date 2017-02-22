@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
@@ -23,8 +22,8 @@ import com.alibaba.druid.wall.WallCheckResult;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.SchemaConfig;
-import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.monitor.SQLRecord;
 import org.opencloudb.net.AbstractConnection;
@@ -90,7 +89,7 @@ public class SQLFirewallServer {
     private static final ScheduledExecutorService scheduleAtFixedRateExecutor =
             new ScheduledThreadPoolExecutor(1,scheduleFactory);
 
-    private SystemConfig systemConfig = null;
+    private FirewallConfig firewallConf = null;
 
 
     /**
@@ -128,7 +127,7 @@ public class SQLFirewallServer {
 
     public SQLFirewallServer(){
 
-        systemConfig = MycatServer.getInstance().getConfig().getSystem();
+        firewallConf = MycatServer.getInstance().getConfig().getFirewall();
         /**
          * 初始化sql_id
          * 从数据sql_backlist 查询最大sql_id作为初始值。
@@ -157,7 +156,7 @@ public class SQLFirewallServer {
                 for (String key:sqlRecordMap.keySet()) {
                     SQLRecord sqlRec = sqlRecordMap.get(key);
                     if((System.currentTimeMillis()-sqlRec.getLastAccessedTimestamp())
-                            > systemConfig.getMaxAllowExecuteUnitTime()*1000){
+                            > firewallConf.getMaxAllowExecuteUnitTime()*1000){
                         if(LOGGER.isDebugEnabled()){
                             LOGGER.debug("sql record:  " +  key + "will remove from sql record map......");
                         }
@@ -165,7 +164,7 @@ public class SQLFirewallServer {
                     }
                 }
             }
-        },0,systemConfig.getMaxAllowExecuteUnitTime()*2,TimeUnit.SECONDS);
+        },0,firewallConf.getMaxAllowExecuteUnitTime()*2,TimeUnit.SECONDS);
     }
 
     /**
@@ -315,14 +314,14 @@ public class SQLFirewallServer {
          */
         if(sqlRecord != null) {
             if (sqlRecord.getResultRows() >=
-                    systemConfig.getMaxAllowResultRow()) {
+            		firewallConf.getMaxAllowResultRow()) {
 
                 LOGGER.error(sql + " of result rows more than maximum value "
-                        + systemConfig.getMaxAllowResultRow());
+                        + firewallConf.getMaxAllowResultRow());
 
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(sql + " of result rows more than maximum value "
-                            + systemConfig.getMaxAllowResultRow());
+                            + firewallConf.getMaxAllowResultRow());
                 }
 
                 addSqlToBlacklist(sql);
@@ -340,11 +339,11 @@ public class SQLFirewallServer {
                 LOGGER.debug("SQL execute time  " + sqlExecuteTime + " s");
             }
 
-            if (sqlExecuteTime > systemConfig.getMaxAllowExecuteSqlTime()) {
+            if (sqlExecuteTime > firewallConf.getMaxAllowExecuteSqlTime()) {
 
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug(sql + " execution time more than maximum value "
-                            + systemConfig.getMaxAllowExecuteSqlTime());
+                            + firewallConf.getMaxAllowExecuteSqlTime());
                 }
 
                 addSqlToBlacklist(sql);
@@ -362,13 +361,13 @@ public class SQLFirewallServer {
                 LOGGER.debug("Unit Time " + interval + " s ");
             }
 
-            if ((interval < systemConfig.getMaxAllowExecuteUnitTime()) &&
-                    (sqlRecord.getExecutionTimes().get() > systemConfig.getMaxAllowExecuteTimes())) {
+            if ((interval < firewallConf.getMaxAllowExecuteUnitTime()) &&
+                    (sqlRecord.getExecutionTimes().get() > firewallConf.getMaxAllowExecuteTimes())) {
 
 
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("In Unit Time " + systemConfig.getMaxAllowExecuteUnitTime() + " , " +
-                            sql + "  execution times more than maximum value " + systemConfig.getMaxAllowExecuteTimes());
+                    LOGGER.debug("In Unit Time " + firewallConf.getMaxAllowExecuteUnitTime() + " , " +
+                            sql + "  execution times more than maximum value " + firewallConf.getMaxAllowExecuteTimes());
                 }
 
                 addSqlToBlacklist(sql);
@@ -382,7 +381,7 @@ public class SQLFirewallServer {
         /**
          * 基于正则表达式匹配
          */
-        boolean enableRegEx = systemConfig.isEnableRegEx();
+        boolean enableRegEx = firewallConf.isEnableRegEx();
 
         if (enableRegEx) {
 

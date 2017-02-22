@@ -1,0 +1,113 @@
+package org.opencloudb.manager.handler;
+
+import java.nio.ByteBuffer;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.opencloudb.MycatConfig;
+import org.opencloudb.MycatServer;
+import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.model.SchemaConfig;
+import org.opencloudb.config.model.TableConfig;
+import org.opencloudb.config.model.rule.RuleConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.config.util.JAXBUtil;
+import org.opencloudb.manager.ManagerConnection;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
+import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.util.SplitUtil;
+
+import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
+
+/**
+ * create table 逻辑处理器
+ * @author CrazyPig
+ * @since 2017-02-22
+ *
+ */
+public class CreateTableHandler {
+	
+	private static final Set<String> DEFAULT_DB_TYPE_SET = new HashSet<String>();
+	
+	static {
+		DEFAULT_DB_TYPE_SET.add("mysql");
+	}
+	
+	public static void handle(ManagerConnection c, MycatCreateTableStatement stmt, String sql) {
+		
+		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
+		mycatConf.getLock().lock();
+		try {
+			
+			String schemaName = (stmt.getSchema() == null ? c.getSchema() : stmt.getSchema().getSimpleName());
+			
+			if(!mycatConf.getUsers().get(c.getUser()).getSchemas().contains(schemaName)) {
+				c.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Unknown database '" + schemaName + "'");
+				return ;
+			}
+			
+			SchemaConfig schemaConf = mycatConf.getSchemas().get(schemaName);
+			if(schemaConf == null) {
+				c.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Unknown database '" + schemaName + "'");
+				return ;
+			}
+			
+			String tableName = stmt.getTable().getSimpleName();
+			String upperTableName = tableName.toUpperCase();
+			String primaryKey = stmt.getPrimaryKey() == null ? null : ((SQLCharExpr)stmt.getPrimaryKey()).getText();
+			boolean autoIncrement = false;
+			boolean needAddLimit = true;
+			int tableType = stmt.isGlobal() ? TableConfig.TYPE_GLOBAL_TABLE : TableConfig.TYPE_GLOBAL_DEFAULT;
+			String dataNode = ((SQLCharExpr)stmt.getDataNodes()).getText();
+			String ruleName = stmt.getRule() == null ? null : ((SQLCharExpr)stmt.getRule()).getText();
+			
+			// 验证表是否存在
+			if(schemaConf.getTables().containsKey(upperTableName)) {
+				c.writeErrMessage(ErrorCode.ER_TABLE_EXISTS_ERROR, "table '" + tableName + "' already exist");
+				return ;
+			}
+			// 验证dataNode是否存在
+			String[] dataNodes = SplitUtil.split(dataNode, ',', '$', '-');
+			for(String _dataNode : dataNodes) {
+				if(!mycatConf.getDataNodes().containsKey(_dataNode)) {
+					c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "dataNode '" + _dataNode + "' dosen't exist");
+					return ;
+				}
+			}
+			RuleConfig rule = null;
+			if(ruleName != null) {
+				// 验证rule是否存在
+				TableRuleConfig tableRuleConf = mycatConf.getTableRules().get(ruleName);
+				if(tableRuleConf == null) {
+					c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "rule '" + ruleName + "' dosen't exist");
+					return ;
+				}
+				rule = tableRuleConf.getRule();
+			}
+			boolean ruleRequired = rule == null ? false : true;
+			TableConfig tableConf = new TableConfig(upperTableName, primaryKey, autoIncrement, 
+					needAddLimit, tableType, dataNode, 
+					DEFAULT_DB_TYPE_SET, rule, ruleRequired, 
+					null, false, null, null);
+			
+			schemaConf.getTables().put(upperTableName, tableConf);
+			
+			// 更新datanode, Tips: 引入的table有可能增加新的datanode
+			schemaConf.updateDataNodesMeta();
+			
+			// 刷新 schema.xml
+			JAXBUtil.flushSchema(mycatConf);
+			
+			ByteBuffer buffer = c.allocate();
+			c.write(c.writeToBuffer(OkPacket.OK, buffer));
+				
+		} catch(Exception e) {
+			e.printStackTrace();
+			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
+		} finally {
+			mycatConf.getLock().unlock();
+		}
+		
+	}
+	
+}

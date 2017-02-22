@@ -24,17 +24,20 @@ public class MycatConfigCreateHandler {
 		try {
 			SQLStatement stmt = parser.parseStatement();
 			if(stmt instanceof MycatCreateSchemaStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create schema stmt");
+				CreateSchemaHandler.handle(c, (MycatCreateSchemaStatement) stmt, sql);
 			} else if(stmt instanceof MycatCreateTableStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create table stmt");
+				CreateTableHandler.handle(c, (MycatCreateTableStatement) stmt, sql);
 			} else if(stmt instanceof MycatCreateChildTableStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create childtable stmt");
+				CreateChildTableHandler.handle(c, (MycatCreateChildTableStatement) stmt, sql);
 			} else if(stmt instanceof MycatCreateDataNodeStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create datanode stmt");
+				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport create datanode stmt");
 			} else if(stmt instanceof MycatCreateDataHostStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create datahost stmt");
+				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport create datahost stmt");
+			} else {
+				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			}
 		} catch(Exception e) {
+			e.printStackTrace();
 			c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, e.getMessage());
 		}
 	}

@@ -83,6 +83,24 @@ public class SchemaConfig {
 		}
 	}
 	
+	public SchemaConfig(String name, int sqlMaxLimit, boolean checkSQLschema, Map<String, TableConfig> tables) {
+		this.name = name;
+		this.dataNode = null;
+		this.defaultMaxLimit = sqlMaxLimit;
+		this.checkSQLSchema = checkSQLschema;
+		this.tables = tables;
+		this.noSharding = false;
+		this.metaDataNodes = buildMetaDataNodes();
+		this.allDataNodes = buildAllDataNodes();
+		if (this.allDataNodes != null && !this.allDataNodes.isEmpty()) {
+			String[] dnArr = new String[this.allDataNodes.size()];
+			dnArr = this.allDataNodes.toArray(dnArr);
+			this.allDataNodeStrArr = dnArr;
+		} else {
+			this.allDataNodeStrArr = null;
+		}
+	}
+	
 	public String[] getAllDataNodeStrArr() {
 		return allDataNodeStrArr;
 	}
@@ -218,6 +236,14 @@ public class SchemaConfig {
 
 	private static boolean isEmpty(String str) {
 		return ((str == null) || (str.length() == 0));
+	}
+	
+	public synchronized void updateDataNodesMeta() {
+		metaDataNodes.clear();
+		allDataNodes.clear();
+		
+		metaDataNodes.addAll(buildMetaDataNodes());
+		allDataNodes.addAll(buildAllDataNodes());
 	}
 
 }

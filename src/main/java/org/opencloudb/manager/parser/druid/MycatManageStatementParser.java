@@ -7,10 +7,12 @@ import org.opencloudb.MycatServer;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
 import org.opencloudb.parser.druid.MycatExprParser;
@@ -101,6 +103,9 @@ public class MycatManageStatementParser extends SQLStatementParser {
                 	continue;
                 } else if(identifierEquals("DATAHOST")) {
                 	statementList.add(parseDropDataHost(false));
+                } else if(lexer.token() == Token.USER) {
+                	statementList.add(parseDropUser(false));
+                	continue;
                 } else {
                     throw new ParserException("TODO " + lexer.token());
                 }
@@ -160,12 +165,70 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			MycatCreateDataHostParser createDataHostParser = new MycatCreateDataHostParser(this.exprParser);
 			return createDataHostParser.parseCreateDataHost(false);
 			
+		} else if(token == Token.USER) {
+			
+			return parseCreateUser(false);
+			
 		} else {
 			
 			throw new ParserException("Unsupport Statement : create " + token);
 			
 		}
 		
+	}
+	
+	public SQLStatement parseCreateUser(boolean acceptCreate) {
+		if(acceptCreate) {
+			accept(Token.CREATE);
+		}
+		accept(Token.USER);
+		MycatCreateUserStatement stmt = new MycatCreateUserStatement();
+		stmt.setUserName(this.exprParser.name());
+		
+		for(;;) {
+			
+			if(identifierEquals("PASSWORD")) {
+				lexer.nextToken();
+				accept(Token.EQ);
+				stmt.setPassword(this.exprParser.expr());
+				continue;
+			}
+			
+			if(identifierEquals("SCHEMAS")) {
+				acceptIdentifier("SCHEMAS");
+				accept(Token.EQ);
+				stmt.setSchemas(this.exprParser.expr());
+				continue;
+			}
+			
+			if(identifierEquals("READONLY")) {
+				acceptIdentifier("READONLY");
+				accept(Token.EQ);
+				if(lexer.token() == Token.TRUE) {
+					lexer.nextToken();
+					stmt.setReadOnly(true);
+				} else if(lexer.token() == Token.FALSE) {
+					lexer.nextToken();
+					stmt.setReadOnly(false);
+				} else {
+					throw new ParserException("readOnly must be true or false");
+				}
+				continue;
+			}
+			
+			break;
+		}
+		
+		// 语义检查
+		if(stmt.getPassword() == null) {
+			throw new ParserException("user definition must provide password property, eg: password = \"${your_password}\"");
+		}
+		
+		if(stmt.getSchemas() == null) {
+			throw new ParserException("user definition must provide schemas property, eg: schemas = \"${schemaList}\"");
+		}
+		
+		return stmt;
 	}
 	
 	/**
@@ -317,6 +380,16 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		acceptIdentifier("DATAHOST");
 		MycatDropDataHostStatement stmt = new MycatDropDataHostStatement();
 		stmt.setDataHost(this.exprParser.name());
+		return stmt;
+	}
+	
+	public SQLStatement parseDropUser(boolean acceptDrop) {
+		if(acceptDrop) {
+			accept(Token.DROP);
+		}
+		accept(Token.USER);
+		MycatDropUserStatement stmt = new MycatDropUserStatement();
+		stmt.setUserName(this.exprParser.name());
 		return stmt;
 	}
 	

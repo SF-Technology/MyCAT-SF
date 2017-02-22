@@ -13,10 +13,12 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatemen
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
@@ -179,6 +181,36 @@ public class MycatManageStatementParserTest {
 		
 	}
 	
+	@Test
+	public void testParseCreateUserStatementSuccess() {
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("create user usr01")
+			.append(" password = 'sf123456'")
+			.append(" schemas = 'testdb, cjx'")
+			.append(" readOnly = true");
+		String sql = sb.toString();
+		MycatManageStatementParser parser = new MycatManageStatementParser(sql);
+		SQLStatement stmt = parser.parseStatement();
+		assertEquals(MycatCreateUserStatement.class, stmt.getClass());
+		MycatCreateUserStatement _stmt = (MycatCreateUserStatement) stmt;
+		assertEquals("usr01", _stmt.getUserName().getSimpleName());
+		assertEquals("sf123456", ((SQLCharExpr)_stmt.getPassword()).getText());
+		assertEquals("testdb, cjx", ((SQLCharExpr)_stmt.getSchemas()).getText());
+		assertEquals(true, _stmt.isReadOnly());
+		
+		testSuccessFromFile("create_user_success_test.txt");
+		
+		
+	}
+	
+	@Test
+	public void testParseCreateUserStatementFail() {
+		
+		testFailFromFile("create_user_fail_test.txt");
+		
+	}
+	
 	@Test(expected = ParserException.class)
 	public void testParseDropSchemaStatement() {
 		String sql = "drop schema TESTDB";
@@ -232,6 +264,16 @@ public class MycatManageStatementParserTest {
 		sql = "drop datahost dh1 dd";
 		parser = new MycatManageStatementParser(sql);
 		parser.parseStatement();
+	}
+	
+	@Test
+	public void testParseDropUserStatement() {
+		String sql = "drop user usr01";
+		MycatManageStatementParser parser = new MycatManageStatementParser(sql);
+		SQLStatement stmt = parser.parseStatement();
+		assertEquals(MycatDropUserStatement.class, stmt.getClass());
+		MycatDropUserStatement _stmt = (MycatDropUserStatement) stmt;
+		assertEquals("usr01", _stmt.getUserName().getSimpleName());
 	}
 	
 	@Test

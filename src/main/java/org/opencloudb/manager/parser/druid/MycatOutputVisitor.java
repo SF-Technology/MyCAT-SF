@@ -8,10 +8,12 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatemen
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
@@ -221,6 +223,29 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public void endVisit(MycatListStatement stmt) {
+		
+	}
+
+	@Override
+	public void visit(MycatCreateUserStatement stmt) {
+		println("CREATE USER " + stmt.getUserName().getSimpleName());
+		println("password = " + stmt.getPassword());
+		println("schemas = " + stmt.getSchemas());
+		println("readOnly = " + stmt.isReadOnly());
+	}
+
+	@Override
+	public void endVisit(MycatCreateUserStatement stmt) {
+		
+	}
+
+	@Override
+	public void visit(MycatDropUserStatement stmt) {
+		print("DROP USER " + stmt.getUserName());
+	}
+
+	@Override
+	public void endVisit(MycatDropUserStatement stmt) {
 		
 	}
 

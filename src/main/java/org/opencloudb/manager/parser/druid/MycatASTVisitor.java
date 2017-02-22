@@ -6,10 +6,12 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatemen
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
@@ -48,5 +50,11 @@ public interface MycatASTVisitor extends SQLASTVisitor {
 	
 	void visit(MycatListStatement mycatListStatement);
 	void endVisit(MycatListStatement stmt);
+	
+	void visit(MycatCreateUserStatement stmt);
+	void endVisit(MycatCreateUserStatement stmt);
+	
+	void visit(MycatDropUserStatement stmt);
+	void endVisit(MycatDropUserStatement stmt);
 	
 }

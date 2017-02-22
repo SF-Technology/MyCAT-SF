@@ -35,6 +35,11 @@ import org.opencloudb.config.Isolations;
  */
 public final class SystemConfig {
 
+	private static final String DEFAULT_ROOT_USER = "root";
+	private static final String DEFAULT_ROOT_PASSWORD = "sf123456";
+	private String rootUser = DEFAULT_ROOT_USER;
+	private String rootPassword = DEFAULT_ROOT_PASSWORD;
+	
 	public static final String SYS_HOME = "MYCAT_HOME";
 	private static final int DEFAULT_PORT = 8066;
 	private static final int DEFAULT_MANAGER_PORT = 9066;
@@ -1460,4 +1465,22 @@ public final class SystemConfig {
     public void setLimitZeroAllow(boolean limitZeroAllow) {
         this.limitZeroAllow = limitZeroAllow;
     }
+
+	public String getRootUser() {
+		return rootUser;
+	}
+
+	public void setRootUser(String rootUser) {
+		this.rootUser = rootUser;
+	}
+
+	public String getRootPassword() {
+		return rootPassword;
+	}
+
+	public void setRootPassword(String rootPassword) {
+		this.rootPassword = rootPassword;
+	}
+    
+    
 }

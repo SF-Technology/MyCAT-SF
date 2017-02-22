@@ -95,12 +95,25 @@ public class MycatConfig {
 		this.tableRules = confInit.getTableRules();
 		this.functions = confInit.getFunctions();
 		
+		initRootUser();
+		
 		this.reloadTime = TimeUtil.currentTimeMillis();
 		this.rollbackTime = -1L;
 		this.status = RELOAD;
 		this.lock = new ReentrantLock();
 
 		this.tableIndexMap = new ConcurrentHashMap<String, Map<String, String>>();
+	}
+	
+	/**
+	 * 初始化built-in root用户
+	 */
+	private void initRootUser() {
+		UserConfig rootUserConf = new UserConfig();
+		rootUserConf.setName(system.getRootUser());
+		rootUserConf.setPassword(system.getRootPassword());
+		rootUserConf.setSchemas(new HashSet<String>(schemas.keySet()));
+		this.users.put(system.getRootUser(), rootUserConf);
 	}
 	
 	public SystemConfig getSystem() {

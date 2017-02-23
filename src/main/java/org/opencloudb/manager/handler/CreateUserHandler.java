@@ -56,6 +56,12 @@ public class CreateUserHandler {
 			
             if(schemas != null) {
             	String[] strArray = SplitUtil.split(schemas, ',', true);
+            	for(String schema : strArray) {
+            		if(!mycatConfig.getSchemas().containsKey(schema)) {
+            			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "schema '" + schema + "' dosen't exist");
+        				return ;
+            		}
+            	}
             	newUserConf.setSchemas(new HashSet<String>(Arrays.asList(strArray)));
             } else {
             	newUserConf.setSchemas(new HashSet<String>());

@@ -12,6 +12,7 @@ public final class ManagerParseMycatConfig {
 	public static final int LIST = 1;
 	public static final int CREATE = 2;
 	public static final int DROP = 3;
+	public static final int ALTER = 4;
 	
 	public static int parse(String stmt, int offset) {
 		for(int i = offset + 1, len = stmt.length(); i < len; i++) {
@@ -21,6 +22,9 @@ public final class ManagerParseMycatConfig {
 				case '\r':
 				case '\n':
 					continue;
+				case 'A':
+				case 'a':
+					return alterCheck(stmt, i);
 				case 'L':
 				case 'l':
 					return listCheck(stmt, i);
@@ -32,6 +36,22 @@ public final class ManagerParseMycatConfig {
 					return dropCheck(stmt, i);
 				default:
 					break;
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int alterCheck(String stmt, int offset) {
+		if(stmt.length() > "LTER ".length() + offset) {
+			char c1 = stmt.charAt(++offset); // L
+			char c2 = stmt.charAt(++offset); // T
+			char c3 = stmt.charAt(++offset); // E
+			char c4 = stmt.charAt(++offset); // R
+			char c5 = stmt.charAt(++offset);
+			if((c1 == 'L' || c1 == 'l') && (c2 == 'T' || c2 == 't')
+					&& (c3 == 'E' || c3 == 'e') && (c4 == 'R' || c4 == 'r')
+					&& (c5 == ' ' || c5 == '\t' || c5 == '\r' || c5 == '\n')) {
+				return ALTER;
 			}
 		}
 		return OTHER;

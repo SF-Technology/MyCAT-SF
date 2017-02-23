@@ -80,13 +80,10 @@ public class ShowDatabases {
         if (user != null) {
             TreeSet<String> schemaSet = new TreeSet<String>();
             Set<String> schemaList = user.getSchemas();
-            if (schemaList == null || schemaList.size() == 0) {
-                schemaSet.addAll(conf.getSchemas().keySet());
-            } else {
-                for (String schema : schemaList) {
-                    schemaSet.add(schema);
-                }
+            for (String schema : schemaList) {
+                schemaSet.add(schema);
             }
+            
             for (String name : schemaSet) {
                 RowDataPacket row = new RowDataPacket(FIELD_COUNT);
                 row.add(StringUtil.encode(name, c.getCharset()));

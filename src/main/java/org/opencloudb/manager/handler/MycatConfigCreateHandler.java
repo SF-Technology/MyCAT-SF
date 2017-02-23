@@ -8,6 +8,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatemen
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 
@@ -33,6 +34,8 @@ public class MycatConfigCreateHandler {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport create datanode stmt");
 			} else if(stmt instanceof MycatCreateDataHostStatement) {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport create datahost stmt");
+			} else if(stmt instanceof MycatCreateUserStatement) {
+				CreateUserHandler.handle(c, (MycatCreateUserStatement) stmt, sql);
 			} else {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			}

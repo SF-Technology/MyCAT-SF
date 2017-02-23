@@ -115,6 +115,9 @@ public class SchemaJAXB {
 				if(tableConf.getRule() != null) {
 					table.setRule(tableConf.getRule().getName());
 				}
+				if(tableConf.isGlobalTable()) {
+					table.setType("global");
+				}
 				return table;
 			} 
 			

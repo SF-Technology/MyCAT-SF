@@ -3,10 +3,12 @@ package org.opencloudb.manager.handler;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.loader.xml.jaxb.UserJAXB;
 import org.opencloudb.config.model.UserConfig;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
@@ -59,10 +61,16 @@ public class CreateUserHandler {
             	newUserConf.setSchemas(new HashSet<String>());
             }
             
-            mycatConfig.getUsers().put(newUserName, newUserConf);
-			
             // 刷新 user.xml
-            JAXBUtil.flushUser(mycatConfig);
+            Map<String, UserConfig> users = mycatConfig.getUsers();
+            // 更新内存中配置
+            users.put(newUserName, newUserConf);
+            UserJAXB userJAXB = JAXBUtil.toUserJAXB(users, true);
+            if(!JAXBUtil.flushUser(userJAXB)) {
+            	users.remove(newUserName); // flush失败, 需要回滚内存中配置
+            	c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "flush user.xml fail");
+            	return ;
+            }
             
             ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));

@@ -1,10 +1,14 @@
 package org.opencloudb.manager.handler;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.config.util.JAXBUtil;
@@ -47,22 +51,34 @@ public class DropTableHandler {
 			TableConfig target = schemaConf.getTables().get(upperTableName);
 			
 			// 检查是否有子表, 如果有子表也要drop掉
-			for(TableConfig tableConf : schemaConf.getTables().values()) {
+			List<TableConfig> delChildTables = new ArrayList<TableConfig>();
+			for(Iterator<TableConfig> it = schemaConf.getTables().values().iterator(); it.hasNext();) {
+				TableConfig tableConf = it.next();
 				if(tableConf == target) {
 					continue;
 				}
 				if(tableConf.isChildTable() && tableConf.getParentTC() == target) {
-					schemaConf.getTables().remove(tableConf.getName());
+					delChildTables.add(tableConf);
+					it.remove();
 				}
 			}
 			
-			schemaConf.getTables().remove(target.getName());
+			TableConfig delTable = schemaConf.getTables().remove(target.getName());
+			
+			// 刷新 schema.xml
+			SchemaJAXB schemaJAXB = JAXBUtil.toSchemaJAXB(mycatConf.getSchemas());
+			if(!JAXBUtil.flushSchema(schemaJAXB)) {
+				// 出错回滚
+				schemaConf.getTables().put(upperTableName, delTable);
+				for(TableConfig delChildTable : delChildTables) {
+					schemaConf.getTables().put(delChildTable.getName(), delChildTable);
+				}
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "flush schema.xml fail");
+				return ;
+			}
 			
 			// 重新更新SchemaConfig datanode集合
 			schemaConf.updateDataNodesMeta();
-			
-			// 刷新 schema.xml
-			JAXBUtil.flushSchema(mycatConf);
 			
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));

@@ -2,9 +2,12 @@ package org.opencloudb.manager.handler;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.Map;
+
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.config.util.JAXBUtil;
@@ -35,10 +38,22 @@ public class CreateSchemaHandler {
 		MycatConfig mycatConfig = MycatServer.getInstance().getConfig();
 		mycatConfig.getLock().lock();
 		try {
-			mycatConfig.getSchemas().put(schemaName, schema);
-			mycatConfig.getUsers().get(c.getUser()).getSchemas().add(schemaName);
+			
 			// 刷新 schema.xml
-			flushSchema();
+			Map<String, SchemaConfig> schemas = mycatConfig.getSchemas();
+			Map<String, SchemaConfig> wrapSchemas = new HashMap<String, SchemaConfig>(schemas);
+			wrapSchemas.put(schemaName, schema);
+			SchemaJAXB schemaJAXB = JAXBUtil.toSchemaJAXB(wrapSchemas);
+			
+			if(!JAXBUtil.flushSchema(schemaJAXB)) {
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "flush schema.xml fail");
+				return ;
+			}
+			
+			// 更新内存中配置
+			schemas.put(schemaName, schema);
+			mycatConfig.getUsers().get(c.getUser()).getSchemas().add(schemaName);
+			
 			// 响应客户端
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
@@ -48,12 +63,6 @@ public class CreateSchemaHandler {
 		} finally {
 			mycatConfig.getLock().unlock();
 		}
-		
-	}
-	
-	private static void flushSchema() throws Exception {
-		
-		JAXBUtil.flushSchema(MycatServer.getInstance().getConfig());
 		
 	}
 	

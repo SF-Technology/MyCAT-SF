@@ -5,14 +5,16 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
-import org.opencloudb.MycatConfig;
+import org.opencloudb.MycatServer;
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.loader.xml.jaxb.UserJAXB;
 import org.opencloudb.config.loader.xml.jaxb.UserJAXB.User;
@@ -34,8 +36,9 @@ public class JAXBUtil {
 	 * @param fileName 生成的xml文件名
 	 * @param dtdName dtd文件名称(不带后缀.dtd)
 	 * @throws Exception
+	 * @return true:成功 , false:失败
 	 */
-	public static void marshaller(Object object, String fileName, String dtdName) throws Exception {
+	public static boolean marshaller(Object object, String fileName, String dtdName) throws Exception {
 
 		JAXBContext jaxbContext = JAXBContext.newInstance(object.getClass());
 		Marshaller marshaller = jaxbContext.createMarshaller();
@@ -50,52 +53,72 @@ public class JAXBUtil {
 			throw new Exception("can not found file : " + fileName);
 		}
 		
-		Path path = Paths.get(url.toURI());
+		Path target = Paths.get(url.toURI());
 		
-		try (OutputStream out = Files.newOutputStream(path, StandardOpenOption.CREATE,
-				StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+		OutputStream out = null;
+		
+		try {
+			// 创建临时文件, 将内容先刷到临时文件
+			Path tmpFilePath = Files.createTempFile(target.getParent(), fileName, ".tmp");
+			out = Files.newOutputStream(tmpFilePath, StandardOpenOption.CREATE,
+					StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
 			marshaller.marshal(object, out);
-		}
-		
-	}
-	
-	public static void flushSchema(MycatConfig mycatConfig) throws Exception {
-		
-		SchemaJAXB schemaJAXB = new SchemaJAXB();
-	
-		if(mycatConfig.getSchemas().size() > 0) {
-			Set<String> schemaNameSet = new TreeSet<String>(mycatConfig.getSchemas().keySet());
-			for(String schemaName : schemaNameSet) {
-				SchemaConfig schemaConf = mycatConfig.getSchemas().get(schemaName);
-				Schema schema = Schema.transferFrom(schemaConf);
-				schemaJAXB.getSchemas().add(schema);
+			// 原子rename操作, 将临时文件覆盖到目标文件
+			Files.move(tmpFilePath, target, StandardCopyOption.ATOMIC_MOVE);
+			
+		} catch(Exception e) {
+			throw e;
+		} finally {
+			if(out != null) {
+				out.close();
 			}
 		}
+		
+		return true;
+	}
+	
+	public static boolean flushSchema(SchemaJAXB schemaJAXB) throws Exception {
 		
 		// 刷新到schema.xml
-		marshaller(schemaJAXB, "schema.xml", "schema");
+		return marshaller(schemaJAXB, "schema.xml", "schema");
 		
 	}
 	
-	public static void flushUser(MycatConfig mycatConfig) throws Exception {
-		
-		UserJAXB userJAXB = new UserJAXB();
-		
-		if(mycatConfig.getUsers().size() > 0) {
-			Set<String> userNameSet = new TreeSet<String>(mycatConfig.getUsers().keySet());
-			for(String userName : userNameSet) {
-				if(mycatConfig.getSystem().getRootUser().equals(userName)) {
-					continue;
-				}
-				UserConfig userConf = mycatConfig.getUsers().get(userName);
-				User user = User.transferFrom(userConf);
-				userJAXB.getUsers().add(user);
-			}
-		}
+	public static boolean flushUser(UserJAXB userJAXB) throws Exception {
 		
 		// 刷新到user.xml
-		marshaller(userJAXB, "user.xml", "user");
+		return marshaller(userJAXB, "user.xml", "user");
 		
+	}
+	
+	public static SchemaJAXB toSchemaJAXB(Map<String, SchemaConfig> schemas) {
+		
+		SchemaJAXB schemaJAXB = new SchemaJAXB();
+		Set<String> schemaNameSet = new TreeSet<String>(schemas.keySet());
+		for(String schemaName : schemaNameSet) {
+			SchemaConfig schemaConf = schemas.get(schemaName);
+			Schema schema = Schema.transferFrom(schemaConf);
+			schemaJAXB.getSchemas().add(schema);
+		}
+		
+		return schemaJAXB;
+	}
+	
+	public static UserJAXB toUserJAXB(Map<String, UserConfig> users, boolean excludeRoot) {
+		
+		UserJAXB userJAXB = new UserJAXB();
+		Set<String> userNameSet = new TreeSet<String>(users.keySet());
+		for(String userName : userNameSet) {
+			if(excludeRoot && MycatServer.getInstance().getConfig().getSystem()
+					.getRootUser().equals(userName)) {
+				continue;
+			}
+			UserConfig userConf = users.get(userName);
+			User user = User.transferFrom(userConf);
+			userJAXB.getUsers().add(user);
+		}
+		
+		return userJAXB;
 	}
 	
 }

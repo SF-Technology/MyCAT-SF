@@ -7,6 +7,7 @@ import java.util.Set;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.config.util.JAXBUtil;
@@ -81,11 +82,15 @@ public class CreateChildTableHandler {
 			
 			schemaConf.getTables().put(upperTableName, tableConf);
 			
-			// 更新datanode, Tips: 引入的table有可能增加新的datanode
-			schemaConf.updateDataNodesMeta();
+			SchemaJAXB schemaJAXB = JAXBUtil.toSchemaJAXB(mycatConf.getSchemas());
 			
 			// 刷新 schema.xml
-			JAXBUtil.flushSchema(mycatConf);
+			if(!JAXBUtil.flushSchema(schemaJAXB)) {
+				// 出错回滚
+				schemaConf.getTables().remove(upperTableName);
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "flush schema.xml fail");
+				return ;
+			}
 			
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));

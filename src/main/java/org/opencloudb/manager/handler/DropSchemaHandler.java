@@ -1,11 +1,15 @@
 package org.opencloudb.manager.handler;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
+import org.opencloudb.config.loader.xml.jaxb.UserJAXB;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.UserConfig;
 import org.opencloudb.config.util.JAXBUtil;
@@ -39,23 +43,45 @@ public class DropSchemaHandler {
 			
 			// 对于引用该schema的用户, 需要删除对应schema集合中该schema
 			boolean needFlushRule = false;
-			for(UserConfig userConf : mycatConf.getUsers().values()) {
+			Map<String, UserConfig> users = mycatConf.getUsers();
+			List<UserConfig> needFlushUsers = new ArrayList<UserConfig>();
+			for(UserConfig userConf : users.values()) {
 				if(userConf.getSchemas().contains(schemaName)) {
 					userConf.getSchemas().remove(schemaName);
+					needFlushUsers.add(userConf);
 					needFlushRule = true;
 				}
 			} 
 			
-			schemas.remove(schemaName);
+			SchemaConfig delSchema = schemas.remove(schemaName);
 			
 			// 刷新 schema.xml
-			JAXBUtil.flushSchema(mycatConf);
+			SchemaJAXB schemaJAXB = JAXBUtil.toSchemaJAXB(schemas);
 			
-			// 刷新 user.xml
-			if(needFlushRule) {
-				JAXBUtil.flushUser(mycatConf);
+			if(!JAXBUtil.flushSchema(schemaJAXB)) {
+				// 出错回滚
+				schemas.put(schemaName, delSchema);
+				for(UserConfig needFlushUser : needFlushUsers) {
+					needFlushUser.getSchemas().add(schemaName);
+				}
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "flush schema.xml fail");
+				return ;
 			}
 			
+			// 刷新 user.xml
+			UserJAXB userJAXB = JAXBUtil.toUserJAXB(users, true);
+			
+			if(needFlushRule && (!JAXBUtil.flushUser(userJAXB))) {
+				// 出错回滚
+				schemas.put(schemaName, delSchema);
+				for(UserConfig needFlushUser : needFlushUsers) {
+					needFlushUser.getSchemas().add(schemaName);
+				}
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "flush user.xml fail");
+				return ;
+			}
+			
+			// 删除的schema为当前连接使用的schema, 将当前连接的schema置空
 			if(schemaName.equals(c.getSchema())) {
 				c.setSchema(null);
 			}

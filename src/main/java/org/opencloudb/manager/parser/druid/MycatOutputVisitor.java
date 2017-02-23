@@ -2,6 +2,7 @@ package org.opencloudb.manager.parser.druid;
 
 import java.util.List;
 
+import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
@@ -246,6 +247,25 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public void endVisit(MycatDropUserStatement stmt) {
+		
+	}
+
+	@Override
+	public void visit(MycatAlterUserStatement stmt) {
+		println("ALTER USER " + stmt.getUserName().getSimpleName());
+		if(stmt.isAlterPassword()) {
+			println("password = " + stmt.getPassword());
+		}
+		if(stmt.isAlterSchemas()) {
+			println("schemas = " + stmt.getSchemas());
+		}
+		if(stmt.isAlterReadOnly()) {
+			println("readOnly = " + stmt.isReadOnly());
+		}
+	}
+
+	@Override
+	public void endVisit(MycatAlterUserStatement stmt) {
 		
 	}
 

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.opencloudb.MycatServer;
+import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
@@ -415,7 +416,60 @@ public class MycatManageStatementParser extends SQLStatementParser {
 	 */
 	@Override
 	public SQLStatement parseAlter() {
-		throw new ParserException("Unsupport Alter statement");
+//		throw new ParserException("Unsupport Alter statement");
+		accept(Token.ALTER);
+		Token token = lexer.token();
+		if(token == Token.USER) {
+			return parseAlterUser(false);
+		} else {
+			throw new ParserException("Unsupport Statement : alter " + token);
+		}
+	}
+	
+	public SQLStatement parseAlterUser(boolean acceptAlter) {
+		if(acceptAlter) {
+			accept(Token.ALTER);
+		}
+		accept(Token.USER);
+		MycatAlterUserStatement stmt = new MycatAlterUserStatement();
+		stmt.setUserName(this.exprParser.name());
+		for(;;) {
+			
+			if(identifierEquals("PASSWORD")) {
+				lexer.nextToken();
+				accept(Token.EQ);
+				stmt.setPassword(this.exprParser.expr());
+				stmt.setAlterPassword(true);
+				continue;
+			}
+			
+			if(identifierEquals("SCHEMAS")) {
+				acceptIdentifier("SCHEMAS");
+				accept(Token.EQ);
+				stmt.setSchemas(this.exprParser.expr());
+				stmt.setAlterSchemas(true);
+				continue;
+			}
+			
+			if(identifierEquals("READONLY")) {
+				acceptIdentifier("READONLY");
+				accept(Token.EQ);
+				if(lexer.token() == Token.TRUE) {
+					lexer.nextToken();
+					stmt.setReadOnly(true);
+				} else if(lexer.token() == Token.FALSE) {
+					lexer.nextToken();
+					stmt.setReadOnly(false);
+				} else {
+					throw new ParserException("readOnly must be true or false");
+				}
+				stmt.setAlterReadOnly(true);
+				continue;
+			}
+			
+			break;
+		}
+		return stmt;
 	}
 
 	/**

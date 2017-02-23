@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.Test;
 import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
+import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
@@ -274,6 +275,20 @@ public class MycatManageStatementParserTest {
 		assertEquals(MycatDropUserStatement.class, stmt.getClass());
 		MycatDropUserStatement _stmt = (MycatDropUserStatement) stmt;
 		assertEquals("usr01", _stmt.getUserName().getSimpleName());
+	}
+	
+	@Test
+	public void testParseAlterUserStatement() {
+		String sql = "alter user user01 password = 'newpasswd' schemas = 'db1, db2, db3'";
+		MycatManageStatementParser parser = new MycatManageStatementParser(sql);
+		SQLStatement stmt = parser.parseStatement();
+		assertEquals(MycatAlterUserStatement.class, stmt.getClass());
+		MycatAlterUserStatement _stmt = (MycatAlterUserStatement) stmt;
+		assertEquals("user01", _stmt.getUserName().getSimpleName());
+		assertEquals(true, _stmt.isAlterPassword());
+		assertEquals(true, _stmt.isAlterSchemas());
+		assertEquals("newpasswd", ((SQLCharExpr)_stmt.getPassword()).getText());
+		assertEquals("db1, db2, db3", ((SQLCharExpr)_stmt.getSchemas()).getText());
 	}
 	
 	@Test

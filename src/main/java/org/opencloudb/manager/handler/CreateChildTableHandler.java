@@ -71,7 +71,12 @@ public class CreateChildTableHandler {
 			// 验证parent table是否存在
 			TableConfig parentTC = schemaConf.getTables().get(parentTableName.toUpperCase());
 			if(parentTC == null) {
-				c.writeErrMessage(ErrorCode.ER_TABLE_EXISTS_ERROR, "parent table '" + tableName + "' dosen't exist");
+				c.writeErrMessage(ErrorCode.ER_NO_SUCH_TABLE, "parent table '" + parentTableName + "' dosen't exist");
+				return ;
+			}
+			// 验证parent table必须是分片表
+			if(parentTC.getRule() == null || parentTC.isGlobalTable()) {
+				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "parent table '" + parentTableName + "' is not a shard table");
 				return ;
 			}
 			

@@ -8,4 +8,5 @@ public enum MycatListStatementTarget {
 	, RULES // list rules
 	, FUNCTIONS // list functions
 	, USERS // list users
+	, SYSTEM_VARIABLES // system variables
 }

@@ -6,6 +6,8 @@ import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
 
@@ -33,10 +35,14 @@ public class MycatConfigCreateHandler {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create datanode stmt");
 			} else if(stmt instanceof MycatCreateDataHostStatement) {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create datahost stmt");
+			} else if(stmt instanceof MycatCreateRuleStatement) {
+				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create rule stmt");
+			} else if(stmt instanceof MycatCreateFunctionStatement) {
+				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create function stmt");
 			}
 		} catch(Exception e) {
 			c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, e.getMessage());
 		}
 	}
-
+	
 }

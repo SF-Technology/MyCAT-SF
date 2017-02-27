@@ -12,6 +12,7 @@ public final class ManagerParseMycatConfig {
 	public static final int LIST = 1;
 	public static final int CREATE = 2;
 	public static final int DROP = 3;
+	public static final int SET = 4;
 	
 	public static int parse(String stmt, int offset) {
 		for(int i = offset + 1, len = stmt.length(); i < len; i++) {
@@ -30,6 +31,9 @@ public final class ManagerParseMycatConfig {
 				case 'D':
 				case 'd':
 					return dropCheck(stmt, i);
+				case 'S':
+				case 's':
+					return setCheck(stmt, i);
 				default:
 					break;
 			}
@@ -80,6 +84,20 @@ public final class ManagerParseMycatConfig {
 					&& (c3 == 'P' || c3 == 'p')
 					&& (c4 == ' ' || c4 == '\t' || c4 == '\r' || c4 == '\n')) {
 				return DROP;
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int setCheck(String stmt, int offset) {
+		if(stmt.length() > offset + "ET ".length()) {
+			char c1 = stmt.charAt(++offset); // E
+			char c2 = stmt.charAt(++offset); // T
+			char c3 = stmt.charAt(++offset); 
+			
+			if((c1 == 'E' || c1 == 'e') && (c2 == 'T' || c2 == 't')
+					&& (c3 == ' ' || c3 == '\t' || c3 == '\r' || c3 == '\n')) {
+				return SET;
 			}
 		}
 		return OTHER;

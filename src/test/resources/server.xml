@@ -33,19 +33,6 @@
   </system>
   -->
 
-  <!-- 用户访问定义，用户名、密码、schema等信息。 -->
-  <user name="test">
-    <property name="password">test</property>
-    <property name="schemas">dbtest</property>    
-    <property name="benchmark">11111</property>   
-    <!-- benchmark 基准, 当前端的整体connection数达到基准值是, 对来自该账户的请求开始拒绝连接，0或不设表示不限制 -->
-  </user>
-  <!--
-  <user name="root">
-    <property name="password"></property>
-  </user>
-  -->
-
   <!-- 集群列表定义，指定集群节点的主机和权重，用于集群间的心跳和客户端负载均衡。 -->
   <cluster>
     <node name="daas1">

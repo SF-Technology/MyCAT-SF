@@ -6,6 +6,8 @@ import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
@@ -36,13 +38,17 @@ public class MycatConfigCreateHandler {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport create datahost stmt");
 			} else if(stmt instanceof MycatCreateUserStatement) {
 				CreateUserHandler.handle(c, (MycatCreateUserStatement) stmt, sql);
-			} else {
+			} else if(stmt instanceof MycatCreateRuleStatement) {
+				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create rule stmt");
+			} else if(stmt instanceof MycatCreateFunctionStatement) {
+				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create function stmt");
+			}else {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
-			}
+			} 
 		} catch(Exception e) {
 			e.printStackTrace();
 			c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, e.getMessage());
 		}
 	}
-
+	
 }

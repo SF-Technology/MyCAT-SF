@@ -6,6 +6,8 @@ import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 import org.opencloudb.manager.response.ListDataHosts;
 import org.opencloudb.manager.response.ListDataNodes;
+import org.opencloudb.manager.response.ListFunctions;
+import org.opencloudb.manager.response.ListRules;
 import org.opencloudb.manager.response.ListSchemas;
 import org.opencloudb.manager.response.ListTables;
 import org.opencloudb.manager.response.ListUsers;
@@ -40,13 +42,16 @@ public class MycatConfigListHandler {
 					handleListDataHost(c);
 					break;
 				case RULES:
-					// TODO
+					handleListRules(c);
 					break;
 				case FUNCTIONS:
-					// TODO
+					handleListFunctions(c);
 					break;
 				case USERS:
 					handleListUsers(c);
+					break;
+				case SYSTEM_VARIABLES:
+					// TODO
 					break;
 				default:
 					break;
@@ -78,6 +83,14 @@ public class MycatConfigListHandler {
 	
 	public static void handleListUsers(ManagerConnection c) {
 		ListUsers.response(c);
+	}
+	
+	public static void handleListRules(ManagerConnection c) {
+		ListRules.response(c);
+	}
+	
+	public static void handleListFunctions(ManagerConnection c) {
+		ListFunctions.response(c);
 	}
 
 }

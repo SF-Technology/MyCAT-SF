@@ -1,27 +1,36 @@
 package org.opencloudb.manager.parser.druid;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.opencloudb.MycatServer;
 import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
+import org.opencloudb.manager.parser.druid.statement.MycatSetSystemVariableStatement;
 import org.opencloudb.parser.druid.MycatExprParser;
 import org.opencloudb.parser.druid.MycatLexer;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLName;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
+import com.alibaba.druid.sql.ast.statement.SQLDropFunctionStatement;
 import com.alibaba.druid.sql.parser.ParserException;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
 import com.alibaba.druid.sql.parser.Token;
@@ -107,7 +116,13 @@ public class MycatManageStatementParser extends SQLStatementParser {
                 } else if(lexer.token() == Token.USER) {
                 	statementList.add(parseDropUser(false));
                 	continue;
-                } else {
+                } else if(identifierEquals("RULE")){
+                	statementList.add(parseDropRule(false));
+                	continue;
+                } else if(lexer.token() == Token.FUNCTION) {
+                	statementList.add(parseDropFunction(false));
+                	continue;
+                }else {
                     throw new ParserException("TODO " + lexer.token());
                 }
             }
@@ -117,7 +132,8 @@ public class MycatManageStatementParser extends SQLStatementParser {
                 statementList.add(stmt);
                 continue;
             }
-
+            
+            // 关于list的自定义语法解析入口 --stridehuan
             if (parseStatementListDialect(statementList)) {
                 continue;
             }
@@ -169,6 +185,13 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		} else if(token == Token.USER) {
 			
 			return parseCreateUser(false);
+			
+		} else if(identifierEquals("RULE")){ // create rule
+			
+			return parseCreateRule(false);
+		} else if(token == Token.FUNCTION){ // create function
+			
+			return parseCreateFunction(false);
 			
 		} else {
 			
@@ -246,7 +269,6 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		stmt.setSchema(this.exprParser.name());
 		
 		for(;;) {
-			
 			if(identifierEquals("checkSQLschema")) {
 				lexer.nextToken();
 				accept(Token.EQ);
@@ -355,6 +377,132 @@ public class MycatManageStatementParser extends SQLStatementParser {
 	}
 	
 	/**
+	 * create rule语句解析
+	 * @param acceptCreate
+	 * @return
+	 */
+	public SQLStatement parseCreateRule(boolean acceptCreate){
+		if (acceptCreate){
+			accept(Token.CREATE);
+		}
+		acceptIdentifier("RULE");
+		MycatCreateRuleStatement stmt = new MycatCreateRuleStatement();
+		stmt.setRule(exprParser.name());
+		
+		accept(Token.ON);
+		accept(Token.COLUMN);
+		stmt.setColumn(exprParser.name());
+		
+		acceptIdentifier("USING");
+		accept(Token.FUNCTION);
+		stmt.setFunction(exprParser.name());
+		
+		return stmt;
+	}
+	
+	/**
+	 * create function 解析
+	 * @param acceptCreate
+	 * @return
+	 */
+	public SQLStatement parseCreateFunction(boolean acceptCreate) {
+		if (acceptCreate){
+			accept(Token.CREATE);
+		}
+		accept(Token.FUNCTION);
+		MycatCreateFunctionStatement stmt = new MycatCreateFunctionStatement();
+		stmt.setFunction(exprParser.name());
+		
+		acceptIdentifier("USING");
+		acceptIdentifier("CLASS");
+		stmt.setClassName(acquireClassName());
+		
+		acceptIdentifier("INCLUDE");
+		acceptIdentifier("PROPERTIES");
+		stmt.setProperties(acquireProperties());
+		
+		return stmt;
+	}
+	
+	/**
+	 * 获得类的全路径
+	 * 例：org.opencloudb.route.function.PartitionByHashMod
+	 * @return
+	 */
+	private String acquireClassName(){
+		boolean expectName = true;
+		StringBuffer className = new StringBuffer();
+		
+		for(;;){
+			if (expectName){
+				className.append(exprParser.name());
+			} else {
+				accept(Token.DOT);
+				className.append('.');
+			}
+			
+			expectName = !expectName;
+			
+			if (!expectName && lexer.token() != Token.DOT){
+				break;
+			}
+		}
+		
+		return className.toString();
+	}
+	
+	/**
+	 * 获得properties
+	 * 例：
+	 * ({
+	 * name=${prop_name} 
+	 * value=${prop_value}
+	 * }, {
+	 * }, ...
+	 * )
+	 * @return
+	 */
+	private Map<String, String> acquireProperties(){
+		Map<String, String> properties = new LinkedHashMap<String, String>();
+		
+		accept(Token.LPAREN); // accept '('
+		
+		for(;;){
+			accept(Token.LBRACE); // accept '{'
+			
+			acceptIdentifier("NAME");
+			accept(Token.EQ);
+			String name = exprParser.name().getSimpleName();
+			acceptIdentifier("VALUE");
+			accept(Token.EQ);
+			String value;
+			switch (lexer.token()){
+			case LITERAL_INT:
+			case LITERAL_FLOAT:
+			case LITERAL_HEX:
+				value = lexer.numberString();
+				lexer.nextToken();
+				break;
+			default:
+				value = exprParser.name().getSimpleName();
+			}
+			properties.put(name, value);
+			
+			accept(Token.RBRACE); // accept '}'
+			
+			if (lexer.token() == Token.COMMA){ // equals ','
+				accept(Token.COMMA);
+				continue;
+			} else {
+				accept(Token.RPAREN); // accept '}'
+				break;
+			}
+		}
+		
+		return properties;
+	}
+	
+	/**
 	 * drop datanode语句解析
 	 * @param acceptDrop
 	 * @return
@@ -395,12 +543,90 @@ public class MycatManageStatementParser extends SQLStatementParser {
 	}
 	
 	/**
+	 * drop rule语句解析
+	 * @param acceptDrop
+	 * @return
+	 */
+	public SQLStatement parseDropRule(boolean acceptDrop) {
+		if(acceptDrop) {
+			accept(Token.DROP);
+		}
+		acceptIdentifier("RULE");
+		
+		MycatDropRuleStatement stmt = new MycatDropRuleStatement();
+		stmt.setRule(exprParser.name());
+		
+		return stmt;
+	}
+	
+	/* 
+	 * drop function语句解析
+	 */
+	@Override
+    public SQLDropFunctionStatement parseDropFunction(boolean acceptDrop) {
+        if (acceptDrop) {
+            accept(Token.DROP);
+        }
+
+        MycatDropFunctionStatement stmt = new MycatDropFunctionStatement();
+
+        accept(Token.FUNCTION);
+
+        SQLName name = this.exprParser.name();
+        stmt.setName(name);
+
+        return stmt;
+    }
+	
+	/**
 	 * set语句解析
 	 */
 	@Override
 	public SQLStatement parseSet() {
-		// TODO parse set statement
-		return null;
+		accept(Token.SET);
+		
+		Token token = lexer.token();
+		if(identifierEquals("SYSTEM")) { // create schema
+			
+			return parseSetSystemVariable(false);
+			
+		} else {
+			
+			throw new ParserException("Unsupport Statement : create " + token);
+			
+		}
+	}
+	
+	/**
+	 * set system variable语句
+	 * @param acceptSet
+	 * @return
+	 */
+	public SQLStatement parseSetSystemVariable(boolean acceptSet){
+		if (acceptSet) {
+			accept(Token.SET);
+		}
+		
+		acceptIdentifier("SYSTEM");
+		acceptIdentifier("VARIABLE");
+		
+		MycatSetSystemVariableStatement stmt = new MycatSetSystemVariableStatement();
+		stmt.setVariableName(exprParser.name());
+		
+		accept(Token.EQ);
+		
+		switch (lexer.token()){
+		case LITERAL_INT:
+		case LITERAL_FLOAT:
+		case LITERAL_HEX:
+			stmt.setVariableValue(lexer.numberString());;
+			lexer.nextToken();
+			break;
+		default:
+			stmt.setVariableValue(exprParser.name().getSimpleName());;
+		}
+		
+		return stmt;
 	}
 	
 	/**
@@ -549,6 +775,10 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		} else if(identifierEquals("USERS")) {
 			stmt.setTarget(MycatListStatementTarget.USERS);
 			lexer.nextToken();
+		} else if(identifierEquals("SYSTEM")) {
+			acceptIdentifier("SYSTEM");
+			acceptIdentifier("VARIABLES");
+			stmt.setTarget(MycatListStatementTarget.SYSTEM_VARIABLES);
 		} else {
 			throw new ParserException("Unsupport Statement : list " + lexer.stringVal());
 		}

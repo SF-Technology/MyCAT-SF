@@ -270,6 +270,14 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		stmt.setSchema(this.exprParser.name());
 		
 		for(;;) {
+			
+			if(identifierEquals("dataNode")) {
+				lexer.nextToken();
+				accept(Token.EQ);
+				stmt.setDataNode(acceptNumAndStr());
+				continue;
+			}
+			
 			if(identifierEquals("checkSQLschema")) {
 				lexer.nextToken();
 				accept(Token.EQ);
@@ -298,6 +306,10 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			}
 			
 			break;
+		}
+		
+		if(stmt.getDataNode() == null || stmt.getDataNode().isEmpty()) {
+			throw new ParserException("schema definition must provide default dataNode property, eg: dataNode = ${default_datanode}");
 		}
 		
 		return stmt;

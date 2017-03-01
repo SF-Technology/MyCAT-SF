@@ -36,8 +36,9 @@ public class SchemaConfig {
 	private final Random random = new Random();
 	private final String name;
 	private final Map<String, TableConfig> tables;
-	private final boolean noSharding;
-	private final String dataNode;
+	private volatile boolean noSharding;
+	private final String defaultDataNode;
+	private volatile String dataNode;
 	private final Set<String> metaDataNodes;
 	private final Set<String> allDataNodes;
 	/**
@@ -61,6 +62,7 @@ public class SchemaConfig {
 			Map<String, TableConfig> tables, int defaultMaxLimit,
 			boolean checkSQLschema) {
 		this.name = name;
+		this.defaultDataNode = dataNode;
 		this.dataNode = dataNode;
 		this.checkSQLSchema = checkSQLschema;
 		this.tables = tables;
@@ -83,15 +85,22 @@ public class SchemaConfig {
 		}
 	}
 	
-	public SchemaConfig(String name, int sqlMaxLimit, boolean checkSQLschema, Map<String, TableConfig> tables) {
+	public SchemaConfig(String name, String dataNode, int sqlMaxLimit, boolean checkSQLschema) {
 		this.name = name;
-		this.dataNode = null;
+		this.defaultDataNode = dataNode;
+		this.dataNode = dataNode;
 		this.defaultMaxLimit = sqlMaxLimit;
 		this.checkSQLSchema = checkSQLschema;
-		this.tables = tables;
-		this.noSharding = false;
+		this.tables = new HashMap<String, TableConfig>();
+		buildJoinMap(tables);
+		this.noSharding = (tables == null || tables.isEmpty());
+		if (noSharding && dataNode == null) {
+			throw new RuntimeException(name
+					+ " in noSharding mode schema must have default dataNode ");
+		}
 		this.metaDataNodes = buildMetaDataNodes();
 		this.allDataNodes = buildAllDataNodes();
+//		this.metaDataNodes = buildAllDataNodes();
 		if (this.allDataNodes != null && !this.allDataNodes.isEmpty()) {
 			String[] dnArr = new String[this.allDataNodes.size()];
 			dnArr = this.allDataNodes.toArray(dnArr);
@@ -244,6 +253,16 @@ public class SchemaConfig {
 		
 		metaDataNodes.addAll(buildMetaDataNodes());
 		allDataNodes.addAll(buildAllDataNodes());
+	}
+	
+	public void setDataNodeNull() {
+		this.dataNode = null;
+		this.noSharding = false;
+	}
+	
+	public void reuseDefaultDataNode() {
+		this.dataNode = this.defaultDataNode;
+		this.noSharding = true;
 	}
 
 }

@@ -20,6 +20,8 @@ public class MycatCreateSchemaStatement extends MycatStatementImpl implements SQ
 	private boolean checkSQLSchema = DEFAULT_CHECK_SQL_SCHEMA;
 	private int sqlMaxLimit = DEFAULT_SQL_MAX_LIMIT;
 	
+	private String dataNode;
+	
 	@Override
 	public void accept0(MycatASTVisitor visitor) {
 		visitor.visit(this);
@@ -48,6 +50,14 @@ public class MycatCreateSchemaStatement extends MycatStatementImpl implements SQ
 
 	public void setSqlMaxLimit(int sqlMaxLimit) {
 		this.sqlMaxLimit = sqlMaxLimit;
+	}
+
+	public String getDataNode() {
+		return dataNode;
+	}
+
+	public void setDataNode(String dataNode) {
+		this.dataNode = dataNode;
 	}
 
 }

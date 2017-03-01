@@ -9,7 +9,6 @@ import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.model.SchemaConfig;
-import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
@@ -34,11 +33,18 @@ public class CreateSchemaHandler {
 		String schemaName = StringUtil.removeBackquote(stmt.getSchema().getSimpleName());
 		int sqlMaxLimit = stmt.getSqlMaxLimit();
 		boolean checkSQLschema = stmt.isCheckSQLSchema();
-		// 创建新schema配置
-		SchemaConfig schema = new SchemaConfig(schemaName, sqlMaxLimit, checkSQLschema, new HashMap<String, TableConfig>());
+		String dataNode = stmt.getDataNode();
 		MycatConfig mycatConfig = MycatServer.getInstance().getConfig();
 		mycatConfig.getLock().lock();
 		try {
+			
+			if(!mycatConfig.getDataNodes().containsKey(dataNode)) {
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "Unknown dataNode '" + dataNode + "'");
+				return ;
+			}
+			
+			// 创建新schema配置
+			SchemaConfig schema = new SchemaConfig(schemaName, dataNode, sqlMaxLimit, checkSQLschema);
 			
 			// 刷新 schema.xml
 			Map<String, SchemaConfig> schemas = mycatConfig.getSchemas();

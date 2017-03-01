@@ -90,6 +90,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 	@Override
 	public boolean visit(MycatCreateSchemaStatement stmt) {
 		print("CREATE SCHEMA " + stmt.getSchema());
+		print(" dataNode = " + stmt.getDataNode());
 		print(" checkSQLschema = " + stmt.isCheckSQLSchema());
 		print(" sqlMaxLimit = " + stmt.getSqlMaxLimit());
 		println();

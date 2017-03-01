@@ -475,18 +475,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			String name = exprParser.name().getSimpleName();
 			acceptIdentifier("VALUE");
 			accept(Token.EQ);
-			String value;
-			switch (lexer.token()){
-			case LITERAL_INT:
-			case LITERAL_FLOAT:
-			case LITERAL_HEX:
-				value = lexer.numberString();
-				lexer.nextToken();
-				break;
-			default:
-				value = exprParser.name().getSimpleName();
-			}
-			properties.put(name, value);
+			properties.put(name, acceptNumAndStr());
 			
 			accept(Token.RBRACE); // accept '}'
 			
@@ -500,6 +489,31 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		
 		return properties;
+	}
+	
+	/**
+	 * 只接受数值和字符串，如果是，返回相应字符串，如果不是，抛解析异常
+	 * @return
+	 */
+	private String acceptNumAndStr() {
+		String value;
+		switch (lexer.token()){
+		case LITERAL_INT:
+		case LITERAL_FLOAT:
+		case LITERAL_HEX:
+			value = lexer.numberString();
+			lexer.nextToken();
+			break;
+		case LITERAL_ALIAS:
+		case LITERAL_CHARS:
+			value = lexer.stringVal();
+			lexer.nextToken();
+			break;
+		default:
+			throw new ParserException("error " + lexer.token());
+		}
+		
+		return value;
 	}
 	
 	/**

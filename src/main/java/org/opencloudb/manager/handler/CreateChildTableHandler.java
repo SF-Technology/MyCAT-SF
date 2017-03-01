@@ -52,6 +52,14 @@ public class CreateChildTableHandler {
 				c.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Unknown database '" + schemaName + "'");
 				return ;
 			}
+			
+			/*
+			 * schema dataNode属性不为空, 表示该schema不是sharding schema, 不能在此schema上创建table或者drop table
+			 */
+			if(schemaConf.getDataNode() != null) {
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "noSharding schema can not create or drop table");
+				return ;
+			}
 		
 			String tableName = StringUtil.removeBackquote(stmt.getTable().getSimpleName());
 			String upperTableName = tableName.toUpperCase();

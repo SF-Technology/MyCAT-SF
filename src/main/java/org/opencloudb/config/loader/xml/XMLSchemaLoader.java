@@ -180,10 +180,10 @@ public class XMLSchemaLoader implements SchemaLoader {
 			}
 
 			// 设置了table的不需要设置dataNode属性，没有设置table的必须设置dataNode属性
-			if (dataNode == null && tables.size() == 0) {
-				throw new ConfigException(
-						"schema " + name + " didn't config tables,so you must set dataNode property!");
-			}
+//			if (dataNode == null && tables.size() == 0) {
+//				throw new ConfigException(
+//						"schema " + name + " didn't config tables,so you must set dataNode property!");
+//			}
 
 			SchemaConfig schemaConfig = new SchemaConfig(name, dataNode,
 					tables, sqlMaxLimit, "true".equalsIgnoreCase(checkSQLSchemaStr));

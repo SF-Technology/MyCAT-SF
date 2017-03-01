@@ -308,9 +308,9 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			break;
 		}
 		
-		if(stmt.getDataNode() == null || stmt.getDataNode().isEmpty()) {
-			throw new ParserException("schema definition must provide default dataNode property, eg: dataNode = ${default_datanode}");
-		}
+//		if(stmt.getDataNode() == null || stmt.getDataNode().isEmpty()) {
+//			throw new ParserException("schema definition must provide default dataNode property, eg: dataNode = ${default_datanode}");
+//		}
 		
 		return stmt;
 	}

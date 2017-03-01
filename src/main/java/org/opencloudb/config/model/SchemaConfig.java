@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.opencloudb.config.util.ConfigException;
+
 /**
  * @author mycat
  */
@@ -36,9 +38,8 @@ public class SchemaConfig {
 	private final Random random = new Random();
 	private final String name;
 	private final Map<String, TableConfig> tables;
-	private volatile boolean noSharding;
-	private final String defaultDataNode;
-	private volatile String dataNode;
+	private boolean noSharding;
+	private final String dataNode;
 	private final Set<String> metaDataNodes;
 	private final Set<String> allDataNodes;
 	/**
@@ -62,17 +63,19 @@ public class SchemaConfig {
 			Map<String, TableConfig> tables, int defaultMaxLimit,
 			boolean checkSQLschema) {
 		this.name = name;
-		this.defaultDataNode = dataNode;
 		this.dataNode = dataNode;
 		this.checkSQLSchema = checkSQLschema;
 		this.tables = tables;
 		this.defaultMaxLimit = defaultMaxLimit;
 		buildJoinMap(tables);
 		this.noSharding = (tables == null || tables.isEmpty());
-		if (noSharding && dataNode == null) {
-			throw new RuntimeException(name
-					+ " in noSharding mode schema must have default dataNode ");
+		if(dataNode != null && !noSharding) {
+			throw new ConfigException("schema '" + name + "' in noSharding (has default dataNode) can not define any tables!");
 		}
+//		if (noSharding && dataNode == null) {
+//			throw new RuntimeException(name
+//					+ " in noSharding mode schema must have default dataNode ");
+//		}
 		this.metaDataNodes = buildMetaDataNodes();
 		this.allDataNodes = buildAllDataNodes();
 //		this.metaDataNodes = buildAllDataNodes();
@@ -87,17 +90,16 @@ public class SchemaConfig {
 	
 	public SchemaConfig(String name, String dataNode, int sqlMaxLimit, boolean checkSQLschema) {
 		this.name = name;
-		this.defaultDataNode = dataNode;
 		this.dataNode = dataNode;
 		this.defaultMaxLimit = sqlMaxLimit;
 		this.checkSQLSchema = checkSQLschema;
 		this.tables = new HashMap<String, TableConfig>();
 		buildJoinMap(tables);
-		this.noSharding = (tables == null || tables.isEmpty());
-		if (noSharding && dataNode == null) {
-			throw new RuntimeException(name
-					+ " in noSharding mode schema must have default dataNode ");
-		}
+		this.noSharding = (dataNode != null);
+//		if (noSharding && dataNode == null) {
+//			throw new RuntimeException(name
+//					+ " in noSharding mode schema must have default dataNode ");
+//		}
 		this.metaDataNodes = buildMetaDataNodes();
 		this.allDataNodes = buildAllDataNodes();
 //		this.metaDataNodes = buildAllDataNodes();
@@ -255,14 +257,4 @@ public class SchemaConfig {
 		allDataNodes.addAll(buildAllDataNodes());
 	}
 	
-	public void setDataNodeNull() {
-		this.dataNode = null;
-		this.noSharding = false;
-	}
-	
-	public void reuseDefaultDataNode() {
-		this.dataNode = this.defaultDataNode;
-		this.noSharding = true;
-	}
-
 }

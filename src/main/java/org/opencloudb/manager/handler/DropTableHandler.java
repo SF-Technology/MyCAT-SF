@@ -42,8 +42,16 @@ public class DropTableHandler {
 				return ;
 			}
 			
-			// 检查table是否已经存在
 			SchemaConfig schemaConf = mycatConf.getSchemas().get(schemaName);
+			/*
+			 * schema dataNode属性不为空, 表示该schema不是sharding schema, 不能在此schema上创建table或者drop table
+			 */
+			if(schemaConf.getDataNode() != null) {
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "noSharding schema can not create or drop table");
+				return ;
+			}
+			
+			// 检查table是否已经存在
 			if(!schemaConf.getTables().containsKey(upperTableName)) {
 				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "table '" + tableName + "' dosen't exist");
 				return ;

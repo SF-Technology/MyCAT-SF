@@ -3,6 +3,7 @@ package org.opencloudb.manager.parser.druid;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import com.alibaba.druid.sql.parser.ParserException;
 import com.alibaba.druid.sql.parser.SQLDDLParser;
@@ -79,14 +80,14 @@ public class MycatCreateDataHostParser extends SQLDDLParser {
 			if(identifierEquals("dbType")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setmDbType(this.exprParser.expr());
+				stmt.setmDbType(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
 			if(identifierEquals("dbDriver")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setDbDriver(this.exprParser.expr());
+				stmt.setDbDriver(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
@@ -145,28 +146,28 @@ public class MycatCreateDataHostParser extends SQLDDLParser {
 				if(identifierEquals("host")) {
 					lexer.nextToken();
 					accept(Token.EQ);
-					writeHost.setHost(this.exprParser.expr());
+					writeHost.setHost(new SQLCharExpr(acceptStringVal()));
 					continue;
 				}
 				
 				if(identifierEquals("url")) {
 					lexer.nextToken();
 					accept(Token.EQ);
-					writeHost.setUrl(this.exprParser.expr());
+					writeHost.setUrl(new SQLCharExpr(acceptStringVal()));
 					continue;
 				}
 				
 				if(lexer.token() == Token.USER) {
 					lexer.nextToken();
 					accept(Token.EQ);
-					writeHost.setUser(this.exprParser.expr());
+					writeHost.setUser(new SQLCharExpr(acceptStringVal()));
 					continue;
 				}
 				
 				if(identifierEquals("password")) {
 					lexer.nextToken();
 					accept(Token.EQ);
-					writeHost.setPassword(this.exprParser.expr());
+					writeHost.setPassword(new SQLCharExpr(acceptStringVal()));
 					continue;
 				}
 				
@@ -239,28 +240,28 @@ public class MycatCreateDataHostParser extends SQLDDLParser {
 				if(identifierEquals("host")) {
 					lexer.nextToken();
 					accept(Token.EQ);
-					readHost.setHost(this.exprParser.expr());
+					readHost.setHost(new SQLCharExpr(acceptStringVal()));
 					continue;
 				}
 				
 				if(identifierEquals("url")) {
 					lexer.nextToken();
 					accept(Token.EQ);
-					readHost.setUrl(this.exprParser.expr());
+					readHost.setUrl(new SQLCharExpr(acceptStringVal()));
 					continue;
 				}
 				
 				if(lexer.token() == Token.USER) {
 					lexer.nextToken();
 					accept(Token.EQ);
-					readHost.setUser(this.exprParser.expr());
+					readHost.setUser(new SQLCharExpr(acceptStringVal()));
 					continue;
 				}
 				
 				if(identifierEquals("password")) {
 					lexer.nextToken();
 					accept(Token.EQ);
-					readHost.setPassword(this.exprParser.expr());
+					readHost.setPassword(new SQLCharExpr(acceptStringVal()));
 					continue;
 				}
 				
@@ -301,6 +302,25 @@ public class MycatCreateDataHostParser extends SQLDDLParser {
 		}
 		
 		accept(Token.RPAREN); // accept )
+	}
+	
+	/**
+	 * 只接受字符串，如果是，返回相应字符串，如果不是，抛解析异常
+	 * @return
+	 */
+	private String acceptStringVal() {
+		String value;
+		switch (lexer.token()){
+		case LITERAL_ALIAS:
+		case LITERAL_CHARS:
+			value = lexer.stringVal();
+			lexer.nextToken();
+			break;
+		default:
+			throw new ParserException("error " + lexer.token());
+		}
+		
+		return value;
 	}
 	
 }

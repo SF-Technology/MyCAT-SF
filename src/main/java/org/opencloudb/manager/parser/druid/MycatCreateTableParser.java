@@ -63,21 +63,21 @@ public class MycatCreateTableParser extends SQLDDLParser {
 			if(identifierEquals("primaryKey")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setPrimaryKey(this.exprParser.expr());
+				stmt.setPrimaryKey(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
 			if(identifierEquals("dataNode")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setDataNodes(this.exprParser.expr());
+				stmt.setDataNodes(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
 			if(identifierEquals("rule")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setRule(this.exprParser.expr());
+				stmt.setRule(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
@@ -128,28 +128,28 @@ public class MycatCreateTableParser extends SQLDDLParser {
 			if(identifierEquals("parent")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setParentTable(this.exprParser.expr());
+				stmt.setParentTable(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
 			if(identifierEquals("parentKey")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setParentKey(this.exprParser.expr());
+				stmt.setParentKey(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
 			if(identifierEquals("joinKey")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setJoinKey(this.exprParser.expr());
+				stmt.setJoinKey(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
 			if(identifierEquals("primaryKey")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setPrimaryKey(this.exprParser.expr());
+				stmt.setPrimaryKey(new SQLCharExpr(acceptStringVal()));
 				continue;
 			}
 			
@@ -171,6 +171,25 @@ public class MycatCreateTableParser extends SQLDDLParser {
 		}
 		
 		return stmt;
+	}
+	
+	/**
+	 * 只接受字符串，如果是，返回相应字符串，如果不是，抛解析异常
+	 * @return
+	 */
+	private String acceptStringVal() {
+		String value;
+		switch (lexer.token()){
+		case LITERAL_ALIAS:
+		case LITERAL_CHARS:
+			value = lexer.stringVal();
+			lexer.nextToken();
+			break;
+		default:
+			throw new ParserException("error " + lexer.token());
+		}
+		
+		return value;
 	}
 
 }

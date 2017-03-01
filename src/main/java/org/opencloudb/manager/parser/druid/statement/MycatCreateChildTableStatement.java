@@ -20,6 +20,7 @@ public class MycatCreateChildTableStatement extends MycatStatementImpl implement
 	private SQLExpr primaryKey;
 	private SQLExpr parentKey;
 	private SQLExpr joinKey;
+	private boolean autoIncrement;
 	
 	@Override
 	public void accept0(MycatASTVisitor visitor) {
@@ -73,6 +74,14 @@ public class MycatCreateChildTableStatement extends MycatStatementImpl implement
 
 	public void setJoinKey(SQLExpr joinKey) {
 		this.joinKey = joinKey;
+	}
+
+	public boolean isAutoIncrement() {
+		return autoIncrement;
+	}
+
+	public void setAutoIncrement(boolean autoIncrement) {
+		this.autoIncrement = autoIncrement;
 	}
 	
 }

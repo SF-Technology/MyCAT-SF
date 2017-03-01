@@ -81,6 +81,21 @@ public class MycatCreateTableParser extends SQLDDLParser {
 				continue;
 			}
 			
+			if(identifierEquals("autoIncrement")) {
+				lexer.nextToken();
+				accept(Token.EQ);
+				if(lexer.token() == Token.TRUE) {
+					lexer.nextToken();
+					stmt.setAutoIncrement(true);
+				} else if(lexer.token() == Token.FALSE) {
+					lexer.nextToken();
+					stmt.setAutoIncrement(false);
+				} else {
+					throw new ParserException("autoIncrement must be true or false");
+				}
+				continue;
+			}
+			
 			break;
 		}
 		
@@ -150,6 +165,21 @@ public class MycatCreateTableParser extends SQLDDLParser {
 				lexer.nextToken();
 				accept(Token.EQ);
 				stmt.setPrimaryKey(new SQLCharExpr(acceptStringVal()));
+				continue;
+			}
+			
+			if(identifierEquals("autoIncrement")) {
+				lexer.nextToken();
+				accept(Token.EQ);
+				if(lexer.token() == Token.TRUE) {
+					lexer.nextToken();
+					stmt.setAutoIncrement(true);
+				} else if(lexer.token() == Token.FALSE) {
+					lexer.nextToken();
+					stmt.setAutoIncrement(false);
+				} else {
+					throw new ParserException("autoIncrement must be true or false");
+				}
 				continue;
 			}
 			

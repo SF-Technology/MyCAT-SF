@@ -114,6 +114,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 		if(stmt.getPrimaryKey() != null) {
 			println("primaryKey = " + stmt.getPrimaryKey());
 		}
+		println("autoIncrement = " + stmt.isAutoIncrement());
 		println("dataNode = " + stmt.getDataNodes());
 		if(stmt.getRule() != null) {
 			println("rule = " + stmt.getRule());
@@ -139,6 +140,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 		if(stmt.getPrimaryKey() != null) {
 			println("primaryKey = " + stmt.getPrimaryKey());
 		}
+		println("autoIncrement = " + stmt.isAutoIncrement());
 		return false;
 	}
 

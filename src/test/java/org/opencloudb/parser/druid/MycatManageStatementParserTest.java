@@ -83,6 +83,7 @@ public class MycatManageStatementParserTest {
 		StringBuilder sb = new StringBuilder();
 		sb.append("create table tb1 in TESTDB")
 			.append(" global = false")
+			.append(" autoIncrement = false")
 			.append(" primaryKey = \"ID\"")
 			.append(" dataNode = \"dn1,dn2,dn3\"")
 			.append(" rule = \"mod3\"");
@@ -106,6 +107,7 @@ public class MycatManageStatementParserTest {
 		sb.append("create childtable chtb1 in TESTDB")
 			.append(" parent = \"tb1\"")
 			.append(" parentKey = \"id\"")
+			.append(" autoIncrement = true")
 			.append(" joinKey = \"pid\"")
 			.append(" primaryKey = \"id\"");
 		String sql = sb.toString();

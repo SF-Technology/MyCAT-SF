@@ -58,7 +58,7 @@ public class DropTableHandler {
 				if(tableConf == target) {
 					continue;
 				}
-				if(tableConf.isChildTable() && tableConf.getParentTC() == target) {
+				if(tableConf.isChildTable() && isChild(tableConf, target)) {
 					delChildTables.add(tableConf);
 					it.remove();
 				}
@@ -91,6 +91,17 @@ public class DropTableHandler {
 			mycatConf.getLock().unlock();
 		}
 		
+	}
+	
+	private static boolean isChild(TableConfig child, TableConfig ancestor) {
+		TableConfig parent = null;
+		while((parent = child.getParentTC()) != null) {
+			if(parent == ancestor) {
+				return true;
+			}
+			child = parent;
+		}
+		return false;
 	}
 
 }

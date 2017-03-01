@@ -15,6 +15,7 @@ import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.util.SplitUtil;
+import org.opencloudb.util.StringUtil;
 
 import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
 
@@ -39,7 +40,7 @@ public class CreateUserHandler {
 		
 		try {
 			
-			String newUserName = stmt.getUserName().getSimpleName();
+			String newUserName = StringUtil.removeBackquote(stmt.getUserName().getSimpleName());
 			// 判断user是否已经存在
 			if(mycatConfig.getUsers().containsKey(newUserName)) {
 				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "user '" + newUserName + "' already exist");

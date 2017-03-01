@@ -14,6 +14,7 @@ import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.util.StringUtil;
 
 import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
 
@@ -37,7 +38,7 @@ public class CreateChildTableHandler {
 		mycatConf.getLock().lock();
 		try {
 			
-			String schemaName = (stmt.getSchema() == null ? c.getSchema() : stmt.getSchema().getSimpleName());
+			String schemaName = (stmt.getSchema() == null ? c.getSchema() : StringUtil.removeBackquote(stmt.getSchema().getSimpleName()));
 			
 			if(!mycatConf.getUsers().get(c.getUser()).getSchemas().contains(schemaName)) {
 				c.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Unknown database '" + schemaName + "'");
@@ -52,7 +53,7 @@ public class CreateChildTableHandler {
 				return ;
 			}
 		
-			String tableName = stmt.getTable().getSimpleName();
+			String tableName = StringUtil.removeBackquote(stmt.getTable().getSimpleName());
 			String upperTableName = tableName.toUpperCase();
 			String primaryKey = stmt.getPrimaryKey() == null ? null : ((SQLCharExpr)stmt.getPrimaryKey()).getText();
 			boolean autoIncrement = false;

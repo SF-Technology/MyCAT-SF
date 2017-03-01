@@ -16,6 +16,7 @@ import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.util.StringUtil;
 
 /**
  * drop schema 逻辑处理器
@@ -27,7 +28,7 @@ public class DropSchemaHandler {
 	
 	public static void handle(ManagerConnection c, MycatDropSchemaStatement stmt, String sql) {
 		
-		String schemaName = stmt.getSchema().toString();
+		String schemaName = StringUtil.removeBackquote(stmt.getSchema().toString());
 		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
 		mycatConf.getLock().lock();
 		

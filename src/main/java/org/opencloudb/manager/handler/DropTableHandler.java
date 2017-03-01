@@ -15,6 +15,7 @@ import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.util.StringUtil;
 
 /**
  * drop table 逻辑处理器 (包含drop childtable)
@@ -26,7 +27,7 @@ public class DropTableHandler {
 	
 	public static void handle(ManagerConnection c, MycatDropTableStatement stmt, String sql) {
 
-		String tableName = stmt.getTable().getSimpleName();
+		String tableName = StringUtil.removeBackquote(stmt.getTable().getSimpleName());
 		String upperTableName = tableName.toUpperCase();
 		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
 		

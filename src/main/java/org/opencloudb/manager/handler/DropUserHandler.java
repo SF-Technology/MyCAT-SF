@@ -12,6 +12,7 @@ import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.util.StringUtil;
 
 
 /**
@@ -35,7 +36,7 @@ public class DropUserHandler {
 		
 		try {
 			
-			String userName = stmt.getUserName().getSimpleName();
+			String userName = StringUtil.removeBackquote(stmt.getUserName().getSimpleName());
 			// 判断user是否已经存在
 			if(!mycatConfig.getUsers().containsKey(userName)) {
 				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "user '" + userName + "' dosen't exist");

@@ -14,6 +14,7 @@ import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.util.StringUtil;
 
 /**
  * create schema 逻辑处理器
@@ -30,7 +31,7 @@ public class CreateSchemaHandler {
 			return ;
 		}
 		
-		String schemaName = stmt.getSchema().getSimpleName();
+		String schemaName = StringUtil.removeBackquote(stmt.getSchema().getSimpleName());
 		int sqlMaxLimit = stmt.getSqlMaxLimit();
 		boolean checkSQLschema = stmt.isCheckSQLSchema();
 		// 创建新schema配置

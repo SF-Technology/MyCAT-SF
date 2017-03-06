@@ -539,5 +539,13 @@ public interface ErrorCode {
 	public static final int ER_DROP_PARTITION_WHEN_FK_DEFINED = 1493;
 	public static final int ER_PLUGIN_IS_NOT_LOADED = 1494;
 	public static final int ER_USER_READ_ONLY = 1495;
-
+	public static final int ER_CANT_CREATE_RULE = 1496;
+	public static final int ER_CANT_CREATE_FUNCTION = 1497;
+	public static final int ER_RULE_NOT_EXIST = 1498;
+	public static final int ER_FUNCTION_NOT_EXIST = 1499;
+	public static final int ER_FUNCTION_CANT_REMOVE = 1500;
+	public static final int ER_CANT_GET_SYSTEM_VARIABLES = 1501;
+	public static final int ER_CANT_SET_SYSTEM_VARIABLE = 1502;
+	public static final int ER_VARIABLE_NOT_EXISTS = 1503;
+	public static final int ER_FLUSH_FAILED = 1504;
 }

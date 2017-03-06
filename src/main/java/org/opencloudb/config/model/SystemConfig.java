@@ -23,15 +23,31 @@
  */
 package org.opencloudb.config.model;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.opencloudb.config.Isolations;
+
 
 /**
  * 系统基础配置项
  *
  * @author mycat
+ */
+/**
+ * @author 01140003
+ * @version 2017年3月2日 下午4:04:48 
  */
 public final class SystemConfig {
 
@@ -180,9 +196,7 @@ public final class SystemConfig {
 	 * 写入到临时目录
 	 */
 	private String dataNodeSortedTempDir;
-
-
-
+	
 	/**
 	 * 定时采集监控信息入H2DB，间隔时间
 	 */
@@ -342,6 +356,81 @@ public final class SystemConfig {
 		this.topSqlExecuteTimeN = 100;
 		this.topSqlExecuteCountN = 100;
 		this.sqlRecordInDiskPeriod = 1; //1 day
+	}
+	
+	/**
+	 * 获得系统变量的当前值
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws IntrospectionException
+	 */
+	public Map<String, Object> currentSystemVariables() throws IllegalAccessException, 
+	IllegalArgumentException, InvocationTargetException, IntrospectionException {
+		return acquireVariables(this);
+	}
+	
+	/**
+	 * 获得系统变量的默认值
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws IntrospectionException
+	 */
+	public Map<String, Object> defaultSystemVariables() throws IllegalAccessException, 
+	IllegalArgumentException, InvocationTargetException, IntrospectionException{
+		SystemConfig systemConfig = new SystemConfig();
+		
+		return acquireVariables(systemConfig);
+	}
+	
+	/**
+	 * 通过反射，获得object对象中所有具有get和set方法的属性，以及这些属性的值
+	 * @param object
+	 * @return
+	 * @throws IntrospectionException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	private Map<String, Object> acquireVariables(Object object) throws IntrospectionException, 
+	IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		Map<String, Object> systemVariables = new HashMap<String, Object>(); // key=属性，value=默认值
+		
+		BeanInfo beanInfo = Introspector.getBeanInfo(object.getClass());
+		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+		
+		for (PropertyDescriptor descriptor : pds) {
+			Method getMethod = descriptor.getReadMethod();
+			Method setMethod = descriptor.getWriteMethod();
+			
+			if (getMethod != null && setMethod != null) {
+				Object value = getMethod.invoke(object);
+				systemVariables.put(descriptor.getName(), value);
+			}
+		}
+		
+		return systemVariables;
+	}
+	
+	/**
+	 * 获得可动态配置的属性
+	 * @return
+	 * @throws NoSuchFieldException
+	 * @throws SecurityException
+	 */
+	public Set<String> dynamicVariables(){
+		HashSet<String> fields = new HashSet<String>();
+		
+		fields.add("sqlExecuteTimeout");
+		fields.add("slowTime");
+		fields.add("handleDistributedTransactions");
+		fields.add("useSqlStat");
+		fields.add("useStreamOutput");
+		
+		return fields;
 	}
 
 

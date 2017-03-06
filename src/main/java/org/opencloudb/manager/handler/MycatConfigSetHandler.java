@@ -7,6 +7,10 @@ import org.opencloudb.manager.parser.druid.statement.MycatSetSystemVariableState
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 
+/**
+ * @author 01140003
+ * @version 2017年3月2日 下午7:21:31 
+ */
 public class MycatConfigSetHandler {
 public static void handle(String sql, ManagerConnection c) {
 		
@@ -14,7 +18,7 @@ public static void handle(String sql, ManagerConnection c) {
 		try {
 			SQLStatement stmt = parser.parseStatement();
 			if(stmt instanceof MycatSetSystemVariableStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process set system variable stmt");
+				SetSystemVariableHandler.handle(c, (MycatSetSystemVariableStatement)stmt, sql);
 			} 
 		} catch(Exception e) {
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());

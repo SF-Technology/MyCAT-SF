@@ -40,6 +40,9 @@ public final class PartitionByString extends AbstractPartitionAlgorithm implemen
     protected int[] length;
     protected PartitionUtil partitionUtil;
 
+    public String getPartitionCount() {
+    	return intArrayToStr(this.count);
+    }
     public void setPartitionCount(String partitionCount) {
         this.count = toIntArray(partitionCount);
     }
@@ -106,6 +109,19 @@ public final class PartitionByString extends AbstractPartitionAlgorithm implemen
 			ints[i] = Integer.parseInt(strs[i]);
 		}
 		return ints;
+	}
+	private static String intArrayToStr(int[] intArr) {
+		StringBuffer sb = new StringBuffer();
+		
+		for(int i = 0; i < intArr.length; i++) {
+			sb.append(String.valueOf(intArr[i]));
+			
+			if (i != intArr.length - 1) {
+				sb.append(", ");
+			}
+		}
+		
+		return sb.toString();
 	}
 	@Override
 	public Integer calculate(String key) {

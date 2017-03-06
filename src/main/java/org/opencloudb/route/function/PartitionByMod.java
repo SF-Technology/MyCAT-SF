@@ -45,14 +45,14 @@ public class PartitionByMod extends AbstractPartitionAlgorithm implements RuleAl
 	private int count;
 	@Override
 	public void init() {
-	
-		
 	}
-
-
 
 	public void setCount(int count) {
 		this.count = count;
+	}
+	
+	public int getCount() {
+		return count;
 	}
 
 	@Override

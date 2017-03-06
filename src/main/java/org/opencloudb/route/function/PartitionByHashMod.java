@@ -15,6 +15,9 @@ public class PartitionByHashMod extends AbstractPartitionAlgorithm implements Ru
     private boolean watch = false;
     private int count;
 
+    public int getCount() {
+    	return count;
+    }
     public void setCount(int count) {
         this.count = count;
         if ((count & (count - 1)) == 0) {

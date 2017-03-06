@@ -49,13 +49,25 @@ public class PartitionByPattern extends AbstractPartitionAlgorithm implements Ru
 
 		initialize();
 	}
+	
+	public String getMapFile() {
+		return mapFile;
+	}
 
 	public void setMapFile(String mapFile) {
 		this.mapFile = mapFile;
 	}
+	
+	public int getPatternValue() {
+		return patternValue;
+	}
 
 	public void setPatternValue(int patternValue) {
 		this.patternValue = patternValue;
+	}
+	
+	public int getDefaultNode() {
+		return defaultNode;
 	}
 
 	public void setDefaultNode(int defaultNode) {

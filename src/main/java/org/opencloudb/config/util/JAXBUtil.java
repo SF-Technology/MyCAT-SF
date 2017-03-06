@@ -14,13 +14,17 @@ import java.util.TreeSet;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 
+import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
+import org.opencloudb.config.loader.xml.jaxb.RuleJAXB;
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.loader.xml.jaxb.UserJAXB;
 import org.opencloudb.config.loader.xml.jaxb.UserJAXB.User;
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB.Schema;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 
 /**
  * 
@@ -91,6 +95,16 @@ public class JAXBUtil {
 		
 	}
 	
+	/**
+	 * 将修改的配置信息刷到rule.xml中
+	 * @param ruleJAXB
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean flushRule(RuleJAXB ruleJAXB) throws Exception {
+		return marshaller(ruleJAXB, "rule.xml", "rule");
+	}
+	
 	public static SchemaJAXB toSchemaJAXB(Map<String, SchemaConfig> schemas) {
 		
 		SchemaJAXB schemaJAXB = new SchemaJAXB();
@@ -121,4 +135,14 @@ public class JAXBUtil {
 		return userJAXB;
 	}
 	
+	/**
+	 * 将内存中的配置信息转化为可以刷入到rule.xml文件中的bean对象
+	 * @param currentRules
+	 * @param currentFunctions
+	 * @return
+	 */
+	public static RuleJAXB toRuleJAXB(Map<String, TableRuleConfig> currentRules, 
+			Map<String, AbstractPartitionAlgorithm> currentFunctions) {
+		return new RuleJAXB(currentRules, currentFunctions);
+	}
 }

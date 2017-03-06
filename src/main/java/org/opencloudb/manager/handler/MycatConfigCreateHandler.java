@@ -39,9 +39,9 @@ public class MycatConfigCreateHandler {
 			} else if(stmt instanceof MycatCreateUserStatement) {
 				CreateUserHandler.handle(c, (MycatCreateUserStatement) stmt, sql);
 			} else if(stmt instanceof MycatCreateRuleStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create rule stmt");
+				CreateRuleHandler.handle(c, (MycatCreateRuleStatement) stmt, sql);
 			} else if(stmt instanceof MycatCreateFunctionStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process create function stmt");
+				CreateFunctionHandler.handle(c, (MycatCreateFunctionStatement) stmt, sql);
 			}else {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			} 

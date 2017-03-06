@@ -25,11 +25,12 @@ import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
 import org.opencloudb.manager.parser.druid.statement.MycatSetSystemVariableStatement;
 import org.opencloudb.parser.druid.MycatExprParser;
 import org.opencloudb.parser.druid.MycatLexer;
+import org.opencloudb.util.StringUtil;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.SQLName;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import com.alibaba.druid.sql.ast.statement.SQLDropFunctionStatement;
 import com.alibaba.druid.sql.parser.ParserException;
@@ -400,15 +401,15 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		acceptIdentifier("RULE");
 		MycatCreateRuleStatement stmt = new MycatCreateRuleStatement();
-		stmt.setRule(exprParser.name());
+		stmt.setRule(acceptName());
 		
 		accept(Token.ON);
 		accept(Token.COLUMN);
-		stmt.setColumn(exprParser.name());
+		stmt.setColumn(acceptName());
 		
 		acceptIdentifier("USING");
 		accept(Token.FUNCTION);
-		stmt.setFunction(exprParser.name());
+		stmt.setFunction(acceptName()); 
 		
 		return stmt;
 	}
@@ -424,7 +425,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		accept(Token.FUNCTION);
 		MycatCreateFunctionStatement stmt = new MycatCreateFunctionStatement();
-		stmt.setFunction(exprParser.name());
+		stmt.setFunction(acceptName());
 		
 		acceptIdentifier("USING");
 		acceptIdentifier("CLASS");
@@ -439,12 +440,18 @@ public class MycatManageStatementParser extends SQLStatementParser {
 	
 	/**
 	 * 获得类的全路径
-	 * 例：org.opencloudb.route.function.PartitionByHashMod
+	 * 例：org.opencloudb.route.function.PartitionByHashMod 或
+	 *  "org.opencloudb.route.function.PartitionByHashMod"
 	 * @return
 	 */
 	private String acquireClassName(){
 		boolean expectName = true;
 		StringBuffer className = new StringBuffer();
+		if (lexer.token() == Token.LITERAL_ALIAS || lexer.token() == Token.LITERAL_CHARS) {
+			className.append(lexer.stringVal());
+			lexer.nextToken();
+			return className.toString();
+		}
 		
 		for(;;){
 			if (expectName){
@@ -523,10 +530,28 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			lexer.nextToken();
 			break;
 		default:
-			throw new ParserException("error " + lexer.token());
+			throw new ParserException("You have an error in syntax. Number or string are expected. Get " + lexer.token() + ".");
 		}
 		
 		return value;
+	}
+	
+	/**
+	 * 接受一个name，比如rule name或function name等
+	 * 不能包含特殊字符，如果包含特殊字符外面必须套 '`'
+	 * @return
+	 */
+	private String acceptName() {
+		String name;
+		
+		switch (lexer.token()){
+		case LITERAL_ALIAS:
+		case LITERAL_CHARS:
+			throw new ParserException("You have an error in syntax. Name \"" + lexer.stringVal() + "\" is illegal.");
+		default:
+			name = StringUtil.removeBackquote(exprParser.name().getSimpleName());
+			return name;
+		}
 	}
 	
 	/**
@@ -581,7 +606,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		acceptIdentifier("RULE");
 		
 		MycatDropRuleStatement stmt = new MycatDropRuleStatement();
-		stmt.setRule(exprParser.name());
+		stmt.setRule(acceptName());
 		
 		return stmt;
 	}
@@ -599,8 +624,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 
         accept(Token.FUNCTION);
 
-        SQLName name = this.exprParser.name();
-        stmt.setName(name);
+        stmt.setName(new SQLIdentifierExpr(acceptName()));
 
         return stmt;
     }
@@ -642,16 +666,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		
 		accept(Token.EQ);
 		
-		switch (lexer.token()){
-		case LITERAL_INT:
-		case LITERAL_FLOAT:
-		case LITERAL_HEX:
-			stmt.setVariableValue(lexer.numberString());;
-			lexer.nextToken();
-			break;
-		default:
-			stmt.setVariableValue(exprParser.name().getSimpleName());;
-		}
+		stmt.setVariableValue(acceptNumAndStr());
 		
 		return stmt;
 	}

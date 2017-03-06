@@ -26,14 +26,8 @@ package org.opencloudb.route.function;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,6 +57,7 @@ public class PartitionByMurmurHash extends AbstractPartitionAlgorithm implements
 	private int seed;
 	private int count;
 	private int virtualBucketTimes=DEFAULT_VIRTUAL_BUCKET_TIMES;
+	private String weightMapPath;
 	private Map<Integer,Integer> weightMap=new HashMap<>();
 //	private String bucketMapPath;
 	
@@ -132,12 +127,21 @@ public class PartitionByMurmurHash extends AbstractPartitionAlgorithm implements
 		}
 		return w;
 	}
+	
+	public int getSeed() {
+		return seed;
+	}
+	
 	/**
 	 * 创建murmur_hash对象的种子，默认0
 	 * @param seed
 	 */
 	public void setSeed(int seed){
 		this.seed=seed;
+	}
+	
+	public int getCount() {
+		return count;
 	}
 	/**
 	 * 节点的数量
@@ -146,6 +150,10 @@ public class PartitionByMurmurHash extends AbstractPartitionAlgorithm implements
 	public void setCount(int count) {
 		this.count = count;
 	}
+	
+	public int getVirtualBucketTimes() {
+		return virtualBucketTimes;
+	}
 	/**
 	 * 虚拟节点倍数，virtualBucketTimes*count就是虚拟结点数量
 	 * @param virtualBucketTimes
@@ -153,6 +161,11 @@ public class PartitionByMurmurHash extends AbstractPartitionAlgorithm implements
 	public void setVirtualBucketTimes(int virtualBucketTimes){
 		this.virtualBucketTimes=virtualBucketTimes;
 	}
+	
+	public String getWeightMapFile() {
+		return weightMapPath;
+	}
+	
 	/**
 	 * 节点的权重，没有指定权重的节点默认是1。以properties文件的格式填写，以从0开始到count-1的整数值也就是节点索引为key，以节点权重值为值。
 	 * 所有权重值必须是正整数，否则以1代替
@@ -161,6 +174,7 @@ public class PartitionByMurmurHash extends AbstractPartitionAlgorithm implements
 	 * @throws  
 	 */
 	public void setWeightMapFile(String weightMapPath) throws IOException{
+		this.weightMapPath = weightMapPath;
 		Properties props=new Properties();
 		try(BufferedReader reader=new BufferedReader(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(weightMapPath), DEFAULT_CHARSET))){
 			props.load(reader);

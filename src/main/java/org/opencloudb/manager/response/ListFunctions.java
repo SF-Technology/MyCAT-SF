@@ -5,6 +5,7 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -92,34 +93,23 @@ public class ListFunctions {
 	}
 	
 	public static Map<String, Object> acquireProperties(AbstractPartitionAlgorithm function){
-		HashMap<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<String, Object>(); // key=属性，value=默认值
 		
-		BeanInfo beanInfo;
-		PropertyDescriptor[] pds;
 		try {
-			beanInfo = Introspector.getBeanInfo(function.getClass());
-			pds = beanInfo.getPropertyDescriptors();
-		} catch (IntrospectionException e) {
-			pds = new PropertyDescriptor[0];
-			LOGGER.error("Introspection error.", e);
-		}
-		
-		
-		for (PropertyDescriptor descriptor : pds){
-			Method method = descriptor.getWriteMethod();
-			if(method != null){
-				try {
-					Field field = function.getClass().getDeclaredField(descriptor.getName());
-					field.setAccessible(true);
-					properties.put(field.getName(), field.get(function));
-				} catch (NoSuchFieldException e) { // getDeclaredField调用的属性在beanClass中不存在
-					LOGGER.error("No such field error.", e);
-				} catch (IllegalArgumentException e) { // 如果field.get()中的对象与field不匹配要求会抛这个异常
-					LOGGER.error("Illegal argument error.", e);
-				} catch (IllegalAccessException e) { // 如果 field是private的属性，且没有设置成accessible，则会抛出这个异常
-					LOGGER.error("Illegal access error.", e);
+			BeanInfo beanInfo = Introspector.getBeanInfo(function.getClass());
+			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+			for (PropertyDescriptor descriptor : pds) {
+				Method getMethod = descriptor.getReadMethod();
+				Method setMethod = descriptor.getWriteMethod();
+				
+				if (getMethod != null && setMethod != null) {
+					Object value = getMethod.invoke(function);
+					properties.put(descriptor.getName(), value);
 				}
 			}
+		} catch (IntrospectionException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			LOGGER.error("Fail to get properties.", e);
+			throw new RuntimeException(e);
 		}
 		
 		return properties;

@@ -133,15 +133,27 @@ public class PartitionByRangeDateHash extends AbstractPartitionAlgorithm impleme
     {
         return beginDate;
     }
+    
+    public String getsBeginDate() {
+    	return sBeginDate;
+    }
 
     public void setsBeginDate(String sBeginDate)
     {
         this.sBeginDate = sBeginDate;
     }
+    
+    public String getsPartionDay() {
+    	return sPartionDay;
+    }
 
     public void setsPartionDay(String sPartionDay)
     {
         this.sPartionDay = sPartionDay;
+    }
+    
+    public String getDateFormat() {
+    	return dateFormat;
     }
 
     public void setDateFormat(String dateFormat)

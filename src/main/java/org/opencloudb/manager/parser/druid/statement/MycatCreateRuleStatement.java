@@ -1,29 +1,28 @@
 package org.opencloudb.manager.parser.druid.statement;
 
-import com.alibaba.druid.sql.ast.SQLName;
 import com.alibaba.druid.sql.ast.statement.SQLDDLStatement;
 
 public class MycatCreateRuleStatement extends MycatStatementImpl implements SQLDDLStatement{
-	private SQLName rule;
-	private SQLName column;
-	private SQLName function;
+	private String  rule;
+	private String column;
+	private String function;
 	
-	public SQLName getRule() {
+	public String getRule() {
 		return rule;
 	}
-	public void setRule(SQLName rule) {
+	public void setRule(String rule) {
 		this.rule = rule;
 	}
-	public SQLName getColumn() {
+	public String getColumn() {
 		return column;
 	}
-	public void setColumn(SQLName column) {
+	public void setColumn(String column) {
 		this.column = column;
 	}
-	public SQLName getFunction() {
+	public String getFunction() {
 		return function;
 	}
-	public void setFunction(SQLName function) {
+	public void setFunction(String function) {
 		this.function = function;
 	}
 	

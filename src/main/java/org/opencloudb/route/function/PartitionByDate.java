@@ -66,20 +66,34 @@ public class PartitionByDate extends AbstractPartitionAlgorithm implements RuleA
 		return AbstractPartitionAlgorithm.calculateSequenceRange(this, beginValue, endValue);
 	}
 
+	public String getsBeginDate() {
+		return sBeginDate;
+	}
+	
 	public void setsBeginDate(String sBeginDate) {
 		this.sBeginDate = sBeginDate;
+	}
+	
+	public String getsPartionDay() {
+		return sPartionDay;
 	}
 
 	public void setsPartionDay(String sPartionDay) {
 		this.sPartionDay = sPartionDay;
 	}
 
+	public String getDateFormat() {
+		return dateFormat;
+	}
+	
 	public void setDateFormat(String dateFormat) {
 		this.dateFormat = dateFormat;
 	}
+	
 	public String getsEndDate() {
 		return this.sEndDate;
 	}
+	
 	public void setsEndDate(String sEndDate) {
 		this.sEndDate = sEndDate;
 	}

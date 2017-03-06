@@ -47,13 +47,25 @@ public class PartitionByPrefixPattern extends AbstractPartitionAlgorithm impleme
 
 		initialize();
 	}
+	
+	public String getMapFile() {
+		return mapFile;
+	}
 
 	public void setMapFile(String mapFile) {
 		this.mapFile = mapFile;
 	}
 
+	public int getPatternValue() {
+		return patternValue;
+	}
+	
 	public void setPatternValue(int patternValue) {
 		this.patternValue = patternValue;
+	}
+	
+	public int getPrefixLength() {
+		return prefixLength;
 	}
 
 	public void setPrefixLength(int prefixLength) {

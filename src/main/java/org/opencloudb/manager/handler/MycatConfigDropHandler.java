@@ -39,10 +39,10 @@ public class MycatConfigDropHandler {
 			} else if(stmt instanceof MycatDropUserStatement) {
 				DropUserHandler.handle(c, (MycatDropUserStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropRuleStatement){
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop rule stmt");
+				DropRuleHandler.handle(c, (MycatDropRuleStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropFunctionStatement){
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop function stmt");}
-			else { // TODO more... 
+				DropFunctionHandler.handle(c, (MycatDropFunctionStatement)stmt, sql);
+			} else { // TODO more... 
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			}
 		} catch(Exception e) {

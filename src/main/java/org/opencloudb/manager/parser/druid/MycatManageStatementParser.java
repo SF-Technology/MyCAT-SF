@@ -22,6 +22,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
+import org.opencloudb.manager.parser.druid.statement.MycatSetSqlwallVariableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatSetSystemVariableStatement;
 import org.opencloudb.parser.druid.MycatExprParser;
 import org.opencloudb.parser.druid.MycatLexer;
@@ -514,6 +515,8 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			break;
 		case LITERAL_ALIAS:
 		case LITERAL_CHARS:
+		case TRUE:
+		case FALSE:
 			value = lexer.stringVal();
 			lexer.nextToken();
 			break;
@@ -629,7 +632,10 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			
 			return parseSetSystemVariable(false);
 			
-		} else {
+		} else if(identifierEquals("SQLWALL")) {
+			return parseSetSqlwallVariable(false);
+		}
+		else {
 			
 			throw new ParserException("Unsupport Statement : create " + token);
 			
@@ -650,6 +656,29 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		acceptIdentifier("VARIABLE");
 		
 		MycatSetSystemVariableStatement stmt = new MycatSetSystemVariableStatement();
+		stmt.setVariableName(exprParser.name());
+		
+		accept(Token.EQ);
+		
+		stmt.setVariableValue(acceptNumAndStr());
+		
+		return stmt;
+	}
+	
+	/**
+	 * set sqlwall variable语句解析
+	 * @param acceptSet
+	 * @return
+	 */
+	public SQLStatement parseSetSqlwallVariable(boolean acceptSet){
+		if(acceptSet) {
+			accept(Token.SET);
+		}
+		
+		acceptIdentifier("SQLWALL");
+		acceptIdentifier("VARIABLE");
+		
+		MycatSetSqlwallVariableStatement stmt = new MycatSetSqlwallVariableStatement();
 		stmt.setVariableName(exprParser.name());
 		
 		accept(Token.EQ);
@@ -809,6 +838,10 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			acceptIdentifier("SYSTEM");
 			acceptIdentifier("VARIABLES");
 			stmt.setTarget(MycatListStatementTarget.SYSTEM_VARIABLES);
+		} else if(identifierEquals("SQLWALL")) {
+			acceptIdentifier("SQLWALL");
+			acceptIdentifier("VARIABLES");
+			stmt.setTarget(MycatListStatementTarget.SQLWALL_VARIABLES);
 		} else {
 			throw new ParserException("Unsupport Statement : list " + lexer.stringVal());
 		}

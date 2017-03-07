@@ -9,6 +9,7 @@ import org.opencloudb.manager.response.ListDataNodes;
 import org.opencloudb.manager.response.ListFunctions;
 import org.opencloudb.manager.response.ListRules;
 import org.opencloudb.manager.response.ListSchemas;
+import org.opencloudb.manager.response.ListSqlwallVariables;
 import org.opencloudb.manager.response.ListSystemVariables;
 import org.opencloudb.manager.response.ListTables;
 import org.opencloudb.manager.response.ListUsers;
@@ -54,6 +55,9 @@ public class MycatConfigListHandler {
 				case SYSTEM_VARIABLES:
 					handleListSystemVariables(c);
 					break;
+				case SQLWALL_VARIABLES:
+					hamdleListSqlwallVariables(c);
+					break;
 				default:
 					break;
 				}
@@ -98,4 +102,7 @@ public class MycatConfigListHandler {
 		ListSystemVariables.response(c);
 	}
 
+	public static void hamdleListSqlwallVariables(ManagerConnection c) {
+		ListSqlwallVariables.response(c);
+	}
 }

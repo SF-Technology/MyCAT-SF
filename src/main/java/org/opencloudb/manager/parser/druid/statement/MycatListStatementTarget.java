@@ -9,4 +9,5 @@ public enum MycatListStatementTarget {
 	, FUNCTIONS // list functions
 	, USERS // list users
 	, SYSTEM_VARIABLES // system variables
+	, SQLWALL_VARIABLES // sqlwall variables
 }

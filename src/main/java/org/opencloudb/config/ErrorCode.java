@@ -548,4 +548,6 @@ public interface ErrorCode {
 	public static final int ER_CANT_SET_SYSTEM_VARIABLE = 1502;
 	public static final int ER_VARIABLE_NOT_EXISTS = 1503;
 	public static final int ER_FLUSH_FAILED = 1504;
+	public static final int ER_CANT_GET_SQLWALL_VARIABLES = 1505;
+	public static final int ER_CANT_SET_SQLWALL_VARIABLE = 1506;
 }

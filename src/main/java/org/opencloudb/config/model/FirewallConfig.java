@@ -1,5 +1,27 @@
 package org.opencloudb.config.model;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import org.opencloudb.config.loader.xml.XMLServerLoader;
+import org.opencloudb.config.util.ConfigException;
+import org.opencloudb.config.util.ConfigUtil;
+import org.opencloudb.config.util.ParameterMapping;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 /**
  * 防火墙配置
  * @author CrazyPig
@@ -101,6 +123,149 @@ public class FirewallConfig {
 	private boolean intersectAllow;		//true 是否允许SELECT * FROM A INTERSECT SELECT * FROM B这样的语句
 	private boolean constArithmeticAllow; //true 拦截常量运算的条件，比如说WHERE FID = 3 - 1，其中"3 - 1"是常量运算表达式。
 	private boolean limitZeroAllow;       	//false 是否允许limit 0这样的语句
+	
+	/**
+	 * 获得sqlwall变量的当前值
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws IntrospectionException
+	 */
+	public Map<String, Object> currentSqlwallVariables() throws IllegalAccessException, 
+	IllegalArgumentException, InvocationTargetException, IntrospectionException {
+		return acquireVariables(this);
+	}
+	
+	/**
+	 * 获得可动态配置的属性
+	 * @return
+	 * @throws NoSuchFieldException
+	 * @throws SecurityException
+	 */
+	public Set<String> dynamicVariables(){
+		HashSet<String> fields = new HashSet<String>();
+		
+		fields.add("enableSQLFirewall");
+		fields.add("enableRegEx");
+		fields.add("maxAllowResultRow");
+		fields.add("maxAllowExecuteTimes");
+		fields.add("maxAllowExecuteSqlTime");
+		fields.add("maxAllowExecuteUnitTime");
+		
+		return fields;
+	}
+	
+	/**
+	 * 获得sqlwall变量的默认值(new一个FirewallConfig实例，然后将配置信息映射到该实例中，然后从中取出默认配置信息)
+	 * @return
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 * @throws IntrospectionException
+	 */
+	public Map<String, Object> defaultSqlwallVariables() throws IllegalAccessException, 
+	IllegalArgumentException, InvocationTargetException, IntrospectionException {
+		InputStream dtd = null;
+        InputStream xml = null;
+        Element root = null;
+        
+		try {
+			dtd = XMLServerLoader.class.getResourceAsStream("/server.dtd");
+	        xml = XMLServerLoader.class.getResourceAsStream("/server.xml");
+	        root = ConfigUtil.getDocument(dtd, xml).getDocumentElement();
+		} catch (ConfigException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ConfigException(e);
+        } finally {
+            if (dtd != null) {
+                try {
+                    dtd.close();
+                } catch (IOException e) {
+                }
+            }
+            if (xml != null) {
+                try {
+                    xml.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+		
+		Map<String, Object> props = loadSqlwallVariables(root);
+		FirewallConfig firewallConfig = new FirewallConfig();
+		ParameterMapping.mapping(firewallConfig, props);
+		
+		return acquireVariables(firewallConfig);
+	}
+	
+	/**
+	 * 从server.xml中取出sqlwall的配置信息
+	 * @param root
+	 * @return
+	 */
+	private Map<String, Object> loadSqlwallVariables(Element root) {
+		Map<String, Object> variables = new TreeMap<String, Object>();
+		
+		NodeList list = root.getElementsByTagName("sqlwall");
+        for (int i = 0, n = list.getLength(); i < n; i++) {
+            Node parent = list.item(i);
+            
+            if (!(parent instanceof Element))
+            	continue;
+            
+            NodeList children = parent.getChildNodes();
+            for (int j = 0; j < children.getLength(); j++) {
+            	Node node = children.item(j);
+            	
+            	if (!(node instanceof Element))
+            		continue;
+            	
+            	Element e = (Element) node;
+            	
+            	if (!e.getNodeName().equals("property"))
+            		continue;
+            	
+            	String key = e.getAttribute("name");
+                String value = e.getTextContent();
+                
+                variables.put(key, value == null ? "" : value.trim());
+            }
+        }
+        
+        return variables;
+	}
+	
+	/**
+	 * 通过反射，获得object对象中所有具有get和set方法的属性，以及这些属性的值
+	 * @param object
+	 * @return
+	 * @throws IntrospectionException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
+	private Map<String, Object> acquireVariables(Object object) throws IntrospectionException, 
+	IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		Map<String, Object> systemVariables = new HashMap<String, Object>(); // key=属性，value=默认值
+		
+		BeanInfo beanInfo = Introspector.getBeanInfo(object.getClass());
+		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+		
+		for (PropertyDescriptor descriptor : pds) {
+			Method getMethod = descriptor.getReadMethod();
+			Method setMethod = descriptor.getWriteMethod();
+			
+			if (getMethod != null && setMethod != null) {
+				Object value = getMethod.invoke(object);
+				systemVariables.put(descriptor.getName(), value);
+			}
+		}
+		
+		return systemVariables;
+	}
+	
 	public int getEnableSQLFirewall() {
 		return enableSQLFirewall;
 	}

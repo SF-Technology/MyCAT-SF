@@ -3,6 +3,7 @@ package org.opencloudb.manager.handler;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
+import org.opencloudb.manager.parser.druid.statement.MycatSetSqlwallVariableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatSetSystemVariableStatement;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
@@ -19,7 +20,10 @@ public static void handle(String sql, ManagerConnection c) {
 			SQLStatement stmt = parser.parseStatement();
 			if(stmt instanceof MycatSetSystemVariableStatement) {
 				SetSystemVariableHandler.handle(c, (MycatSetSystemVariableStatement)stmt, sql);
-			} 
+			}
+			if(stmt instanceof MycatSetSqlwallVariableStatement) {
+				SetSqlwallVariableHandler.handle(c, (MycatSetSqlwallVariableStatement)stmt, sql);
+			}
 		} catch(Exception e) {
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		}

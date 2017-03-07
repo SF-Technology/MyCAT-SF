@@ -29,8 +29,8 @@ import org.opencloudb.parser.druid.MycatLexer;
 import org.opencloudb.util.StringUtil;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.SQLName;
 import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import com.alibaba.druid.sql.ast.statement.SQLDropFunctionStatement;
@@ -217,14 +217,14 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			if(identifierEquals("PASSWORD")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setPassword(this.exprParser.expr());
+				stmt.setPassword(new SQLCharExpr(acceptNumAndStr()));
 				continue;
 			}
 			
 			if(identifierEquals("SCHEMAS")) {
 				acceptIdentifier("SCHEMAS");
 				accept(Token.EQ);
-				stmt.setSchemas(this.exprParser.expr());
+				stmt.setSchemas(new SQLCharExpr(acceptNumAndStr()));
 				continue;
 			}
 			
@@ -272,6 +272,14 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		stmt.setSchema(this.exprParser.name());
 		
 		for(;;) {
+			
+			if(identifierEquals("dataNode")) {
+				lexer.nextToken();
+				accept(Token.EQ);
+				stmt.setDataNode(acceptNumAndStr());
+				continue;
+			}
+			
 			if(identifierEquals("checkSQLschema")) {
 				lexer.nextToken();
 				accept(Token.EQ);
@@ -301,6 +309,10 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			
 			break;
 		}
+		
+//		if(stmt.getDataNode() == null || stmt.getDataNode().isEmpty()) {
+//			throw new ParserException("schema definition must provide default dataNode property, eg: dataNode = ${default_datanode}");
+//		}
 		
 		return stmt;
 	}
@@ -353,14 +365,14 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			if(identifierEquals("datahost")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setDatahost(this.exprParser.expr());
+				stmt.setDatahost(new SQLCharExpr(acceptNumAndStr()));
 				continue;
 			}
 			
 			if(lexer.token() == Token.DATABASE) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setDatabase(this.exprParser.expr());
+				stmt.setDatabase(new SQLCharExpr(acceptNumAndStr()));
 				continue;
 			}
 			
@@ -723,7 +735,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			if(identifierEquals("PASSWORD")) {
 				lexer.nextToken();
 				accept(Token.EQ);
-				stmt.setPassword(this.exprParser.expr());
+				stmt.setPassword(new SQLCharExpr(acceptNumAndStr()));
 				stmt.setAlterPassword(true);
 				continue;
 			}
@@ -731,7 +743,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			if(identifierEquals("SCHEMAS")) {
 				acceptIdentifier("SCHEMAS");
 				accept(Token.EQ);
-				stmt.setSchemas(this.exprParser.expr());
+				stmt.setSchemas(new SQLCharExpr(acceptNumAndStr()));
 				stmt.setAlterSchemas(true);
 				continue;
 			}

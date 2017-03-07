@@ -55,7 +55,7 @@ public class MycatManageStatementParserTest {
 	
 	@Test
 	public void testParseCreateSchemaStatementSuccess() {
-		String sql = "create schema TESTDB checkSQLschema = true sqlMaxLimit = 10000;";
+		String sql = "create schema TESTDB dataNode = 'dn1' checkSQLschema = true sqlMaxLimit = 10000;";
 		MycatManageStatementParser parser = new MycatManageStatementParser(sql);
 		SQLStatement stmt = parser.parseStatement();
 		Assert.assertEquals(MycatCreateSchemaStatement.class, stmt.getClass());
@@ -63,10 +63,11 @@ public class MycatManageStatementParserTest {
 		Assert.assertEquals("TESTDB", _stmt.getSchema().getSimpleName().toUpperCase());
 		Assert.assertEquals(10000, _stmt.getSqlMaxLimit());
 		Assert.assertEquals(true, _stmt.isCheckSQLSchema());
-		sql = "create schema TESTDB sqlMaxLimit = 10000 checkSQLschema = false;";
+		assertEquals("dn1", _stmt.getDataNode());
+		sql = "create schema TESTDB dataNode = 'dn1' sqlMaxLimit = 10000 checkSQLschema = false;";
 		parser = new MycatManageStatementParser(sql); 
 		stmt = parser.parseStatement();
-		sql = "create schema TESTDB;";
+		sql = "create schema TESTDB dataNode = 'dn1';";
 		parser = new MycatManageStatementParser(sql);
 		stmt = parser.parseStatement();
 	}
@@ -83,6 +84,7 @@ public class MycatManageStatementParserTest {
 		StringBuilder sb = new StringBuilder();
 		sb.append("create table tb1 in TESTDB")
 			.append(" global = false")
+			.append(" autoIncrement = false")
 			.append(" primaryKey = \"ID\"")
 			.append(" dataNode = \"dn1,dn2,dn3\"")
 			.append(" rule = \"mod3\"");
@@ -106,6 +108,7 @@ public class MycatManageStatementParserTest {
 		sb.append("create childtable chtb1 in TESTDB")
 			.append(" parent = \"tb1\"")
 			.append(" parentKey = \"id\"")
+			.append(" autoIncrement = true")
 			.append(" joinKey = \"pid\"")
 			.append(" primaryKey = \"id\"");
 		String sql = sb.toString();

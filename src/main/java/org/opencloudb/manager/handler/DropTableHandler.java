@@ -15,6 +15,7 @@ import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.util.StringUtil;
 
 /**
  * drop table 逻辑处理器 (包含drop childtable)
@@ -26,7 +27,7 @@ public class DropTableHandler {
 	
 	public static void handle(ManagerConnection c, MycatDropTableStatement stmt, String sql) {
 
-		String tableName = stmt.getTable().getSimpleName();
+		String tableName = StringUtil.removeBackquote(stmt.getTable().getSimpleName());
 		String upperTableName = tableName.toUpperCase();
 		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
 		
@@ -41,8 +42,16 @@ public class DropTableHandler {
 				return ;
 			}
 			
-			// 检查table是否已经存在
 			SchemaConfig schemaConf = mycatConf.getSchemas().get(schemaName);
+			/*
+			 * schema dataNode属性不为空, 表示该schema不是sharding schema, 不能在此schema上创建table或者drop table
+			 */
+			if(schemaConf.getDataNode() != null) {
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "noSharding schema can not create or drop table");
+				return ;
+			}
+			
+			// 检查table是否已经存在
 			if(!schemaConf.getTables().containsKey(upperTableName)) {
 				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "table '" + tableName + "' dosen't exist");
 				return ;
@@ -57,7 +66,7 @@ public class DropTableHandler {
 				if(tableConf == target) {
 					continue;
 				}
-				if(tableConf.isChildTable() && tableConf.getParentTC() == target) {
+				if(tableConf.isChildTable() && isChild(tableConf, target)) {
 					delChildTables.add(tableConf);
 					it.remove();
 				}
@@ -90,6 +99,17 @@ public class DropTableHandler {
 			mycatConf.getLock().unlock();
 		}
 		
+	}
+	
+	private static boolean isChild(TableConfig child, TableConfig ancestor) {
+		TableConfig parent = null;
+		while((parent = child.getParentTC()) != null) {
+			if(parent == ancestor) {
+				return true;
+			}
+			child = parent;
+		}
+		return false;
 	}
 
 }

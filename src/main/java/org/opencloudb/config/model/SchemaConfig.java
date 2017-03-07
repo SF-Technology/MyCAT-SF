@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import org.opencloudb.config.util.ConfigException;
+
 /**
  * @author mycat
  */
@@ -36,7 +38,7 @@ public class SchemaConfig {
 	private final Random random = new Random();
 	private final String name;
 	private final Map<String, TableConfig> tables;
-	private final boolean noSharding;
+	private boolean noSharding;
 	private final String dataNode;
 	private final Set<String> metaDataNodes;
 	private final Set<String> allDataNodes;
@@ -67,10 +69,13 @@ public class SchemaConfig {
 		this.defaultMaxLimit = defaultMaxLimit;
 		buildJoinMap(tables);
 		this.noSharding = (tables == null || tables.isEmpty());
-		if (noSharding && dataNode == null) {
-			throw new RuntimeException(name
-					+ " in noSharding mode schema must have default dataNode ");
+		if(dataNode != null && !noSharding) {
+			throw new ConfigException("schema '" + name + "' in noSharding (has default dataNode) can not define any tables!");
 		}
+//		if (noSharding && dataNode == null) {
+//			throw new RuntimeException(name
+//					+ " in noSharding mode schema must have default dataNode ");
+//		}
 		this.metaDataNodes = buildMetaDataNodes();
 		this.allDataNodes = buildAllDataNodes();
 //		this.metaDataNodes = buildAllDataNodes();
@@ -83,15 +88,21 @@ public class SchemaConfig {
 		}
 	}
 	
-	public SchemaConfig(String name, int sqlMaxLimit, boolean checkSQLschema, Map<String, TableConfig> tables) {
+	public SchemaConfig(String name, String dataNode, int sqlMaxLimit, boolean checkSQLschema) {
 		this.name = name;
-		this.dataNode = null;
+		this.dataNode = dataNode;
 		this.defaultMaxLimit = sqlMaxLimit;
 		this.checkSQLSchema = checkSQLschema;
-		this.tables = tables;
-		this.noSharding = false;
+		this.tables = new HashMap<String, TableConfig>();
+		buildJoinMap(tables);
+		this.noSharding = (dataNode != null);
+//		if (noSharding && dataNode == null) {
+//			throw new RuntimeException(name
+//					+ " in noSharding mode schema must have default dataNode ");
+//		}
 		this.metaDataNodes = buildMetaDataNodes();
 		this.allDataNodes = buildAllDataNodes();
+//		this.metaDataNodes = buildAllDataNodes();
 		if (this.allDataNodes != null && !this.allDataNodes.isEmpty()) {
 			String[] dnArr = new String[this.allDataNodes.size()];
 			dnArr = this.allDataNodes.toArray(dnArr);
@@ -245,5 +256,5 @@ public class SchemaConfig {
 		metaDataNodes.addAll(buildMetaDataNodes());
 		allDataNodes.addAll(buildAllDataNodes());
 	}
-
+	
 }

@@ -90,6 +90,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 	@Override
 	public boolean visit(MycatCreateSchemaStatement stmt) {
 		print("CREATE SCHEMA " + stmt.getSchema());
+		print(" dataNode = " + stmt.getDataNode());
 		print(" checkSQLschema = " + stmt.isCheckSQLSchema());
 		print(" sqlMaxLimit = " + stmt.getSqlMaxLimit());
 		println();
@@ -114,6 +115,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 		if(stmt.getPrimaryKey() != null) {
 			println("primaryKey = " + stmt.getPrimaryKey());
 		}
+		println("autoIncrement = " + stmt.isAutoIncrement());
 		println("dataNode = " + stmt.getDataNodes());
 		if(stmt.getRule() != null) {
 			println("rule = " + stmt.getRule());
@@ -139,6 +141,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 		if(stmt.getPrimaryKey() != null) {
 			println("primaryKey = " + stmt.getPrimaryKey());
 		}
+		println("autoIncrement = " + stmt.isAutoIncrement());
 		return false;
 	}
 

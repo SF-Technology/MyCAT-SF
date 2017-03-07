@@ -1,5 +1,7 @@
-create schema TESTDB sqlMaxLimit = abc;
+create schema TESTDB;
 
-create schema TESTDB checkSQLschema = fdsf;
+create schema TESTDB dataNode = 'dn1' sqlMaxLimit = abc;
 
-create schema TESTDB fdsfdsf;
+create schema TESTDB dataNode = 'dn1' checkSQLschema = fdsf;
+
+create schema TESTDB dataNode = 'dn1' fdsfdsf;

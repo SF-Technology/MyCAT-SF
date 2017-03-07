@@ -16,6 +16,7 @@ public class MycatCreateTableStatement extends MycatStatementImpl implements SQL
 
 	private SQLName table;
 	private boolean isGlobal;
+	private boolean autoIncrement;
 	private SQLExpr primaryKey;
 	private SQLExpr dataNodes;
 	private SQLExpr rule;
@@ -75,4 +76,12 @@ public class MycatCreateTableStatement extends MycatStatementImpl implements SQL
 		this.schema = schema;
 	}
 
+	public boolean isAutoIncrement() {
+		return autoIncrement;
+	}
+
+	public void setAutoIncrement(boolean autoIncrement) {
+		this.autoIncrement = autoIncrement;
+	}
+	
 }

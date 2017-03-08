@@ -46,6 +46,10 @@ public final class PartitionByString extends AbstractPartitionAlgorithm implemen
     public void setPartitionCount(String partitionCount) {
         this.count = toIntArray(partitionCount);
     }
+    
+    public String getPartitionLength() {
+    	return intArrayToStr(this.length);
+    }
 
     public void setPartitionLength(String partitionLength) {
         this.length = toIntArray(partitionLength);

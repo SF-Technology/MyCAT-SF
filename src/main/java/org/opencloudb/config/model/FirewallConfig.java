@@ -4,23 +4,12 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-
-import org.opencloudb.config.loader.xml.XMLServerLoader;
-import org.opencloudb.config.util.ConfigException;
-import org.opencloudb.config.util.ConfigUtil;
-import org.opencloudb.config.util.ParameterMapping;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * 防火墙配置
@@ -165,76 +154,11 @@ public class FirewallConfig {
 	 * @throws IntrospectionException
 	 */
 	public Map<String, Object> defaultSqlwallVariables() throws IllegalAccessException, 
-	IllegalArgumentException, InvocationTargetException, IntrospectionException {
-		InputStream dtd = null;
-        InputStream xml = null;
-        Element root = null;
-        
-		try {
-			dtd = XMLServerLoader.class.getResourceAsStream("/server.dtd");
-	        xml = XMLServerLoader.class.getResourceAsStream("/server.xml");
-	        root = ConfigUtil.getDocument(dtd, xml).getDocumentElement();
-		} catch (ConfigException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ConfigException(e);
-        } finally {
-            if (dtd != null) {
-                try {
-                    dtd.close();
-                } catch (IOException e) {
-                }
-            }
-            if (xml != null) {
-                try {
-                    xml.close();
-                } catch (IOException e) {
-                }
-            }
-        }
+	IllegalArgumentException, InvocationTargetException, IntrospectionException{
 		
-		Map<String, Object> props = loadSqlwallVariables(root);
 		FirewallConfig firewallConfig = new FirewallConfig();
-		ParameterMapping.mapping(firewallConfig, props);
 		
 		return acquireVariables(firewallConfig);
-	}
-	
-	/**
-	 * 从server.xml中取出sqlwall的配置信息
-	 * @param root
-	 * @return
-	 */
-	private Map<String, Object> loadSqlwallVariables(Element root) {
-		Map<String, Object> variables = new TreeMap<String, Object>();
-		
-		NodeList list = root.getElementsByTagName("sqlwall");
-        for (int i = 0, n = list.getLength(); i < n; i++) {
-            Node parent = list.item(i);
-            
-            if (!(parent instanceof Element))
-            	continue;
-            
-            NodeList children = parent.getChildNodes();
-            for (int j = 0; j < children.getLength(); j++) {
-            	Node node = children.item(j);
-            	
-            	if (!(node instanceof Element))
-            		continue;
-            	
-            	Element e = (Element) node;
-            	
-            	if (!e.getNodeName().equals("property"))
-            		continue;
-            	
-            	String key = e.getAttribute("name");
-                String value = e.getTextContent();
-                
-                variables.put(key, value == null ? "" : value.trim());
-            }
-        }
-        
-        return variables;
 	}
 	
 	/**

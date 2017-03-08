@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
@@ -22,6 +23,7 @@ import org.opencloudb.route.function.AbstractPartitionAlgorithm;
  * @version 2017年3月1日 下午3:10:43 
  */
 public class CreateFunctionHandler {
+	private static final Logger LOGGER = Logger.getLogger(CreateFunctionHandler.class);
 	public static void handle(ManagerConnection c, MycatCreateFunctionStatement stmt, String sql){
 		MycatConfig mycatConfig = MycatServer.getInstance().getConfig();
 		Map<String, TableRuleConfig> tableRules = mycatConfig.getTableRules();
@@ -59,10 +61,10 @@ public class CreateFunctionHandler {
 			}
 		} catch (Exception e) {
 			c.writeErrMessage(ErrorCode.ER_FLUSH_FAILED, "flush rule.xml fail");
-			e.printStackTrace();
+			LOGGER.error("flush rule.xml fail",e);
 			return ;
 		}
-				
+		
 		// rule.xml刷成功之后，更新内存中的配置信息
 		functions.put(name, function);
 		

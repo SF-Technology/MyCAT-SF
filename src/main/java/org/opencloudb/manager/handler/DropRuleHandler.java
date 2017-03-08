@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
@@ -21,6 +22,7 @@ import org.opencloudb.route.function.AbstractPartitionAlgorithm;
  * @version 2017年3月1日 下午5:18:04 
  */
 public class DropRuleHandler {
+	private static final Logger LOGGER = Logger.getLogger(DropRuleHandler.class);
 	public static void handle(ManagerConnection c, MycatDropRuleStatement stmt, String sql) {
 		MycatConfig mycatConfig = MycatServer.getInstance().getConfig();
 		Map<String, TableRuleConfig> tableRules = mycatConfig.getTableRules();
@@ -45,7 +47,7 @@ public class DropRuleHandler {
 				}
 			} catch (Exception e) {
 				c.writeErrMessage(ErrorCode.ER_FLUSH_FAILED, "flush rule.xml fail");
-				e.printStackTrace();
+				LOGGER.error("flush rule.xml fail",e);
 				return ;
 			}
 			

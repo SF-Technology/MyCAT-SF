@@ -17,6 +17,10 @@ public class LatestMonthPartion extends AbstractPartitionAlgorithm {
 	public String[] getDataNodes() {
 		return dataNodes;
 	}
+	
+	public int getSplitOneDay() {
+		return splitOneDay;
+	}
 
 	/**
 	 * @param dataNodeExpression

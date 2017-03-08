@@ -46,6 +46,10 @@ public class AutoPartitionByLong extends AbstractPartitionAlgorithm implements R
 
 		initialize();
 	}
+	
+	public String getMapFile() {
+		return mapFile;
+	}
 
 	public void setMapFile(String mapFile) {
 		this.mapFile = mapFile;

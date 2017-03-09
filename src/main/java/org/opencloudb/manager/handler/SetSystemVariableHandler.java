@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SystemConfig;
@@ -20,6 +21,8 @@ import org.opencloudb.net.mysql.OkPacket;
  * @version 2017年3月2日 下午7:23:03 
  */
 public class SetSystemVariableHandler {
+	private static final Logger LOGGER = Logger.getLogger(SetSystemVariableHandler.class);
+	
 	public static void handle(ManagerConnection c, MycatSetSystemVariableStatement stmt, String sql) {
 		SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
 		Set<String> dynamicVariables = systemConfig.dynamicVariables();
@@ -36,8 +39,9 @@ public class SetSystemVariableHandler {
 				return;
 			}
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
-				| IntrospectionException e1) {
+				| IntrospectionException e) {
 			c.writeErrMessage(ErrorCode.ER_VARIABLE_NOT_EXISTS, "Can not get system variables.");
+			LOGGER.error(e.getMessage(), e);
 			return;
 		}
 		
@@ -46,6 +50,7 @@ public class SetSystemVariableHandler {
 				ParameterMapping.mapping(systemConfig, params);
 			} catch (IllegalAccessException | InvocationTargetException e) {
 				c.writeErrMessage(ErrorCode.ER_CANT_SET_SYSTEM_VARIABLE, "Can not set system variable " + name);
+				LOGGER.error(e.getMessage(), e);
 				return;
 			}
 		} else {

@@ -44,6 +44,7 @@ public class CreateFunctionHandler {
 			ParameterMapping.mapping(function, properties);
 		} catch (ReflectiveOperationException e) {
 			c.writeErrMessage(ErrorCode.ER_CANT_CREATE_FUNCTION, "can not mapping the parameters to the " + name + " object.");
+			LOGGER.error("can not mapping the parameters to the " + name + " object.", e);
 			return;
 		}
 		

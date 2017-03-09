@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.FirewallConfig;
@@ -15,7 +16,8 @@ import org.opencloudb.manager.parser.druid.statement.MycatSetSqlwallVariableStat
 import org.opencloudb.net.mysql.OkPacket;
 
 public class SetSqlwallVariableHandler {
-
+	private static final Logger LOGGER = Logger.getLogger(SetSqlwallVariableHandler.class);
+	
 	public static void handle(ManagerConnection c, MycatSetSqlwallVariableStatement stmt, String sql) {
 		FirewallConfig firewallConfig = MycatServer.getInstance().getConfig().getFirewall();
 		Set<String> dynamicVariables = firewallConfig.dynamicVariables();
@@ -34,6 +36,7 @@ public class SetSqlwallVariableHandler {
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| IntrospectionException e1) {
 			c.writeErrMessage(ErrorCode.ER_VARIABLE_NOT_EXISTS, "Can not get system variables.");
+			LOGGER.error("Can not get system variables.", e1);
 			return;
 		}
 		
@@ -42,6 +45,7 @@ public class SetSqlwallVariableHandler {
 				ParameterMapping.mapping(firewallConfig, params);
 			} catch (IllegalAccessException | InvocationTargetException e) {
 				c.writeErrMessage(ErrorCode.ER_CANT_SET_SQLWALL_VARIABLE, "Can not set sqlwall variable " + name);
+				LOGGER.error("Can not set sqlwall variable " + name, e);
 				return;
 			}
 		} else {

@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.Fields;
@@ -19,6 +20,8 @@ import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.util.StringUtil;
 
 public class ListSystemVariables {
+	private static final Logger LOGGER = Logger.getLogger(ListSystemVariables.class);
+	
 	private static final int FIELD_COUNT = 4;
 	private static final ResultSetHeaderPacket header = PacketUtil.getHeader(FIELD_COUNT);
 	private static final FieldPacket[] fields = new FieldPacket[FIELD_COUNT];
@@ -73,6 +76,7 @@ public class ListSystemVariables {
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| IntrospectionException | SecurityException e) {
 			c.writeErrMessage(ErrorCode.ER_CANT_GET_SYSTEM_VARIABLES, "fail to get system variables.");
+			LOGGER.error(e.getMessage(), e);
 			return;
 		}
 		

@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.Fields;
@@ -19,6 +20,7 @@ import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.util.StringUtil;
 
 public class ListSqlwallVariables {
+	private static final Logger LOGGER = Logger.getLogger(ListSqlwallVariables.class);
 	
 	private static final int FIELD_COUNT = 4;
 	private static final ResultSetHeaderPacket header = PacketUtil.getHeader(FIELD_COUNT);
@@ -75,6 +77,7 @@ public class ListSqlwallVariables {
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| IntrospectionException e) {
 			c.writeErrMessage(ErrorCode.ER_CANT_GET_SQLWALL_VARIABLES, "fail to get system variables.");
+			LOGGER.error("fail to get system variables.", e);
 			return;
 		}
 		for (String varName : currentSqlwallVariables.keySet()){

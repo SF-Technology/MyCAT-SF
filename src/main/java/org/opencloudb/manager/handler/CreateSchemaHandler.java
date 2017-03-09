@@ -41,6 +41,13 @@ public class CreateSchemaHandler {
 		mycatConfig.getLock().lock();
 		try {
 			
+			// 检查schema是否已经存在
+			if(mycatConfig.getSchemas().containsKey(schemaName)) {
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, 
+						"schema '" + schemaName + "' already exist");
+				return ;
+			}
+			
 			if(dataNode != null && (!mycatConfig.getDataNodes().containsKey(dataNode))) {
 				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "Unknown dataNode '" + dataNode + "'");
 				return ;

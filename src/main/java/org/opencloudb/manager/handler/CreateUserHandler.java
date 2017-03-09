@@ -53,6 +53,7 @@ public class CreateUserHandler {
 			UserConfig newUserConf = new UserConfig();
 			newUserConf.setName(newUserName);
 			newUserConf.setPassword(password);
+			newUserConf.setReadOnly(stmt.isReadOnly());
 			
 			
             if(schemas != null) {

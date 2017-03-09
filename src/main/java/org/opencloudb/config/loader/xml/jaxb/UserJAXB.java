@@ -36,6 +36,9 @@ public class UserJAXB {
 			user.setName(userConf.getName());
 			user.getProperties().add(new Property("password", userConf.getPassword()));
 			user.getProperties().add(new Property("schemas", Joiner.on(",").join(new TreeSet<String>(userConf.getSchemas()))));
+			if(userConf.isReadOnly()) {
+				user.getProperties().add(new Property("readOnly", "true"));
+			}
 			return user;
 		}
 

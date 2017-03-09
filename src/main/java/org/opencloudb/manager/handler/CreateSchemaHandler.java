@@ -38,7 +38,7 @@ public class CreateSchemaHandler {
 		mycatConfig.getLock().lock();
 		try {
 			
-			if(!mycatConfig.getDataNodes().containsKey(dataNode)) {
+			if(dataNode != null && (!mycatConfig.getDataNodes().containsKey(dataNode))) {
 				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "Unknown dataNode '" + dataNode + "'");
 				return ;
 			}

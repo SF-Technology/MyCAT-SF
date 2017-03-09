@@ -2,8 +2,10 @@ package org.opencloudb.manager.parser.druid;
 
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
+import org.opencloudb.util.StringUtil;
 
 import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.parser.ParserException;
 import com.alibaba.druid.sql.parser.SQLDDLParser;
 import com.alibaba.druid.sql.parser.SQLExprParser;
@@ -36,7 +38,7 @@ public class MycatCreateTableParser extends SQLDDLParser {
 		}
 		accept(Token.TABLE);
 		MycatCreateTableStatement stmt = new MycatCreateTableStatement();
-		stmt.setTable(exprParser.name());
+		stmt.setTable(new SQLIdentifierExpr(acceptName()));
 		Token token = lexer.token();
 		if(token == Token.IN) {
 			lexer.nextToken();
@@ -132,7 +134,7 @@ public class MycatCreateTableParser extends SQLDDLParser {
 		}
 		acceptIdentifier("CHILDTABLE");
 		MycatCreateChildTableStatement stmt = new MycatCreateChildTableStatement();
-		stmt.setTable(exprParser.name());
+		stmt.setTable(new SQLIdentifierExpr(acceptName()));
 		if(lexer.token() == Token.IN) {
 			lexer.nextToken();
 			stmt.setSchema(exprParser.name());
@@ -201,6 +203,24 @@ public class MycatCreateTableParser extends SQLDDLParser {
 		}
 		
 		return stmt;
+	}
+	
+	/**
+	 * 接受一个name，比如rule name或function name等
+	 * 不能包含特殊字符，如果包含特殊字符外面必须套 '`'
+	 * @return
+	 */
+	private String acceptName() {
+		String name;
+		
+		switch (lexer.token()){
+		case LITERAL_ALIAS:
+		case LITERAL_CHARS:
+			throw new ParserException("You have an error in syntax. Name \"" + lexer.stringVal() + "\" is illegal.");
+		default:
+			name = StringUtil.removeBackquote(exprParser.name().getSimpleName());
+			return name;
+		}
 	}
 	
 	/**

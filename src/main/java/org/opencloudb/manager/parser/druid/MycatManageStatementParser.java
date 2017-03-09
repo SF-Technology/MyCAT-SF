@@ -210,7 +210,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		accept(Token.USER);
 		MycatCreateUserStatement stmt = new MycatCreateUserStatement();
-		stmt.setUserName(this.exprParser.name());
+		stmt.setUserName(new SQLIdentifierExpr(acceptName()));
 		
 		for(;;) {
 			
@@ -269,7 +269,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		accept(Token.SCHEMA);
 		MycatCreateSchemaStatement stmt = new MycatCreateSchemaStatement();
-		stmt.setSchema(this.exprParser.name());
+		stmt.setSchema(new SQLIdentifierExpr(acceptName()));
 		
 		for(;;) {
 			
@@ -328,7 +328,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		accept(Token.SCHEMA);
 		MycatDropSchemaStatement stmt = new MycatDropSchemaStatement();
-		stmt.setSchema(this.exprParser.name());
+		stmt.setSchema(new SQLIdentifierExpr(acceptName()));
 		return stmt;
 	}
 	
@@ -343,7 +343,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		accept(Token.TABLE);
 		MycatDropTableStatement stmt = new MycatDropTableStatement();
-		stmt.setTable(this.exprParser.name());
+		stmt.setTable(new SQLIdentifierExpr(acceptName()));
 		return stmt;
 	}
 	
@@ -358,7 +358,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		acceptIdentifier("DATANODE");
 		MycatCreateDataNodeStatement stmt = new MycatCreateDataNodeStatement();
-		stmt.setDatanode(exprParser.name());
+		stmt.setDatanode(new SQLIdentifierExpr(acceptName()));
 		
 		for(;;) {
 			
@@ -568,7 +568,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		acceptIdentifier("DATANODE");
 		MycatDropDataNodeStatement stmt = new MycatDropDataNodeStatement();
-		stmt.setDataNode(this.exprParser.name());
+		stmt.setDataNode(new SQLIdentifierExpr(acceptName()));
 		return stmt;
 	}
 	
@@ -583,7 +583,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		acceptIdentifier("DATAHOST");
 		MycatDropDataHostStatement stmt = new MycatDropDataHostStatement();
-		stmt.setDataHost(this.exprParser.name());
+		stmt.setDataHost(new SQLIdentifierExpr(acceptName()));
 		return stmt;
 	}
 	
@@ -593,7 +593,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		accept(Token.USER);
 		MycatDropUserStatement stmt = new MycatDropUserStatement();
-		stmt.setUserName(this.exprParser.name());
+		stmt.setUserName(new SQLIdentifierExpr(acceptName()));
 		return stmt;
 	}
 	
@@ -729,7 +729,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 		accept(Token.USER);
 		MycatAlterUserStatement stmt = new MycatAlterUserStatement();
-		stmt.setUserName(this.exprParser.name());
+		stmt.setUserName(new SQLIdentifierExpr(acceptName()));
 		for(;;) {
 			
 			if(identifierEquals("PASSWORD")) {

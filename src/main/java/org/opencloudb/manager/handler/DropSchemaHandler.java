@@ -31,6 +31,12 @@ public class DropSchemaHandler {
 	
 	public static void handle(ManagerConnection c, MycatDropSchemaStatement stmt, String sql) {
 		
+		// 限制非内置root用户无法执行drop schema
+		if(!DynamicConfigPrivilegesHandler.isPrivilegesOk(c)) {
+			c.writeErrMessage(ErrorCode.ER_ACCESS_DENIED_ERROR, "This command can only be used with build-in root user");
+			return ;
+		}
+		
 		String schemaName = StringUtil.removeBackquote(stmt.getSchema().toString());
 		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
 		mycatConf.getLock().lock();

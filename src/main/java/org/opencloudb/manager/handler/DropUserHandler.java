@@ -43,6 +43,12 @@ public class DropUserHandler {
 				return ;
 			}
 			
+			// 不能删除root用户
+			if(mycatConfig.getSystem().getRootUser().equals(userName)) {
+				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "user '" + userName + "' is the built-in root user, can not be drop");
+				return ;
+			}
+			
 			
             // 刷新 user.xml
 			Map<String, UserConfig> users = mycatConfig.getUsers();

@@ -45,7 +45,7 @@ public class CreateRuleHandler {
 			return;
 		}
 		
-		RuleConfig ruleConfig = new RuleConfig(column, function);
+		RuleConfig ruleConfig = new RuleConfig(column.toUpperCase(), function);
 		ruleConfig.setName(name);
 		ruleConfig.setRuleAlgorithm(functions.get(function));
 		

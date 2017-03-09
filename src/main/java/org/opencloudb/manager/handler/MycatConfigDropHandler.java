@@ -1,9 +1,9 @@
 package org.opencloudb.manager.handler;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
-import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropFunctionStatement;
@@ -13,7 +13,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.ast.statement.SQLDropFunctionStatement;
+import com.alibaba.druid.sql.parser.ParserException;
 
 /**
  * 
@@ -22,6 +22,8 @@ import com.alibaba.druid.sql.ast.statement.SQLDropFunctionStatement;
  *
  */
 public class MycatConfigDropHandler {
+	
+	private static final Logger LOGGER = Logger.getLogger(MycatConfigDropHandler.class);
 	
 	public static void handle(String sql, ManagerConnection c) {
 		
@@ -45,8 +47,10 @@ public class MycatConfigDropHandler {
 			} else { // TODO more... 
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			}
+		} catch(ParserException e) {
+			c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, e.getMessage());
 		} catch(Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		}
 	}

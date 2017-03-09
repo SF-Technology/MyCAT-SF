@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
@@ -28,6 +29,8 @@ import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
  *
  */
 public class CreateTableHandler {
+	
+	private static final Logger LOGGER = Logger.getLogger(CreateTableHandler.class);
 	
 	private static final Set<String> DEFAULT_DB_TYPE_SET = new HashSet<String>();
 	
@@ -120,7 +123,7 @@ public class CreateTableHandler {
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 				
 		} catch(Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {
 			mycatConf.getLock().unlock();

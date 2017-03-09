@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
@@ -27,6 +28,7 @@ import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
  */
 public class CreateUserHandler {
 	
+	private static final Logger LOGGER = Logger.getLogger(CreateUserHandler.class);
 	
 	public static void handle(ManagerConnection c, MycatCreateUserStatement stmt, String sql) {
 		
@@ -84,7 +86,7 @@ public class CreateUserHandler {
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 			
 		} catch(Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {
 			mycatConfig.getLock().unlock();

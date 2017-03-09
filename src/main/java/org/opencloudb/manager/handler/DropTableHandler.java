@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
@@ -24,6 +25,8 @@ import org.opencloudb.util.StringUtil;
  *
  */
 public class DropTableHandler {
+	
+	private static final Logger LOGGER = Logger.getLogger(DropTableHandler.class);
 	
 	public static void handle(ManagerConnection c, MycatDropTableStatement stmt, String sql) {
 
@@ -93,7 +96,7 @@ public class DropTableHandler {
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 			
 		} catch(Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {
 			mycatConf.getLock().unlock();

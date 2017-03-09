@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
@@ -22,6 +23,8 @@ import org.opencloudb.util.StringUtil;
  *
  */
 public class CreateSchemaHandler {
+	
+	private static final Logger LOGGER = Logger.getLogger(CreateSchemaHandler.class);
 	
 	public static void handle(ManagerConnection c, MycatCreateSchemaStatement stmt, String sql) {
 		
@@ -65,7 +68,7 @@ public class CreateSchemaHandler {
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 		} catch(Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {
 			mycatConfig.getLock().unlock();

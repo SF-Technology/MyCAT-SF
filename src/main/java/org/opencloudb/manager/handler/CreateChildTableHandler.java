@@ -86,10 +86,13 @@ public class CreateChildTableHandler {
 				c.writeErrMessage(ErrorCode.ER_NO_SUCH_TABLE, "parent table '" + parentTableName + "' dosen't exist");
 				return ;
 			}
-			// 验证parent table必须是分片表
-			if(parentTC.getRule() == null || parentTC.isGlobalTable()) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "parent table '" + parentTableName + "' is not a shard table");
-				return ;
+			
+			// 验证parent table必须是顶级分片表 或者 子表
+			if(parentTC.getParentTC() == null) { // 父表是顶级表
+				if(parentTC.getRule() == null || parentTC.isGlobalTable()) { // 没有分片规则
+					c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "parent table '" + parentTableName + "' is not a shard table");
+					return ;
+				}
 			}
 			
 			TableConfig tableConf = new TableConfig(upperTableName, primaryKey, autoIncrement, 

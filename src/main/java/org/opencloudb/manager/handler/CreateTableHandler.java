@@ -97,7 +97,7 @@ public class CreateTableHandler {
 				}
 				rule = tableRuleConf.getRule();
 			}
-			boolean ruleRequired = rule == null ? false : true;
+			boolean ruleRequired = false;
 			TableConfig tableConf = new TableConfig(upperTableName, primaryKey, autoIncrement, 
 					needAddLimit, tableType, dataNode, 
 					DEFAULT_DB_TYPE_SET, rule, ruleRequired, 

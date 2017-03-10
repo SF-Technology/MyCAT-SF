@@ -53,6 +53,7 @@ public class SchemaJAXB {
 			Map<String, Table> tableIndexMap = new HashMap<String, SchemaJAXB.Schema.Table>();
 			Map<String, List<ChildTable>> childTableListIndexMap = new HashMap<String, List<ChildTable>>();
 			Set<String> rootTableSet = new HashSet<String>();
+			Map<String, ChildTable> childTableMap = new HashMap<String, ChildTable>();
 			
 			// table的处理
 			for(TableConfig tableConf : schemaConf.getTables().values()) {
@@ -61,6 +62,10 @@ public class SchemaJAXB {
 					tableIndexMap.put(tableConf.getName(), table);
 					childTableListIndexMap.put(tableConf.getName(), table.getChildTable());
 					rootTableSet.add(tableConf.getName());
+				} else {
+					ChildTable childTable = ChildTable.transferFrom(tableConf);
+					childTableMap.put(tableConf.getName(), childTable);
+					childTableListIndexMap.put(tableConf.getName(), childTable.getChildTable());
 				}
 			}
 			
@@ -71,9 +76,8 @@ public class SchemaJAXB {
 			for(String childTableName : childTableSet) {
 				TableConfig tableConf = schemaConf.getTables().get(childTableName);
 				String parentTable = tableConf.getParentTC().getName();
-				ChildTable childTable = ChildTable.transferFrom(tableConf);
+				ChildTable childTable = childTableMap.get(childTableName);
 				childTableListIndexMap.get(parentTable).add(childTable);
-				childTableListIndexMap.put(tableConf.getName(), childTable.getChildTable());
 			}
 			
 			if(tableIndexMap.size() > 0) {

@@ -33,41 +33,48 @@ public class CreateFunctionHandler {
 		String className = stmt.getClassName();
 		Map<String, String> properties = stmt.getProperties();
 		
-		if (functions.get(name) != null) { // function exists
-			c.writeErrMessage(ErrorCode.ER_CANT_CREATE_FUNCTION, "Function named " + name + " already exists.");
-			return;
-		}
-		
-		AbstractPartitionAlgorithm function = createFunction(className);
+		mycatConfig.getLock().lock();
 		
 		try {
+			if (functions.get(name) != null) { // function exists
+				c.writeErrMessage(ErrorCode.ER_CANT_CREATE_FUNCTION, "Function named " + name + " already exists.");
+				return;
+			}
+			
+			AbstractPartitionAlgorithm function = createFunction(className);
+			
+			
 			ParameterMapping.mapping(function, properties);
-		} catch (ReflectiveOperationException e) {
-			c.writeErrMessage(ErrorCode.ER_CANT_CREATE_FUNCTION, "can not mapping the parameters to the " + name + " object.");
-			LOGGER.error("can not mapping the parameters to the " + name + " object.", e);
-			return;
-		}
-		
-		function.init(); // 实例化AbstractPartitionAlgorithm对象后要对它进行初始化
-		
-		Map<String, AbstractPartitionAlgorithm> tempFunctions = new HashMap<String, AbstractPartitionAlgorithm>(functions);
-		tempFunctions.put(name, function);
-		
-		// 将修改刷到rule.xml中
-		try {
+				
+			function.init(); // 实例化AbstractPartitionAlgorithm对象后要对它进行初始化
+			
+			Map<String, AbstractPartitionAlgorithm> tempFunctions = new HashMap<String, AbstractPartitionAlgorithm>(functions);
+			tempFunctions.put(name, function);
+			
+			// 将修改刷到rule.xml中
 			RuleJAXB ruleJAXB = JAXBUtil.toRuleJAXB(tableRules, tempFunctions);
 			if(!JAXBUtil.flushRule(ruleJAXB)) {
 				c.writeErrMessage(ErrorCode.ER_FLUSH_FAILED, "flush rule.xml fail");
 				return ;
 			}
+			
+			// rule.xml刷成功之后，更新内存中的配置信息
+			functions.put(name, function);
+		} catch (ReflectiveOperationException e) {
+			c.writeErrMessage(ErrorCode.ER_CANT_CREATE_FUNCTION, "can not mapping the parameters to the " + name + " object.");
+			LOGGER.error("can not mapping the parameters to the " + name + " object.", e);
+			return;
+		} catch (IllegalArgumentException e) {
+			c.writeErrMessage(ErrorCode.ER_CANT_CREATE_FUNCTION, "fail to instantiate class " + className);
+			LOGGER.error("fail to instantiate class " + className,e);
+			return;
 		} catch (Exception e) {
 			c.writeErrMessage(ErrorCode.ER_FLUSH_FAILED, "flush rule.xml fail");
 			LOGGER.error("flush rule.xml fail",e);
-			return ;
+			return;
+		} finally {
+			mycatConfig.getLock().unlock();
 		}
-		
-		// rule.xml刷成功之后，更新内存中的配置信息
-		functions.put(name, function);
 		
 		// 向客户端发送ok包
 		ByteBuffer buffer = c.allocate();

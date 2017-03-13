@@ -33,41 +33,45 @@ public class CreateRuleHandler {
 		String column = stmt.getColumn();
 		String function = stmt.getFunction();
 		
-		// 分片规则已经存在
-		if (tableRules.get(name) != null) {
-			c.writeErrMessage(ErrorCode.ER_CANT_CREATE_RULE, "Table rule named " + name + " already exists.");
-			return;
-		}
+		mycatConfig.getLock().lock();
 		
-		// 无法找到分片函数
-		if (functions.get(function) == null) {
-			c.writeErrMessage(ErrorCode.ER_CANT_CREATE_RULE, "Can not find function named " + function);
-			return;
-		}
-		
-		RuleConfig ruleConfig = new RuleConfig(column.toUpperCase(), function);
-		ruleConfig.setName(name);
-		ruleConfig.setRuleAlgorithm(functions.get(function));
-		
-		// 拷贝tableRules
-		Map<String, TableRuleConfig> tempTableRules = new HashMap<String, TableRuleConfig>(tableRules);
-		tempTableRules.put(name, new TableRuleConfig(name, ruleConfig));
-		
-		// 将修改刷到rule.xml中
 		try {
+			// 分片规则已经存在
+			if (tableRules.get(name) != null) {
+				c.writeErrMessage(ErrorCode.ER_CANT_CREATE_RULE, "Table rule named " + name + " already exists.");
+				return;
+			}
+			
+			// 无法找到分片函数
+			if (functions.get(function) == null) {
+				c.writeErrMessage(ErrorCode.ER_CANT_CREATE_RULE, "Can not find function named " + function);
+				return;
+			}
+			
+			RuleConfig ruleConfig = new RuleConfig(column.toUpperCase(), function);
+			ruleConfig.setName(name);
+			ruleConfig.setRuleAlgorithm(functions.get(function));
+			
+			// 拷贝tableRules
+			Map<String, TableRuleConfig> tempTableRules = new HashMap<String, TableRuleConfig>(tableRules);
+			tempTableRules.put(name, new TableRuleConfig(name, ruleConfig));
+			
+			// 将修改刷到rule.xml中
 			RuleJAXB ruleJAXB = JAXBUtil.toRuleJAXB(tempTableRules, functions);
 			if(!JAXBUtil.flushRule(ruleJAXB)) {
 				c.writeErrMessage(ErrorCode.ER_FLUSH_FAILED, "flush rule.xml fail");
 				return ;
 			}
+			
+			// rule.xml刷成功之后，更新内存中的配置信息
+			tableRules.put(name, new TableRuleConfig(name, ruleConfig));
 		} catch (Exception e) {
 			c.writeErrMessage(ErrorCode.ER_FLUSH_FAILED, "flush rule.xml fail");
 			LOGGER.error("flush rule.xml fail",e);
 			return ;
+		} finally {
+			mycatConfig.getLock().unlock();
 		}
-		
-		// rule.xml刷成功之后，更新内存中的配置信息
-		tableRules.put(name, new TableRuleConfig(name, ruleConfig));
 		
 		// 向客户端发送ok包
 		ByteBuffer buffer = c.allocate();

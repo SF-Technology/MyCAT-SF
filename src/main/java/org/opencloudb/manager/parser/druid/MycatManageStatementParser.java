@@ -22,6 +22,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
+import org.opencloudb.manager.parser.druid.statement.MycatListVariablesStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatSetSqlwallVariableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatSetSystemVariableStatement;
 import org.opencloudb.parser.druid.MycatExprParser;
@@ -493,7 +494,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			
 			acceptIdentifier("NAME");
 			accept(Token.EQ);
-			String name = exprParser.name().getSimpleName();
+			String name = acceptStr();
 			acceptIdentifier("VALUE");
 			accept(Token.EQ);
 			properties.put(name, acceptNumAndStr());
@@ -529,6 +530,25 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		case LITERAL_CHARS:
 		case TRUE:
 		case FALSE:
+			value = lexer.stringVal();
+			lexer.nextToken();
+			break;
+		default:
+			throw new ParserException("You have an error in syntax. Number or string are expected. Get " + lexer.token() + ".");
+		}
+		
+		return value;
+	}
+	
+	/**
+	 * 只接收字符串
+	 * @return
+	 */
+	private String acceptStr() {
+		String value;
+		switch (lexer.token()){
+		case LITERAL_ALIAS:
+		case LITERAL_CHARS:
 			value = lexer.stringVal();
 			lexer.nextToken();
 			break;
@@ -847,17 +867,70 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			stmt.setTarget(MycatListStatementTarget.USERS);
 			lexer.nextToken();
 		} else if(identifierEquals("SYSTEM")) {
-			acceptIdentifier("SYSTEM");
-			acceptIdentifier("VARIABLES");
-			stmt.setTarget(MycatListStatementTarget.SYSTEM_VARIABLES);
+			return parseListSystemVariables(false);
+//			acceptIdentifier("SYSTEM");
+//			acceptIdentifier("VARIABLES");
+//			stmt.setTarget(MycatListStatementTarget.SYSTEM_VARIABLES);
 		} else if(identifierEquals("SQLWALL")) {
-			acceptIdentifier("SQLWALL");
-			acceptIdentifier("VARIABLES");
-			stmt.setTarget(MycatListStatementTarget.SQLWALL_VARIABLES);
+			return parseListSqlwallVariables(false);
+//			acceptIdentifier("SQLWALL");
+//			acceptIdentifier("VARIABLES");
+//			stmt.setTarget(MycatListStatementTarget.SQLWALL_VARIABLES);
 		} else {
 			throw new ParserException("Unsupport Statement : list " + lexer.stringVal());
 		}
 		return stmt;
 	}
+	
+	/**
+	 * 解析list system variables语句
+	 * @param acceptList
+	 * @return
+	 */
+	private MycatListStatement parseListSystemVariables(boolean acceptList) {
+		if (acceptList) {
+			acceptIdentifier("LIST");
+		}
+		acceptIdentifier("SYSTEM");
+		acceptIdentifier("VARIABLES");
+		MycatListVariablesStatement stmt = new MycatListVariablesStatement();
+		
+		if (lexer.token() != Token.LIKE) {
+			stmt.setMatchExpr(null);
+			stmt.setTarget(MycatListStatementTarget.SYSTEM_VARIABLES);
+			return stmt;
+		}
+		
+		accept(Token.LIKE);
+		stmt.setMatchExpr(acceptStr());
+		stmt.setTarget(MycatListStatementTarget.SYSTEM_VARIABLES);
+		
+		return stmt;
+	}
 
+	/**
+	 * 解析list sqlwall variables语句
+	 * @param acceptList
+	 * @return
+	 */
+	private MycatListStatement parseListSqlwallVariables(boolean acceptList) {
+		if (acceptList) {
+			acceptIdentifier("LIST");
+		}
+		acceptIdentifier("SQLWALL");
+		acceptIdentifier("VARIABLES");
+		MycatListVariablesStatement stmt = new MycatListVariablesStatement();
+		
+		if (lexer.token() != Token.LIKE) {
+			stmt.setMatchExpr(null);
+			stmt.setTarget(MycatListStatementTarget.SQLWALL_VARIABLES);
+			return stmt;
+		}
+		
+		accept(Token.LIKE);
+		stmt.setMatchExpr(acceptStr());
+		stmt.setTarget(MycatListStatementTarget.SQLWALL_VARIABLES);
+		
+		return stmt;
+	}
 }

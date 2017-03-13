@@ -31,10 +31,10 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.opencloudb.config.Isolations;
 
@@ -396,7 +396,7 @@ public final class SystemConfig {
 	 */
 	private Map<String, Object> acquireVariables(Object object) throws IntrospectionException, 
 	IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		Map<String, Object> systemVariables = new HashMap<String, Object>(); // key=属性，value=默认值
+		Map<String, Object> systemVariables = new TreeMap<String, Object>(); // key=属性，value=默认值
 		
 		BeanInfo beanInfo = Introspector.getBeanInfo(object.getClass());
 		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
@@ -421,7 +421,7 @@ public final class SystemConfig {
 	 * @throws SecurityException
 	 */
 	public Set<String> dynamicVariables(){
-		HashSet<String> fields = new HashSet<String>();
+		TreeSet<String> fields = new TreeSet<String>();
 		
 		fields.add("sqlExecuteTimeout");
 		fields.add("slowTime");

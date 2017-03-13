@@ -1,4 +1,4 @@
-package org.opencloudb.manager.response;
+package org.opencloudb.manager.handler;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
@@ -12,6 +12,8 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.Fields;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.manager.ManagerConnection;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatListVariablesStatement;
 import org.opencloudb.mysql.PacketUtil;
 import org.opencloudb.net.mysql.EOFPacket;
 import org.opencloudb.net.mysql.FieldPacket;
@@ -19,8 +21,8 @@ import org.opencloudb.net.mysql.ResultSetHeaderPacket;
 import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.util.StringUtil;
 
-public class ListSystemVariables {
-	private static final Logger LOGGER = Logger.getLogger(ListSystemVariables.class);
+public class ListSystemVariablesHandler {
+	private static final Logger LOGGER = Logger.getLogger(ListSystemVariablesHandler.class);
 	
 	private static final int FIELD_COUNT = 4;
 	private static final ResultSetHeaderPacket header = PacketUtil.getHeader(FIELD_COUNT);
@@ -48,7 +50,9 @@ public class ListSystemVariables {
 		eof.packetId = packetId++;
 	}
 	
-	public static void response(ManagerConnection c) {
+	public static void handle(ManagerConnection c, MycatListVariablesStatement stmt, String sql) {
+		String matchExpr = stmt.getMatchExpr();
+		
 		ByteBuffer buffer = c.allocate();
 
 		// write header
@@ -82,9 +86,17 @@ public class ListSystemVariables {
 		
 		for (String varName : currentSytemVariables.keySet()){
 			
+			Object curValue;
+			Object defValue;
 			
-			Object curValue = currentSytemVariables.get(varName);
-			Object defValue = defaultSystemVariables.get(varName);
+			if (varName.equals("rootPassword")) {
+				curValue = "*";
+				defValue = "*";
+			} else {
+				curValue = currentSytemVariables.get(varName);
+				defValue = defaultSystemVariables.get(varName);
+			}
+			
 			
 			if (curValue == null) {
 				curValue = "null";
@@ -94,16 +106,18 @@ public class ListSystemVariables {
 				defValue = "null";
 			}
 			
-			RowDataPacket row = new RowDataPacket(FIELD_COUNT);
-			
-			row.add(StringUtil.encode(varName, c.getCharset()));
-			row.add(StringUtil.encode(curValue.toString(), c.getCharset()));
-			row.add(StringUtil.encode(defValue.toString(), c.getCharset()));
-			row.add(StringUtil.encode(String.valueOf(dynamicVariables.contains(varName)), c.getCharset()));
-			
-			row.packetId = ++packetId;
-			
-			buffer = row.write(buffer, c, true);
+			if (match(varName, matchExpr)) {
+				RowDataPacket row = new RowDataPacket(FIELD_COUNT);
+				
+				row.add(StringUtil.encode(varName, c.getCharset()));
+				row.add(StringUtil.encode(curValue.toString(), c.getCharset()));
+				row.add(StringUtil.encode(defValue.toString(), c.getCharset()));
+				row.add(StringUtil.encode(String.valueOf(dynamicVariables.contains(varName)), c.getCharset()));
+				
+				row.packetId = ++packetId;
+				
+				buffer = row.write(buffer, c, true);
+			}
 		}
 		
 		// write last eof
@@ -113,5 +127,39 @@ public class ListSystemVariables {
 
         // post write
         c.write(buffer);
+	}
+	
+	/**
+	 * 检查目标字符串varName是否匹配%name%表达式
+	 * @param varName
+	 * @param matchExpr
+	 * @return
+	 */
+	private static boolean match(String varName, String matchExpr) {
+		if (matchExpr == null) { // 没有匹配表达式
+			return true;
+		}
+		
+		if (matchExpr.equals("")) {
+			return false;
+		}
+		
+		int len = matchExpr.length();
+		if(matchExpr.charAt(0) == '%') {
+			if (matchExpr.charAt(len - 1) == '%') {
+				if (len == 1) {
+					return false;
+				}
+				return varName.contains(matchExpr.substring(1, len - 1));
+			} else {
+				return varName.endsWith(matchExpr.substring(1, len));
+			}
+		} else {
+			if (matchExpr.charAt(len - 1) == '%') {
+				return varName.startsWith(matchExpr.substring(0, len - 1));
+			} else {
+				return varName.equals(matchExpr);
+			}
+		}
 	}
 }

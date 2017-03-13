@@ -6,10 +6,10 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * 防火墙配置
@@ -133,7 +133,7 @@ public class FirewallConfig {
 	 * @throws SecurityException
 	 */
 	public Set<String> dynamicVariables(){
-		HashSet<String> fields = new HashSet<String>();
+		TreeSet<String> fields = new TreeSet<String>();
 		
 		fields.add("enableSQLFirewall");
 		fields.add("enableRegEx");
@@ -172,7 +172,7 @@ public class FirewallConfig {
 	 */
 	private Map<String, Object> acquireVariables(Object object) throws IntrospectionException, 
 	IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-		Map<String, Object> systemVariables = new HashMap<String, Object>(); // key=属性，value=默认值
+		Map<String, Object> systemVariables = new TreeMap<String, Object>(); // key=属性，value=默认值
 		
 		BeanInfo beanInfo = Introspector.getBeanInfo(object.getClass());
 		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();

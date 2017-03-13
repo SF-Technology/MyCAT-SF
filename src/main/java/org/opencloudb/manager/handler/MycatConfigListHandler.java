@@ -5,13 +5,12 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatListVariablesStatement;
 import org.opencloudb.manager.response.ListDataHosts;
 import org.opencloudb.manager.response.ListDataNodes;
 import org.opencloudb.manager.response.ListFunctions;
 import org.opencloudb.manager.response.ListRules;
 import org.opencloudb.manager.response.ListSchemas;
-import org.opencloudb.manager.response.ListSqlwallVariables;
-import org.opencloudb.manager.response.ListSystemVariables;
 import org.opencloudb.manager.response.ListTables;
 import org.opencloudb.manager.response.ListUsers;
 
@@ -57,10 +56,10 @@ public class MycatConfigListHandler {
 					handleListUsers(c);
 					break;
 				case SYSTEM_VARIABLES:
-					handleListSystemVariables(c);
+					ListSystemVariablesHandler.handle(c, (MycatListVariablesStatement)stmt, sql);
 					break;
 				case SQLWALL_VARIABLES:
-					hamdleListSqlwallVariables(c);
+					ListSqlwallVariablesHandler.handle(c, (MycatListVariablesStatement)stmt, sql);
 					break;
 				default:
 					c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statment : " + sql);
@@ -104,13 +103,5 @@ public class MycatConfigListHandler {
 	
 	public static void handleListFunctions(ManagerConnection c) {
 		ListFunctions.response(c);
-	}
-	
-	public static void handleListSystemVariables(ManagerConnection c) {
-		ListSystemVariables.response(c);
-	}
-
-	public static void hamdleListSqlwallVariables(ManagerConnection c) {
-		ListSqlwallVariables.response(c);
 	}
 }

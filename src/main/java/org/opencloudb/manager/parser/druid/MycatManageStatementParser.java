@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.opencloudb.MycatServer;
+import org.opencloudb.manager.parser.druid.statement.MycatChecksumTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
@@ -41,6 +42,9 @@ public class MycatManageStatementParser extends SQLStatementParser {
 				statementList.add(parseCheckTableConsistencyStatement());
 			}
 			return true;
+		} else if(identifierEquals("CHECKSUM")) {
+			statementList.add(parseCheckSumStatement());
+			return true;
 		}
 		
 		return false;
@@ -67,6 +71,17 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		return stmt;
 	}
 	
+	/**
+	 * 解析checksum table schema.tablename语句
+	 * @return
+	 */
+	public MycatChecksumTableStatement parseCheckSumStatement() {
+		acceptIdentifier("CHECKSUM");
+		accept(Token.TABLE);
+		MycatChecksumTableStatement stmt = new MycatChecksumTableStatement();
+		stmt.setTableName(exprParser.name());
+		accept(Token.EOF);
+		return stmt;
+	}
 	
-
 }

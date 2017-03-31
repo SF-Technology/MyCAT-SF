@@ -13,7 +13,7 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-<!ELEMENT mycat:user (user+)>
+<!ELEMENT mycat:user (user*)>
 <!ATTLIST mycat:user xmlns:mycat CDATA #FIXED "http://org.opencloudb/">
 
 <!ELEMENT user (property+)>

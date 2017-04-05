@@ -42,6 +42,7 @@ import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.lock.GlobalTableLockHolder;
 import org.opencloudb.lock.TableLockHolder;
 import org.opencloudb.mysql.nio.handler.CommitNodeHandler;
+import org.opencloudb.mysql.nio.handler.GlobalTableMultiNodeQueryHandler;
 import org.opencloudb.mysql.nio.handler.KillConnectionHandler;
 import org.opencloudb.mysql.nio.handler.MultiNodeCoordinator;
 import org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler;
@@ -146,8 +147,14 @@ public class NonBlockingSession implements Session {
 			SystemConfig sysConfig = MycatServer.getInstance().getConfig()
 					.getSystem();
 			int mutiNodeLimitType = sysConfig.getMutiNodeLimitType();
-			multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit,
-					this);
+
+			// 如果是路由到多个个分片的全局表查询，则使用MultiGlobalNodeQueryHandler作为 multiNodeHandler
+			// 如果是路由到多个分片的非全局表查询，则使用MultiNodeQueryHandler作为 multiNodeHandler
+			if(rrs.isGlobalTable() && type == ServerParse.SELECT){
+				multiNodeHandler = new GlobalTableMultiNodeQueryHandler(type, rrs, autocommit, this);
+			}else{
+				multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit, this);
+			}
 
 			try {
 				if (((type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) || initCount > 1) {

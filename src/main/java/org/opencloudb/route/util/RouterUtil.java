@@ -1,8 +1,13 @@
 package org.opencloudb.route.util;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
+import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlInsertStatement;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
+import com.alibaba.druid.sql.parser.SQLStatementParser;
 import com.alibaba.druid.wall.spi.WallVisitorUtils;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.FutureCallback;
@@ -19,6 +24,7 @@ import org.opencloudb.mpp.ColumnRoutePair;
 import org.opencloudb.mpp.LoadData;
 import org.opencloudb.mysql.nio.handler.FetchStoreNodeOfChildTableHandler;
 import org.opencloudb.parser.druid.DruidShardingParseInfo;
+import org.opencloudb.parser.druid.MycatStatementParser;
 import org.opencloudb.parser.druid.RouteCalculateUnit;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
@@ -927,6 +933,20 @@ public class RouterUtil {
 			if(isSelect) {
 				// global select ,not cache route result
 				rrs.setCacheAble(false);
+				
+				//如果是select for update或select lock in share mode语句则路由到所有分片 
+				SQLStatementParser parser = new MycatStatementParser(ctx.getSql());
+				SQLStatement statement = parser.parseStatement();
+				if (statement instanceof SQLSelectStatement){
+					SQLSelectQuery query = ((SQLSelectStatement) statement).getSelect().getQuery();
+					if (query instanceof MySqlSelectQueryBlock){
+						MySqlSelectQueryBlock block = (MySqlSelectQueryBlock) query;
+						if (block.isForUpdate() || block.isLockInShareMode()){
+							return routeToMultiNode(false, rrs, tc.getDataNodes(), ctx.getSql(),true);
+						}
+					}
+				}
+				
 				return routeToSingleNode(rrs, tc.getRandomDataNode(),ctx.getSql());
 			} else {//insert into 全局表的记录
 				return routeToMultiNode(false, rrs, tc.getDataNodes(), ctx.getSql(),true);

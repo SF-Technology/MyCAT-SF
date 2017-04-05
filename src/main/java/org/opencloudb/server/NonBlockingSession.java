@@ -39,7 +39,10 @@ import org.opencloudb.backend.BackendConnection;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.lock.GlobalTableLockHolder;
+import org.opencloudb.lock.TableLockHolder;
 import org.opencloudb.mysql.nio.handler.CommitNodeHandler;
+import org.opencloudb.mysql.nio.handler.GlobalTableMultiNodeQueryHandler;
 import org.opencloudb.mysql.nio.handler.KillConnectionHandler;
 import org.opencloudb.mysql.nio.handler.MultiNodeCoordinator;
 import org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler;
@@ -144,12 +147,33 @@ public class NonBlockingSession implements Session {
 			SystemConfig sysConfig = MycatServer.getInstance().getConfig()
 					.getSystem();
 			int mutiNodeLimitType = sysConfig.getMutiNodeLimitType();
-			multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit,
-					this);
+
+			// 如果是路由到多个个分片的全局表查询，则使用MultiGlobalNodeQueryHandler作为 multiNodeHandler
+			// 如果是路由到多个分片的非全局表查询，则使用MultiNodeQueryHandler作为 multiNodeHandler
+			if(rrs.isGlobalTable() && type == ServerParse.SELECT){
+				multiNodeHandler = new GlobalTableMultiNodeQueryHandler(type, rrs, autocommit, this);
+			}else{
+				multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit, this);
+			}
 
 			try {
 				if (((type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) || initCount > 1) {
 					checkDistriTransaxAndExecute(rrs, 2, autocommit);
+				} else if(rrs.isGlobalTable() 
+						&& (type == ServerParse.INSERT || type == ServerParse.UPDATE || type == ServerParse.DELETE)) {
+					String tableName = rrs.getTables().get(0);
+					String schemaName = source.getSchema();
+//					TableConfig gTableConf = MycatServer.getInstance().getConfig().getSchemas().get(schemaName).getTables().get(tableName);
+//					if(gTableConf.isChecksuming()) {
+//						// 正在执行checksum命令, 需要阻塞并等待checksum结束
+//						gTableConf.waitForChecksum();
+//					}
+					GlobalTableLockHolder gTableLockHolder = MycatServer.getInstance().getTableLockManager().getGlobalTableLockHolder(schemaName, tableName);
+					if(gTableLockHolder.isChecksuming()) {
+						// 正在执行checksum命令, 需要阻塞并等待checksum结束
+						gTableLockHolder.waitForChecksum();
+					}
+					multiNodeHandler.execute();
 				} else {
 					multiNodeHandler.execute();
 				}

@@ -49,6 +49,7 @@ public final class ManagerParse {
 	public static final int UPDATE = 15;
 	public static final int INSERT= 16;
 	public static final int DELETE= 17;
+	public static final int CHECKSUM = 18;
 
 	public static int parse(String stmt) {
 		for (int i = 0; i < stmt.length(); i++) {
@@ -232,9 +233,27 @@ public final class ManagerParse {
 			char c4 = stmt.charAt(++offset); // K
 			char c5 = stmt.charAt(++offset);
 			if ((c1 == 'H' || c1 == 'h') && (c2 == 'E' || c2 == 'e')
-					&& (c3 == 'C' || c3 == 'c') && (c4 == 'K' || c4 == 'k')
-					&& (c5 == ' ' || c5 == '\t' || c5 == '\r' || c5 == '\n')) {
-				return (offset << 8) | CHECK;
+					&& (c3 == 'C' || c3 == 'c') && (c4 == 'K' || c4 == 'k')) {
+				if((c5 == ' ' || c5 == '\t' || c5 == '\r' || c5 == '\n')) {
+					return (offset << 8) | CHECK;
+				} else if(c5 == 'S' || c5 == 's') {
+					return checksumCheck(stmt, offset);
+				}
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int checksumCheck(String stmt, int offset) {
+		if(stmt.length() > "CHECKSUM".length()) {
+			char c1 = stmt.charAt(offset); // S
+			char c2 = stmt.charAt(++offset); // U
+			char c3 = stmt.charAt(++offset); // M
+			char c4 = stmt.charAt(++offset);
+			if((c1 == 'S' || c1 == 's') && (c2 == 'U' || c2 == 'u')
+					&& (c3 == 'M' || c3 == 'm')
+					&& (c4 == ' ' || c4 == '\t' || c4 == '\r' || c4 == '\n')) {
+				return CHECKSUM;
 			}
 		}
 		return OTHER;

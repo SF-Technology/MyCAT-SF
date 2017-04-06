@@ -276,7 +276,6 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         Statement stmt = null;
         ResultSet rset = null;
         String  sql = "UPDATE t_sqlstat SET result_rows = " + getResultRows() + " WHERE original_sql = '" + getOriginalSQL().replace("'","") + "'";
-        LOGGER.error(sql);
         try {
             stmt = h2DBConn.createStatement();
             stmt.executeUpdate(sql);

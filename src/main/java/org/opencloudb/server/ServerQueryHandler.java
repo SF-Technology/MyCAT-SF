@@ -72,7 +72,7 @@ public class ServerQueryHandler implements FrontendQueryHandler {
 		int enableSQLFirewall = systemConfig.getEnableSQLFirewall();
 		boolean enableRegEx = systemConfig.isEnableRegEx();
 
-		if(!enableRegEx && !sqlFirewallServer.checkSql(sql,c,enableSQLFirewall)){
+		if(enableSQLFirewall !=0 && !enableRegEx && !sqlFirewallServer.checkSql(sql,c,enableSQLFirewall)){
 			if (enableSQLFirewall == 1){
 				return;
 			}else if (enableSQLFirewall == 2){

@@ -78,7 +78,7 @@ public class TableCreateSQL {
      * t_sqlrecord
      */
     public final static String T_SQLRECORD= "CREATE TABLE t_sqlrecord(" +
-            "original_sql VARCHAR(255)," +
+            "original_sql VARCHAR(255) PRIMARY KEY," +
             "modified_sql VARCHAR(255)," +
             "user VARCHAR(32)," +
             "host VARCHAR(64)," +
@@ -90,7 +90,7 @@ public class TableCreateSQL {
             "start_time BIGINT," +
             "end_time BIGINT," +
             "sqlexec_time BIGINT," +
-            "lastaccess_t BIGINT PRIMARY KEY)";
+            "lastaccess_t BIGINT )";
 
 
 

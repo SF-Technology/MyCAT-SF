@@ -109,7 +109,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			 * 使用Off Heap
 			 */
 			if(isOffHeapuseOffHeapForMerge == 1){
-				dataMergeSvr = new DataNodeMergeManager(this,rrs);
+				dataMergeSvr = new DataNodeMergeManager(this,rrs,session.getSource().getId());
 			}else {
 				dataMergeSvr = new DataMergeService(this,rrs);
 			}

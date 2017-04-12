@@ -33,9 +33,9 @@
 		<!--off heap for merge/order/group/limit -->
 		<property name="useOffHeapForMerge">1</property>
 		<!--内存页大小,单位为m-->
-		<property name="memoryPageSize">1m</property>
+		<property name="memoryPageSize">32k</property>
 		<!--写文件临时buffer大小,单位为k -->
-		<property name="spillsFileBufferSize">1k</property>
+		<property name="spillsFileBufferSize">32k</property>
 		<!--Mycat 系统预留内存,单位为m -->
 		<property name="systemReserveMemorySize">384m</property>
 
@@ -53,7 +53,7 @@
 		<!--每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位-->
 		<property name="sqlRecordInDiskPeriod">1</property>
 		<!--限制并发查询，控制CPU消耗 1开启,0关闭-->
-		<property name="limitConcurrentQuery">1</property>
+		<property name="limitConcurrentQuery">0</property>
 	</system>
 
 	<user name="test">
@@ -63,7 +63,8 @@
 
 	<sqlwall>
 		<!-- SQL 防火墙总开关 0 关闭，不记录直接打印警告信息，1开启，2 关闭，并记录拦截信息-->
-		<property name="enableSQLFirewall">1</property>
+		<property name="enableSQLFirewall">0</property>
+
 		<!-- 是否启用正则表达式匹配SQL-->
 		<property name="enableRegEx">false</property>
 		<!-- 允许结果集，超过了maxAllowResultRow 动态添加到SQL黑名单中 -->

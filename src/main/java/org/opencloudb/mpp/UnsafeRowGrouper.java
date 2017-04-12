@@ -80,8 +80,9 @@ public class UnsafeRowGrouper {
 	private final MyCatMemory myCatMemory;
 	private final MemoryManager memoryManager;
 	private final MycatPropertyConf conf;
+	private final long connid;
 
-	public UnsafeRowGrouper(Map<String,ColMeta> columToIndx,String[] columns, MergeCol[] mergCols, HavingCols havingCols) {
+	public UnsafeRowGrouper(Map<String,ColMeta> columToIndx,String[] columns, MergeCol[] mergCols, HavingCols havingCols,long connid) {
 		super();
 		assert columns!=null;
 		assert columToIndx!=null;
@@ -96,6 +97,7 @@ public class UnsafeRowGrouper {
 		this.myCatMemory = MycatServer.getInstance().getMyCatMemory();
 		this.memoryManager = myCatMemory.getResultMergeMemoryManager();
 		this.conf = myCatMemory.getConf();
+		this.connid = connid;
 
 		logger.debug("columToIndx :" + (columToIndx != null ? columToIndx.toString():"null"));
 
@@ -103,7 +105,7 @@ public class UnsafeRowGrouper {
 		initEmptyValueKey();
 
 		DataNodeMemoryManager dataNodeMemoryManager =
-				new DataNodeMemoryManager(memoryManager,Thread.currentThread().getId());
+				new DataNodeMemoryManager(memoryManager,/*Thread.currentThread().getId()*/connid);
 
 		aggregationMap = new UnsafeFixedWidthAggregationMap(
 				emptyAggregationBuffer,
@@ -401,6 +403,7 @@ public class UnsafeRowGrouper {
                 }
             } catch (IOException e) {
                logger.error(e.getMessage());
+				free();
             }
     }
 

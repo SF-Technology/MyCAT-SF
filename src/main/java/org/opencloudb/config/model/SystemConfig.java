@@ -94,6 +94,7 @@ public final class SystemConfig {
 	private static final String DEFAULT_CLUSTER_HEARTBEAT_PASS = "_HEARTBEAT_PASS_";
 	private static final int DEFAULT_PARSER_COMMENT_VERSION = 50148;
 	private static final int DEFAULT_SQL_RECORD_COUNT = 10;
+	private static final String MAP_FILE_FOLDER = "mapfiles"; // 用来保存mapfile的文件夹
 	private int maxStringLiteralLength = 65535;
 	private int frontWriteQueueSize = 2048;
 	private String bindIp = "0.0.0.0";
@@ -1060,6 +1061,9 @@ public final class SystemConfig {
 	public void setRootPassword(String rootPassword) {
 		this.rootPassword = rootPassword;
 	}
-    
+
+	public static String getMapFileFolder() {
+		return MAP_FILE_FOLDER;
+	}
     
 }

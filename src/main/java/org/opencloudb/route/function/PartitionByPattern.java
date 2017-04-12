@@ -24,11 +24,13 @@
 package org.opencloudb.route.function;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
+import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.rule.RuleAlgorithm;
 
 /**
@@ -98,8 +100,8 @@ public class PartitionByPattern extends AbstractPartitionAlgorithm implements Ru
 		BufferedReader in = null;
 		try {
 			// FileInputStream fin = new FileInputStream(new File(fileMapPath));
-			InputStream fin = this.getClass().getClassLoader()
-					.getResourceAsStream(mapFile);
+			InputStream fin = SystemConfig.class.getClassLoader()
+					.getResourceAsStream(SystemConfig.getMapFileFolder() + File.separatorChar + mapFile);
 			if (fin == null) {
 				throw new RuntimeException("can't find class resource file "
 						+ mapFile);

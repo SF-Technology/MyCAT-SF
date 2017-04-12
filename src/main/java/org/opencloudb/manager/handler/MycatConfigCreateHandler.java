@@ -8,6 +8,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatem
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateMapFileStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
@@ -46,7 +47,9 @@ public class MycatConfigCreateHandler {
 				CreateRuleHandler.handle(c, (MycatCreateRuleStatement) stmt, sql);
 			} else if(stmt instanceof MycatCreateFunctionStatement) {
 				CreateFunctionHandler.handle(c, (MycatCreateFunctionStatement) stmt, sql);
-			}else {
+			} else if(stmt instanceof MycatCreateMapFileStatement) {
+				CreateMapFileHandler.handle(c, (MycatCreateMapFileStatement) stmt, sql);
+			} else {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			} 
 		} catch(ParserException e) {

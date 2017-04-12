@@ -197,6 +197,11 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			
 			return parseCreateFunction(false);
 			
+		} else if(identifierEquals("MAPFILE")){ // create mapfile
+			
+			MycatCreateMapFileParser createMapFileParser = new MycatCreateMapFileParser(this.exprParser);
+			return createMapFileParser.parseCreateMapFile(false);
+			
 		} else {
 			
 			throw new ParserException("Unsupport Statement : create " + token);
@@ -505,7 +510,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
 				accept(Token.COMMA);
 				continue;
 			} else {
-				accept(Token.RPAREN); // accept '}'
+				accept(Token.RPAREN); // accept ')'
 				break;
 			}
 		}

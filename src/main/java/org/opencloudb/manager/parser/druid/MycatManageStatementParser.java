@@ -16,6 +16,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropMapFileStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
@@ -126,7 +127,10 @@ public class MycatManageStatementParser extends SQLStatementParser {
                 } else if(lexer.token() == Token.FUNCTION) {
                 	statementList.add(parseDropFunction(false));
                 	continue;
-                }else {
+                } else if(identifierEquals("MAPFILE")) {
+                	statementList.add(parseDropMapFile(false));
+                	continue;
+                } else {
                     throw new ParserException("TODO " + lexer.token());
                 }
             }
@@ -583,6 +587,25 @@ public class MycatManageStatementParser extends SQLStatementParser {
 	}
 	
 	/**
+	 * 获得文件名(必须是`文件名`、'文件名'、"文件名"这三种格式)
+	 * @return
+	 */
+	private String acceptFileName() {
+		String name;
+		switch (lexer.token()){
+		case LITERAL_ALIAS:
+		case LITERAL_CHARS:
+			name = lexer.stringVal();
+			lexer.nextToken();
+			break;
+		default:
+			name = StringUtil.removeBackquote(exprParser.name().getSimpleName());;
+		}
+		
+		return name;
+	}
+	
+	/**
 	 * drop datanode语句解析
 	 * @param acceptDrop
 	 * @return
@@ -656,6 +679,19 @@ public class MycatManageStatementParser extends SQLStatementParser {
 
         return stmt;
     }
+	
+	public SQLStatement parseDropMapFile(boolean acceptDrop) {
+		if (acceptDrop) {
+			accept(Token.DROP);
+		}
+		
+		acceptIdentifier("MAPFILE");
+		
+		MycatDropMapFileStatement stmt = new MycatDropMapFileStatement();
+		stmt.setFileName(acceptFileName());
+		
+		return stmt;
+	}
 	
 	/**
 	 * set语句解析
@@ -881,6 +917,9 @@ public class MycatManageStatementParser extends SQLStatementParser {
 //			acceptIdentifier("SQLWALL");
 //			acceptIdentifier("VARIABLES");
 //			stmt.setTarget(MycatListStatementTarget.SQLWALL_VARIABLES);
+		} else if(identifierEquals("MAPFILES")) {
+			stmt.setTarget(MycatListStatementTarget.MAPFILES);
+			lexer.nextToken();
 		} else {
 			throw new ParserException("Unsupport Statement : list " + lexer.stringVal());
 		}

@@ -26,6 +26,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
 import org.opencloudb.manager.parser.druid.statement.MycatListVariablesStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatSetSqlwallVariableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatSetSystemVariableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatShowMapFileStatement;
 import org.opencloudb.parser.druid.MycatExprParser;
 import org.opencloudb.parser.druid.MycatLexer;
 import org.opencloudb.util.StringUtil;
@@ -139,6 +140,17 @@ public class MycatManageStatementParser extends SQLStatementParser {
                 SQLStatement stmt = parseRename();
                 statementList.add(stmt);
                 continue;
+            }
+            
+            if (lexer.token() == Token.SHOW) {
+            	lexer.nextToken();
+            	
+            	if(identifierEquals("MAPFILE")) {
+            		statementList.add(parseShowMapFile(false));
+            		continue;
+            	} else {
+                    throw new ParserException("Statement : mycat_config SHOW " + lexer.token() + " is not supported.");
+                }
             }
             
             // 关于list的自定义语法解析入口 --stridehuan
@@ -688,6 +700,19 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		acceptIdentifier("MAPFILE");
 		
 		MycatDropMapFileStatement stmt = new MycatDropMapFileStatement();
+		stmt.setFileName(acceptFileName());
+		
+		return stmt;
+	}
+	
+	public SQLStatement parseShowMapFile(boolean acceptShow) {
+		if (acceptShow) {
+			accept(Token.SHOW);
+		}
+		
+		acceptIdentifier("MAPFILE");
+		
+		MycatShowMapFileStatement stmt = new MycatShowMapFileStatement();
 		stmt.setFileName(acceptFileName());
 		
 		return stmt;

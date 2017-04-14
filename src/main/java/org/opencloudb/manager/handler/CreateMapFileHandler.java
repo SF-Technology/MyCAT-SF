@@ -27,13 +27,14 @@ public class CreateMapFileHandler {
 			mapFile = new File(acquireMapFilePath(fileName));
 			
 			if (mapFile.exists()) {
-				c.writeErrMessage(ErrorCode.ER_FILE_EXISTS_ERROR, "mapfile " + fileName + "exists.");
+				c.writeErrMessage(ErrorCode.ER_FILE_EXISTS_ERROR, "mapfile " + fileName + " exists.");
 				return;
 			}
 			
 		} catch (IOException e) {
 			c.writeErrMessage(ErrorCode.ER_FILE_USED, "fail to acquire mapfile path.");
 			LOGGER.error("fail to acquire mapfile path.", e);
+			return;
 		}
 		
 		try {
@@ -41,6 +42,7 @@ public class CreateMapFileHandler {
 		} catch (IOException e) {
 			c.writeErrMessage(ErrorCode.ER_FILE_USED, "fail to write mapfile.");
 			LOGGER.error("fail to acquire mapfile.", e);
+			return;
 		}
 		
 		// 向客户端发送ok包

@@ -33,7 +33,7 @@
 		<!--off heap for merge/order/group/limit -->
 		<property name="useOffHeapForMerge">1</property>
 		<!--内存页大小,单位为m-->
-		<property name="memoryPageSize">32k</property>
+		<property name="memoryPageSize">64k</property>
 		<!--写文件临时buffer大小,单位为k -->
 		<property name="spillsFileBufferSize">32k</property>
 		<!--Mycat 系统预留内存,单位为m -->
@@ -78,7 +78,7 @@
 
 
 		<property name="selectAllColumnAllow">true</property>
-		<property name="strictSyntaxCheck">true</property>
+		<property name="strictSyntaxCheck">false</property>
 		<property name="deleteWhereNoneCheck">true</property>
 		<property name="noneBaseStatementAllow">true</property>
 	</sqlwall>

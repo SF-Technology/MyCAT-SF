@@ -201,18 +201,12 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
 
             prefixComputer = new RowPrefixComputer(schema);
 
-//            if(orderCols.length>0
-//                    && orderCols[0].getOrderType()
-//                    == OrderCol.COL_ORDER_TYPE_ASC){
-//                prefixComparator = PrefixComparators.LONG;
-//            }else {
-//                prefixComparator = PrefixComparators.LONG_DESC;
-//            }
+
 
             prefixComparator = getPrefixComparator(orderCols);
 
             dataNodeMemoryManager =
-                    new DataNodeMemoryManager(memoryManager,/*Thread.currentThread().getId()*/connid);
+                    new DataNodeMemoryManager(memoryManager,Thread.currentThread().getId());
 
             /**
              * 默认排序，只是将数据连续存储到内存中即可。
@@ -223,7 +217,7 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
                     schema,
                     prefixComparator,
                     prefixComputer,
-                    conf.getSizeAsBytes("mycat.buffer.pageSize", "1k"),
+                    conf.getSizeAsBytes("mycat.buffer.pageSize", "32k"),
                     false/**是否使用基数排序*/,
                     true/**排序*/);
         }
@@ -255,7 +249,7 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
 
 
             dataNodeMemoryManager = new DataNodeMemoryManager(memoryManager,
-                            /*Thread.currentThread().getId()*/connid);
+                            Thread.currentThread().getId());
 
             globalMergeResult = new UnsafeExternalRowSorter(
                     dataNodeMemoryManager,
@@ -263,7 +257,7 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
                     schema,
                     prefixComparator,
                     prefixComputer,
-                    conf.getSizeAsBytes("mycat.buffer.pageSize", "1k"),
+                    conf.getSizeAsBytes("mycat.buffer.pageSize", "32k"),
                     false,/**是否使用基数排序*/
                     false/**不排序*/);
         }
@@ -419,24 +413,7 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
             }
 
         } catch (final Exception e) {
-            /**
-             * 异常时资源释放
-             */
-            if (unsafeRowGrouper != null) {
-                unsafeRowGrouper.free();
-                unsafeRowGrouper = null;
-            }
-
-            if (globalSorter != null) {
-                globalSorter.cleanupResources();
-                globalSorter = null;
-            }
-
-            if (globalMergeResult != null) {
-                globalMergeResult.cleanupResources();
-                globalMergeResult = null;
-            }
-
+           
             multiQueryHandler.handleDataProcessException(e);
         } finally {
             running.set(false);
@@ -451,13 +428,21 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
      */
     public void clear() {
         unsafeRows.clear();
-        if (unsafeRowGrouper != null) {
-            unsafeRowGrouper = null;
+        synchronized (this)
+        {
+            if (unsafeRowGrouper != null) {
+                unsafeRowGrouper.free();
+                unsafeRowGrouper = null;
+            }
         }
-        if (globalSorter != null) {
+
+        if(globalSorter != null){
+            globalSorter.cleanupResources();
             globalSorter = null;
         }
-        if (globalMergeResult != null) {
+
+        if (globalMergeResult != null){
+            globalMergeResult.cleanupResources();
             globalMergeResult = null;
         }
     }

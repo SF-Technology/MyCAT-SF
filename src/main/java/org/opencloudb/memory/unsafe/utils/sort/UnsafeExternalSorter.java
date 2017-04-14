@@ -391,12 +391,6 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
     if (currentPage == null ||
       pageCursor + required > currentPage.getBaseOffset() + currentPage.size()) {
                 //TODO: try to find space on previous pages
-	            try {
-	                if (allocatedPages.size()>2)
-	                    spill(Long.MAX_VALUE, this);
-	            } catch (IOException e) {
-	                e.printStackTrace();
-	            }
       currentPage = allocatePage(required);
       pageCursor = currentPage.getBaseOffset();
       allocatedPages.add(currentPage);

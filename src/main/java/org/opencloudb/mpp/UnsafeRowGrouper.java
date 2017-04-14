@@ -54,7 +54,6 @@ import java.util.regex.Pattern;
 
 /**
  * Created by zagnix on 2016/6/26.
- *
  * implement group function select a,count(*),sum(*) from A group by a
  *
  */
@@ -105,15 +104,15 @@ public class UnsafeRowGrouper {
 		initEmptyValueKey();
 
 		DataNodeMemoryManager dataNodeMemoryManager =
-				new DataNodeMemoryManager(memoryManager,/*Thread.currentThread().getId()*/connid);
+				new DataNodeMemoryManager(memoryManager,Thread.currentThread().getId());
 
 		aggregationMap = new UnsafeFixedWidthAggregationMap(
 				emptyAggregationBuffer,
 				aggBufferSchema,
 				groupKeySchema,
 				dataNodeMemoryManager,
-				2*1024,
-				conf.getSizeAsBytes("mycat.buffer.pageSize", "1m"),
+				1024,
+				conf.getSizeAsBytes("mycat.buffer.pageSize", "32k"),
 				false);
 	}
 
@@ -196,7 +195,6 @@ public class UnsafeRowGrouper {
 						groupKey.setDouble(i, 0);
 						break;
 					case ColMeta.COL_TYPE_NEWDECIMAL:
-//						groupKey.setDouble(i, 0);
 						unsafeRowWriter.write(i, new BigDecimal(0L));
 						break;
 					case ColMeta.COL_TYPE_LONGLONG:
@@ -249,7 +247,6 @@ public class UnsafeRowGrouper {
 						emptyAggregationBuffer.setDouble(curColMeta.colIndex, 0);
 						break;
 					case ColMeta.COL_TYPE_NEWDECIMAL:
-//						emptyAggregationBuffer.setDouble(curColMeta.colIndex, 0);
 						unsafeRowWriter.write(curColMeta.colIndex, new BigDecimal(0L));
 						break;
 					default:
@@ -365,17 +362,7 @@ public class UnsafeRowGrouper {
 								BytesTools.double2Bytes(val1));
 						break;
 					case ColMeta.COL_TYPE_NEWDECIMAL:
-//						int precision = curColMeta.decimals;
-//						double val = row.getDouble(curColMeta.colIndex);
-//
-//						if (isMergAvg && !Double.isNaN(val)){
-//							precision +=4;
-//						}else if (Double.isNaN(val)){
-//							val = 0.0;
-//						}
-//
-//						unsafeRowWriter.write(curColMeta.colIndex,
-//								BytesTools.double2Bytes(val,precision));
+
 						int scale = curColMeta.decimals;
 						BigDecimal decimalVal = row.getDecimal(curColMeta.colIndex, scale);
 						unsafeRowWriter.write(curColMeta.colIndex, decimalVal.toString().getBytes());
@@ -402,8 +389,8 @@ public class UnsafeRowGrouper {
                     sorter.insertRow(row);
                 }
             } catch (IOException e) {
-               logger.error(e.getMessage());
-				free();
+               logger.error("group insertValue err: " + e.getMessage());
+			   free();
             }
     }
 

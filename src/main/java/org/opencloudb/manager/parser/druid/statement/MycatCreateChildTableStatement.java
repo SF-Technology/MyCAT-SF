@@ -21,6 +21,7 @@ public class MycatCreateChildTableStatement extends MycatStatementImpl implement
 	private SQLExpr parentKey;
 	private SQLExpr joinKey;
 	private boolean autoIncrement;
+	private boolean needAddLimit;
 	
 	@Override
 	public void accept0(MycatASTVisitor visitor) {
@@ -82,6 +83,14 @@ public class MycatCreateChildTableStatement extends MycatStatementImpl implement
 
 	public void setAutoIncrement(boolean autoIncrement) {
 		this.autoIncrement = autoIncrement;
+	}
+
+	public boolean isNeedAddLimit() {
+		return needAddLimit;
+	}
+
+	public void setNeedAddLimit(boolean needAddLimit) {
+		this.needAddLimit = needAddLimit;
 	}
 	
 }

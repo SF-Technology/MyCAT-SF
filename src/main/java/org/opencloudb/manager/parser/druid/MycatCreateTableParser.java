@@ -98,6 +98,21 @@ public class MycatCreateTableParser extends SQLDDLParser {
 				continue;
 			}
 			
+			if(identifierEquals("needAddLimit")) {
+				lexer.nextToken();
+				accept(Token.EQ);
+				if(lexer.token() == Token.TRUE) {
+					lexer.nextToken();
+					stmt.setNeedAddLimit(true);
+				} else if(lexer.token() == Token.FALSE) {
+					lexer.nextToken();
+					stmt.setNeedAddLimit(false);
+				} else {
+					throw new ParserException("needAddLimit must be true or false");
+				}
+				continue;
+			}
+			
 			break;
 		}
 		
@@ -181,6 +196,21 @@ public class MycatCreateTableParser extends SQLDDLParser {
 					stmt.setAutoIncrement(false);
 				} else {
 					throw new ParserException("autoIncrement must be true or false");
+				}
+				continue;
+			}
+			
+			if(identifierEquals("needAddLimit")) {
+				lexer.nextToken();
+				accept(Token.EQ);
+				if(lexer.token() == Token.TRUE) {
+					lexer.nextToken();
+					stmt.setNeedAddLimit(true);
+				} else if(lexer.token() == Token.FALSE) {
+					lexer.nextToken();
+					stmt.setNeedAddLimit(false);
+				} else {
+					throw new ParserException("needAddLimit must be true or false");
 				}
 				continue;
 			}

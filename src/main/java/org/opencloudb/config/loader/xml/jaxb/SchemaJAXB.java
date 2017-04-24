@@ -100,11 +100,13 @@ public class SchemaJAXB {
 			@XmlAttribute
 			private String primaryKey;
 			@XmlAttribute
-			private boolean autoIncrement;
+			private Boolean autoIncrement;
 			@XmlAttribute(required = true)
 			private String dataNode;
 			@XmlAttribute
 			private String rule;
+			@XmlAttribute
+			private Boolean needAddLimit;
 			
 			private List<ChildTable> childTable = new ArrayList<ChildTable>();
 			
@@ -112,7 +114,9 @@ public class SchemaJAXB {
 				Table table = new Table();
 				table.setName(tableConf.getName().toLowerCase());
 				table.setDataNode(tableConf.getDataNode());
-				table.setAutoIncrement(tableConf.isAutoIncrement());
+				if(tableConf.isAutoIncrement()) {
+					table.setAutoIncrement(new Boolean(true));
+				}
 				if(tableConf.getPrimaryKey() != null) {
 					table.setPrimaryKey(tableConf.getPrimaryKey().toLowerCase());
 				}
@@ -121,6 +125,9 @@ public class SchemaJAXB {
 				}
 				if(tableConf.isGlobalTable()) {
 					table.setType("global");
+				}
+				if(tableConf.isNeedAddLimit()) {
+					table.setNeedAddLimit(new Boolean(true));
 				}
 				return table;
 			} 
@@ -174,6 +181,17 @@ public class SchemaJAXB {
 			public void setType(String type) {
 				this.type = type;
 			}
+			
+
+			public Boolean getNeedAddLimit() {
+				return needAddLimit;
+			}
+
+
+			public void setNeedAddLimit(Boolean needAddLimit) {
+				this.needAddLimit = needAddLimit;
+			}
+
 
 			public List<ChildTable> getChildTable() {
 				return childTable;
@@ -197,6 +215,8 @@ public class SchemaJAXB {
                 private String joinKey;
                 @XmlAttribute(required = true)
                 private String parentKey;
+                @XmlAttribute
+                private Boolean needAddLimit;
                 
                 private List<ChildTable> childTable = new ArrayList<ChildTable>();
                 
@@ -205,9 +225,14 @@ public class SchemaJAXB {
                 	childTable.setName(tableConf.getName().toLowerCase());
                 	childTable.setJoinKey(tableConf.getJoinKey().toLowerCase());
                 	childTable.setParentKey(tableConf.getParentKey().toLowerCase());
-                	childTable.setAutoIncrement(tableConf.isAutoIncrement());
+                	if(tableConf.isAutoIncrement()) {
+                		childTable.setAutoIncrement(new Boolean(true));
+                	}
                 	if(tableConf.getPrimaryKey() != null) {
                 		childTable.setPrimaryKey(tableConf.getPrimaryKey().toLowerCase());
+                	}
+                	if(tableConf.isNeedAddLimit()) {
+                		childTable.setNeedAddLimit(new Boolean(true));
                 	}
                 	return childTable;
                 }
@@ -250,6 +275,15 @@ public class SchemaJAXB {
 
 				public void setAutoIncrement(Boolean autoIncrement) {
 					this.autoIncrement = autoIncrement;
+				}
+				
+
+				public Boolean getNeedAddLimit() {
+					return needAddLimit;
+				}
+
+				public void setNeedAddLimit(Boolean needAddLimit) {
+					this.needAddLimit = needAddLimit;
 				}
 
 				public List<ChildTable> getChildTable() {

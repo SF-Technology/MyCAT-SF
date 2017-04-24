@@ -300,7 +300,8 @@ public class PhysicalDBPool {
 
 		for (int i = 0; i < initSize; i++) {
 			try {
-				ds.getConnection(this.schemas[i % schemas.length], true, getConHandler, null);
+				
+				ds.getConnection(schemas.length == 0 ? "" : this.schemas[i % schemas.length], true, getConHandler, null);
 			} catch (Exception e) {
 				LOGGER.warn(getMessage(index, " init connection error."), e);
 			}

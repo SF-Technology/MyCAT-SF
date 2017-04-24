@@ -28,6 +28,8 @@ import org.opencloudb.parser.util.Pair;
 import org.opencloudb.route.util.PartitionUtil;
 import org.opencloudb.util.StringUtil;
 
+import com.mysql.fabric.xmlrpc.base.Array;
+
 /**
  * @author <a href="mailto:daasadmin@hp.com">yangwenx</a>
  */
@@ -134,5 +136,15 @@ public final class PartitionByString extends AbstractPartitionAlgorithm implemen
         long hash = StringUtil.hash(key, start, end);
         return partitionUtil.partition(hash);
 	}
-
+	
+	@Override
+	public int requiredNodeNum() {
+		int nodeNum = 0;
+		
+		for (int item : count) {
+			nodeNum += item;
+		}
+		
+		return nodeNum;
+	}
 }

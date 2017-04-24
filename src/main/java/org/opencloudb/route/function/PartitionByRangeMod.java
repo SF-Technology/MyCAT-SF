@@ -81,6 +81,17 @@ public class PartitionByRangeMod extends AbstractPartitionAlgorithm implements R
 		}
 		return rst;
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		int totalNodeNum =  0;
+		
+		for (LongRange range : longRanges) {
+			totalNodeNum += range.groupSize;
+		}
+		
+		return totalNodeNum;
+	}
 
     public Integer calculateStart(String columnValue) {
         long value = Long.valueOf(columnValue);

@@ -83,6 +83,16 @@ public final class PartitionByLong extends AbstractPartitionAlgorithm implements
 	}
 	
 	@Override
+	public int requiredNodeNum() {
+		int nodeNum = 0;
+		for (int i : count) {
+			nodeNum = nodeNum + i;
+		}
+		
+		return nodeNum;
+	}
+	
+	@Override
 	public Integer[] calculateRange(String beginValue, String endValue) {
 		return AbstractPartitionAlgorithm.calculateSequenceRange(this, beginValue, endValue);
 	}

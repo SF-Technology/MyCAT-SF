@@ -31,6 +31,7 @@ import java.util.LinkedList;
 
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.rule.RuleAlgorithm;
+import org.opencloudb.route.function.PartitionByPrefixPattern.LongRange;
 
 /**
  * auto partition by Long ,can be used in auto increment primary key partition
@@ -72,6 +73,15 @@ public class AutoPartitionByLong extends AbstractPartitionAlgorithm implements R
 			return defaultNode ;
 		}
 		return rst;
+	}
+	
+	@Override
+	public int requiredNodeNum() {
+		int maxNodeIndex = -1;
+		for (LongRange range : longRongs) {
+			maxNodeIndex = maxNodeIndex > range.nodeIndx ? maxNodeIndex : range.nodeIndx;
+		}
+		return maxNodeIndex;
 	}
 	
 	@Override

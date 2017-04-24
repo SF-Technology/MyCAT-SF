@@ -46,6 +46,11 @@ public class LatestMonthPartion extends AbstractPartitionAlgorithm {
 		return dnIndex;
 
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		return this.splitOneDay * 31; // 一个月最多31天，计算得到需要的最大分片数
+	}
 
 	public Integer[] calculateRange(String beginValue, String endValue) {
 		return calculateSequenceRange(this,beginValue, endValue);

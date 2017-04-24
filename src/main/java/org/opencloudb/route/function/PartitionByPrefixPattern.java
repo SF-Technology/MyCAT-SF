@@ -93,6 +93,15 @@ public class PartitionByPrefixPattern extends AbstractPartitionAlgorithm impleme
 		}
 		return rst;
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		int maxNodeIndex = -1;
+		for (LongRange range : longRongs) {
+			maxNodeIndex = maxNodeIndex > range.nodeIndx ? maxNodeIndex : range.nodeIndx;
+		}
+		return maxNodeIndex;
+	}
 
 	private void initialize() {
 		BufferedReader in = null;

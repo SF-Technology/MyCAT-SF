@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.rule.RuleAlgorithm;
+import org.opencloudb.route.function.AutoPartitionByLong.LongRange;
 
 /**
  * auto partition by Long
@@ -95,46 +96,11 @@ public class PartitionByPattern extends AbstractPartitionAlgorithm implements Ru
 	
 	@Override
 	public int requiredNodeNum() {
-		BufferedReader in = null;
-		try {
-			// FileInputStream fin = new FileInputStream(new File(fileMapPath));
-			InputStream fin = SystemConfig.class.getClassLoader()
-					.getResourceAsStream(SystemConfig.getMapFileFolder() + File.separatorChar + mapFile);
-			if (fin == null) {
-				throw new RuntimeException("can't find class resource file "
-						+ mapFile);
-			}
-			in = new BufferedReader(new InputStreamReader(fin));
-
-			int maxNodeId = -1;
-			for (String line = null; (line = in.readLine()) != null;) {
-				line = line.trim();
-				if (line.startsWith("#") || line.startsWith("//"))
-					continue;
-				int ind = line.indexOf('=');
-				if (ind < 0) {
-					System.out.println(" warn: bad line int " + mapFile + " :"
-							+ line);
-					continue;
-				}
-				int nodeId = Integer.parseInt(line.substring(ind + 1).trim());
-				maxNodeId = maxNodeId > nodeId ? maxNodeId : nodeId;
-			}
-			
-			return maxNodeId + 1;
-		} catch (Exception e) {
-			if (e instanceof RuntimeException) {
-				throw (RuntimeException) e;
-			} else {
-				throw new RuntimeException(e);
-			}
-
-		} finally {
-			try {
-				in.close();
-			} catch (Exception e2) {
-			}
+		int maxNodeIndex = -1;
+		for (LongRange range : longRongs) {
+			maxNodeIndex = maxNodeIndex > range.nodeIndx ? maxNodeIndex : range.nodeIndx;
 		}
+		return maxNodeIndex;
 	}
 
 	public static boolean isNumeric(String str) {

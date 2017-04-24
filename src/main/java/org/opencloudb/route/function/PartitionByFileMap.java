@@ -106,6 +106,17 @@ public class PartitionByFileMap extends AbstractPartitionAlgorithm implements Ru
 		}
 		return rst;
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		int maxNodeIndex = -1;
+		
+		for (int nodeIndex : app2Partition.values()) {
+			maxNodeIndex = maxNodeIndex > nodeIndex ? maxNodeIndex : nodeIndex;
+		}
+		
+		return maxNodeIndex;
+	}
 
 	private void initialize() {
 		BufferedReader in = null;

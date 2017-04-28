@@ -38,7 +38,7 @@ public class MycatConfigCreateHandler {
 			} else if(stmt instanceof MycatCreateChildTableStatement) {
 				CreateChildTableHandler.handle(c, (MycatCreateChildTableStatement) stmt, sql);
 			} else if(stmt instanceof MycatCreateDataNodeStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport create datanode stmt");
+				CreateDataNodeHandler.handle(c, (MycatCreateDataNodeStatement) stmt, sql);;
 			} else if(stmt instanceof MycatCreateDataHostStatement) {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport create datahost stmt");
 			} else if(stmt instanceof MycatCreateUserStatement) {

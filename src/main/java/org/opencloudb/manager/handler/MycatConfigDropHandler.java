@@ -36,7 +36,7 @@ public class MycatConfigDropHandler {
 			} else if(stmt instanceof MycatDropTableStatement) {
 				DropTableHandler.handle(c, (MycatDropTableStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropDataNodeStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop datanode stmt");
+				DropDataNodeHandler.handle(c, (MycatDropDataNodeStatement) stmt, sql);;
 			} else if(stmt instanceof MycatDropDataHostStatement) {
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop datahost stmt");
 			} else if(stmt instanceof MycatDropUserStatement) {

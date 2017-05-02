@@ -203,10 +203,15 @@ public final class SystemConfig {
 	public int maxAllowExecuteTimes;
 
 	/**
-	 * 单位为s,一条sql执行的时间，超过了, 则动态加入SQL黑名单中
+	 * 单位为ms,一条sql执行的时间最大允许时间,默认是3000
 	 */
 	public int maxAllowExecuteSqlTime;
 
+
+	/**
+	 *  单位为s,一条sql执行的时间大于maxAllowExecuteSqlTime，并超过了多少countInMaxAllowExecuteSqlTime次数则加入动态加入SQL黑名单中
+	 */
+	public int countInMaxAllowExecuteSqlTime;
 	/**
 	 * 单位为s 默认配置1s 与maxAllowExecuteTimes配合使用
 	 */
@@ -363,11 +368,12 @@ public final class SystemConfig {
 		/**
 		 * SQL 防火墙配置默认配置
 		 */
-		this.enableSQLFirewall = 1;
+		this.enableSQLFirewall = 0;
 		this.maxAllowResultRow = 1000000;
 		this.maxAllowExecuteTimes = 100000;
-		this.maxAllowExecuteSqlTime = 3;
-		this.maxAllowExecuteUnitTime = 1;
+		this.maxAllowExecuteSqlTime = 3000;
+		this.countInMaxAllowExecuteSqlTime = 100000;
+		this.maxAllowExecuteUnitTime = 2;
 		this.enableRegEx = false;
 
 		this.selelctAllow=true;
@@ -545,6 +551,13 @@ public final class SystemConfig {
 		return maxAllowExecuteUnitTime;
 	}
 
+	public int getCountInMaxAllowExecuteSqlTime() {
+		return countInMaxAllowExecuteSqlTime;
+	}
+
+	public void setCountInMaxAllowExecuteSqlTime(int countInMaxAllowExecuteSqlTime) {
+		this.countInMaxAllowExecuteSqlTime = countInMaxAllowExecuteSqlTime;
+	}
 	public void setMaxAllowExecuteUnitTime(int maxAllowExecuteUnitTime) {
 		this.maxAllowExecuteUnitTime = maxAllowExecuteUnitTime;
 	}

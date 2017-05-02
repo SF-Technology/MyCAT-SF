@@ -113,7 +113,12 @@ public final  class SQLFirewall {
                 setLimitZeroAllow(systemConfig.isLimitZeroAllow());
 
         provider = new MySqlWallProvider(wallConfig);
-        provider.setBlackListEnable(true);
+
+        if (systemConfig.enableSQLFirewall != 0)
+             provider.setBlackListEnable(true);
+        else
+            provider.setBlackListEnable(false);
+
     }
 
     public WallConfig getWallConfig() {

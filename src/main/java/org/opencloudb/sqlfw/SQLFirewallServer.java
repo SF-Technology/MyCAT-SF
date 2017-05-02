@@ -333,7 +333,6 @@ public class SQLFirewallServer {
             /**
              * 单位为s,一条sql执行的时间，超过了 max time, 则动态加入SQL黑名单中
              */
-            //long sqlExecuteTime = (sqlRecord.getEndTime() - sqlRecord.getStartTime());
             long sqlExecuteTime = sqlRecord.getSqlExecTime();
 
             if (LOGGER.isDebugEnabled()) {
@@ -347,10 +346,13 @@ public class SQLFirewallServer {
                             + systemConfig.getMaxAllowExecuteSqlTime());
                 }
 
-                addSqlToBlacklist(sql);
-                sqlRecordMap.remove(sql);
-
-                return true;
+                long count = sqlRecord.getCountInMaxAllowExecuteSqlTime().incrementAndGet();
+                if(count > systemConfig.getCountInMaxAllowExecuteSqlTime()) {
+                    addSqlToBlacklist(sql);
+                    sqlRecordMap.remove(sql);
+                    return true;
+                }
+                return false;
             }
 
             /**

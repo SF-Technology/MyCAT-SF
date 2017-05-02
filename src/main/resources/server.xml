@@ -73,15 +73,14 @@
 		<property name="maxAllowExecuteTimes">20000</property>
 		<!-- 单位为s 默认配置1s-->
 		<property name="maxAllowExecuteUnitTime">1</property>
-		<!-- 单位为ms,一条sql执行的时间，超过了, 则动态加入SQL黑名单中 -->
+		<!-- 单位为ms,一条sql执行的时间，超过了countInMaxAllowExecuteSqlTime次数, 则动态加入SQL黑名单中 -->
 		<property name="maxAllowExecuteSqlTime">2000</property>
-
+		<property name="countInMaxAllowExecuteSqlTime">10</property>
 
 		<property name="selectAllColumnAllow">true</property>
 		<property name="strictSyntaxCheck">false</property>
 		<property name="deleteWhereNoneCheck">true</property>
 		<property name="noneBaseStatementAllow">true</property>
 	</sqlwall>
-
 
 </mycat:server>

@@ -9,7 +9,7 @@
 	
 	<dataHost name="localhost" maxCon="2000" minCon="10" balance="0" dbType="mysql" dbDriver="native" switchType="-1">
 		<heartbeat>select user()</heartbeat>
-		<writeHost host="hostM1" url="localhost:3306" user="root" password="123456">
+		<writeHost host="hostM1" url="localhost:3306" user="root" password="mysql">
 		</writeHost>
 	</dataHost>
 

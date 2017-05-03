@@ -318,11 +318,14 @@ public class PhysicalDBPool {
 			}
 		}
 		LOGGER.info("init result :" + getConHandler.getStatusInfo());
+		
 //		for (BackendConnection c : list) {
 //			c.release();
 //		}
 		return !list.isEmpty();
 	}
+	
+
 
 	public void doHeartbeat() {
 
@@ -380,8 +383,9 @@ public class PhysicalDBPool {
 		LOGGER.info("clear datasours of pool " + this.hostName);
 		for (PhysicalDatasource source : this.allDs) {			
 			LOGGER.info("clear datasoure of pool  " + this.hostName + " ds:" + source.getConfig());
-			source.clearCons(reason);
 			source.stopHeartbeat();
+			source.clearCons(reason);
+			
 		}
 	}
 
@@ -630,4 +634,7 @@ public class PhysicalDBPool {
 		this.schemas = mySchemas;
 	}
 
+	public DataHostConfig getDataHostConfig() {
+		return dataHostConfig;
+	}
 }

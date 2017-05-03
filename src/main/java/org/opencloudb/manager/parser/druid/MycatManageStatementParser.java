@@ -119,6 +119,7 @@ public class MycatManageStatementParser extends SQLStatementParser {
                 	continue;
                 } else if(identifierEquals("DATAHOST")) {
                 	statementList.add(parseDropDataHost(false));
+                	continue;
                 } else if(lexer.token() == Token.USER) {
                 	statementList.add(parseDropUser(false));
                 	continue;

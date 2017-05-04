@@ -181,7 +181,10 @@ public final class SystemConfig {
 	 */
 
 	/**
-	 *  SQL 防火墙开关 1开启，2 关闭，并记录拦截信息
+	 *  SQL 防火墙开关 -1关闭防火墙，
+	 *  0 开启防火墙，关闭拦截，并打印警告信息，
+	 *  1开启防火墙，打开拦截，
+	 *  2 开启防火墙，关闭拦截，并记录拦截信息
 	 */
 	public int enableSQLFirewall;
 
@@ -226,8 +229,6 @@ public final class SystemConfig {
 	public boolean deleteAllow;	//true	是否允许执行DELETE语句
 	public boolean updateAllow;	//true	是否允许执行UPDATE语句
 	public boolean insertAllow;	//true	是否允许执行INSERT语句
-	public boolean replaceAllow;	//true	是否允许执行REPLACE语句
-	public boolean mergeAllow;	//true	是否允许执行MERGE语句，这个只在Oracle中有用
 	public boolean callAllow;	//true	是否允许通过jdbc的call语法调用存储过程
 	public boolean setAllow;	//true	是否允许使用SET语法
 	public boolean truncateAllow;	//true	truncate语句是危险，缺省打开，若需要自行关闭
@@ -235,7 +236,6 @@ public final class SystemConfig {
 	public boolean alterTableAllow;	//true	是否允许执行Alter Table语句
 	public boolean dropTableAllow;	//true	是否允许修改表
 	public boolean commentAllow;	//false	是否允许语句中存在注释，Oracle的用户不用担心，Wall能够识别hints和注释的区别
-	public boolean noneBaseStatementAllow;//false	是否允许非以上基本语句的其他语句，缺省关闭，通过这个选项就能够屏蔽DDL。
 	public boolean multiStatementAllow;	//false	是否允许一次执行多条语句，缺省关闭
 	public boolean useAllow;	//true	是否允许执行mysql的use语句，缺省打开
 	public boolean describeAllow;	//true	是否允许执行mysql的describe语句，缺省打开
@@ -368,7 +368,7 @@ public final class SystemConfig {
 		/**
 		 * SQL 防火墙配置默认配置
 		 */
-		this.enableSQLFirewall = 0;
+		this.enableSQLFirewall = -1;
 		this.maxAllowResultRow = 1000000;
 		this.maxAllowExecuteTimes = 100000;
 		this.maxAllowExecuteSqlTime = 3000;
@@ -382,16 +382,13 @@ public final class SystemConfig {
 		this.deleteAllow=true;
 		this.updateAllow=true;
 		this.insertAllow=true;
-		this.replaceAllow=true;
-		this.mergeAllow=true;
 		this.callAllow=true;
 		this.setAllow=true;
 		this.truncateAllow=true;
 		this.createTableAllow=true;
 		this.alterTableAllow=true;
 		this.dropTableAllow=true;
-		this.commentAllow=true;
-		this.noneBaseStatementAllow=true;
+		this.commentAllow=false;
 		this.multiStatementAllow=false;
 		this.useAllow=true;
 		this.describeAllow=true;
@@ -561,9 +558,6 @@ public final class SystemConfig {
 	public void setMaxAllowExecuteUnitTime(int maxAllowExecuteUnitTime) {
 		this.maxAllowExecuteUnitTime = maxAllowExecuteUnitTime;
 	}
-
-
-
 
 
 
@@ -1170,21 +1164,6 @@ public final class SystemConfig {
 		this.insertAllow = insertAllow;
 	}
 
-	public boolean isReplaceAllow() {
-		return replaceAllow;
-	}
-
-	public void setReplaceAllow(boolean replaceAllow) {
-		this.replaceAllow = replaceAllow;
-	}
-
-	public boolean isMergeAllow() {
-		return mergeAllow;
-	}
-
-	public void setMergeAllow(boolean mergeAllow) {
-		this.mergeAllow = mergeAllow;
-	}
 
 	public boolean isCallAllow() {
 		return callAllow;
@@ -1242,13 +1221,6 @@ public final class SystemConfig {
 		this.commentAllow = commentAllow;
 	}
 
-	public boolean isNoneBaseStatementAllow() {
-		return noneBaseStatementAllow;
-	}
-
-	public void setNoneBaseStatementAllow(boolean noneBaseStatementAllow) {
-		this.noneBaseStatementAllow = noneBaseStatementAllow;
-	}
 
 	public boolean isMultiStatementAllow() {
 		return multiStatementAllow;

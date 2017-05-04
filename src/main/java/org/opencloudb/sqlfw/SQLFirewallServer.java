@@ -389,7 +389,6 @@ public class SQLFirewallServer {
         if (enableRegEx) {
 
             for (String regex : sqlBlackListMap.values()) {
-
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("regEx  : " + regex);
                     LOGGER.debug("regEx matcher sql : " + sql);
@@ -423,7 +422,7 @@ public class SQLFirewallServer {
         WallCheckResult result =
                 sqlFirewall.getProvider().check(sql);
 
-        if (result.getViolations().size()>0){
+        if (result.getViolations().size() > 0){
             /**
              * 得到SQL语句检查结果
              */
@@ -437,12 +436,13 @@ public class SQLFirewallServer {
                     ((FrontendConnection) sc).writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND,
                             violation.getMessage() + ",  sql==> " + sql);
                 }
+
             }else if(enableSQLFirewall == 2){
                 /**
                  * 不拦截SQL，将sql记录在拦截reporter中
                  */
                 recordSQLReporter(sql,violation.getMessage().toUpperCase());
-            }else if (enableSQLFirewall ==0){
+            }else if (enableSQLFirewall == 0){
                 LOGGER.warn("'" + sql.toUpperCase() + "' that is ".toUpperCase() + violation.getMessage().toUpperCase());
             }
 

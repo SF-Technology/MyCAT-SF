@@ -62,8 +62,8 @@
 	</user>
 
 	<sqlwall>
-		<!-- SQL 防火墙总开关 0 关闭，不记录直接打印警告信息，1开启，2 关闭，并记录拦截信息-->
-		<property name="enableSQLFirewall">0</property>
+		<!-- SQL 防火墙总开关 -1 关闭防火墙，关闭拦截, 0开启防火墙 关闭拦截，不记录直接打印警告信息，1开启防火墙，打开拦截，2 开启防火墙，关闭拦截，并记录拦截信息-->
+		<property name="enableSQLFirewall">1</property>
 
 		<!-- 是否启用正则表达式匹配SQL-->
 		<property name="enableRegEx">false</property>
@@ -79,8 +79,15 @@
 
 		<property name="selectAllColumnAllow">true</property>
 		<property name="strictSyntaxCheck">false</property>
-		<property name="deleteWhereNoneCheck">true</property>
-		<property name="noneBaseStatementAllow">true</property>
+		<property name="describeAllow">false</property>
+
+		<property name="deleteWhereNoneCheck">false</property>
+		<property name="deleteWhereAlwayTrueCheck">false</property>
+		<property name="conditionLikeTrueAllow">true</property>
+		<property name="constArithmeticAllow">false</property>
+		<property name="limitZeroAllow">false</property>
+		<property name="conditionDoubleConstAllow">false</property>
+
 	</sqlwall>
 
 </mycat:server>

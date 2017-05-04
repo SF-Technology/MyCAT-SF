@@ -17,5 +17,6 @@
 		<table name="ext_select_test1" primaryKey="id" dataNode="testdb$1-4" rule="mod-4_id" />
 	
 	</schema>
+
 	
 </mycat:schema>

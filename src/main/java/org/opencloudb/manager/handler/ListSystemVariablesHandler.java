@@ -12,7 +12,6 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.Fields;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.manager.ManagerConnection;
-import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListVariablesStatement;
 import org.opencloudb.mysql.PacketUtil;
 import org.opencloudb.net.mysql.EOFPacket;

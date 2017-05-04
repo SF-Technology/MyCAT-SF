@@ -3,7 +3,6 @@ package org.opencloudb.manager.response;
 import java.io.File;
 import java.nio.ByteBuffer;
 
-import org.apache.log4j.Logger;
 import org.opencloudb.config.Fields;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.manager.ManagerConnection;
@@ -15,8 +14,6 @@ import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.util.StringUtil;
 
 public class ListMapFiles {
-	private static final Logger LOGGER = Logger.getLogger(ListMapFiles.class);
-
 	private static final int FIELD_COUNT = 1;
 	private static final ResultSetHeaderPacket header = PacketUtil.getHeader(FIELD_COUNT);
 	private static final FieldPacket[] fields = new FieldPacket[FIELD_COUNT];

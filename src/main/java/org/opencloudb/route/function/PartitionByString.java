@@ -28,8 +28,6 @@ import org.opencloudb.parser.util.Pair;
 import org.opencloudb.route.util.PartitionUtil;
 import org.opencloudb.util.StringUtil;
 
-import com.mysql.fabric.xmlrpc.base.Array;
-
 /**
  * @author <a href="mailto:daasadmin@hp.com">yangwenx</a>
  */

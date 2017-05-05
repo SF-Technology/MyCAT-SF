@@ -60,6 +60,11 @@ public class PartitionByDate extends AbstractPartitionAlgorithm implements RuleA
 			
 		}
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		return nCount;
+	}
 
 	@Override
 	public Integer[] calculateRange(String beginValue, String endValue) {

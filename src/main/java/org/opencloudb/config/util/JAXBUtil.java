@@ -16,6 +16,9 @@ import javax.xml.bind.Marshaller;
 
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
+import org.opencloudb.backend.PhysicalDBNode;
+import org.opencloudb.backend.PhysicalDBPool;
+import org.opencloudb.config.loader.xml.jaxb.DatabaseJAXB;
 import org.opencloudb.config.loader.xml.jaxb.RuleJAXB;
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.loader.xml.jaxb.UserJAXB;
@@ -105,6 +108,10 @@ public class JAXBUtil {
 		return marshaller(ruleJAXB, "rule.xml", "rule");
 	}
 	
+	public static boolean flushDatabase(DatabaseJAXB databaseJAXB) throws Exception {
+		return marshaller(databaseJAXB, "database.xml", "database");
+	}
+	
 	public static SchemaJAXB toSchemaJAXB(Map<String, SchemaConfig> schemas) {
 		
 		SchemaJAXB schemaJAXB = new SchemaJAXB();
@@ -144,5 +151,15 @@ public class JAXBUtil {
 	public static RuleJAXB toRuleJAXB(Map<String, TableRuleConfig> currentRules, 
 			Map<String, AbstractPartitionAlgorithm> currentFunctions) {
 		return new RuleJAXB(currentRules, currentFunctions);
+	}
+	
+	/**
+	 * 将内存中的配置信息转化为可以刷入到database.xml文件中的bean对象
+	 * @param dataNodes
+	 * @param dataHosts
+	 * @return
+	 */
+	public static DatabaseJAXB toDatabaseJAXB (Map<String, PhysicalDBNode> dataNodes, Map<String, PhysicalDBPool> dataHosts) {
+		return new DatabaseJAXB(dataNodes, dataHosts);
 	}
 }

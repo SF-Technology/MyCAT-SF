@@ -53,6 +53,11 @@ public class PartitionByHashMod extends AbstractPartitionAlgorithm implements Ru
         }
         return (bigNum.mod(BigInteger.valueOf(count))).intValue();
     }
+    
+    @Override
+	public int requiredNodeNum() {
+    	return count;
+    }
 
     @Override
     public void init() {

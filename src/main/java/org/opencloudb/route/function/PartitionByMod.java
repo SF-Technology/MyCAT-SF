@@ -61,6 +61,11 @@ public class PartitionByMod extends AbstractPartitionAlgorithm implements RuleAl
 	BigInteger bigNum = new BigInteger(columnValue).abs();
 	 return (bigNum.mod(BigInteger.valueOf(count))).intValue();
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		return count;
+	}
 
 	private static void hashTest(){
 		PartitionByMod hash=new PartitionByMod();

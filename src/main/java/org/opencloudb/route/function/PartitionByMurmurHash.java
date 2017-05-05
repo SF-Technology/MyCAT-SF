@@ -203,6 +203,11 @@ public class PartitionByMurmurHash extends AbstractPartitionAlgorithm implements
 		}
 		return tail.get(tail.firstKey());
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		return count;
+	}
 
 	private static void hashTest() throws IOException{
 		PartitionByMurmurHash hash=new PartitionByMurmurHash();

@@ -29,7 +29,7 @@ public class MycatCreateDataHostStatement extends MycatStatementImpl implements 
 	private SQLName datahost;
 	private SQLIntegerExpr maxCon = DEFAULT_MAX_CON;
 	private SQLIntegerExpr minCon = DEFAULT_MIN_CON;
-	private SQLExpr balance = DEFAULT_BALANCE;
+	private SQLIntegerExpr balance = DEFAULT_BALANCE;
 	private SQLExpr mDbType = DEFAULT_DB_TYPE;
 	private SQLExpr dbDriver = DEFAUTL_DB_DRIVER;
 	private SQLIntegerExpr switchType = DEFAULT_SWITCH_TYPE;
@@ -118,11 +118,11 @@ public class MycatCreateDataHostStatement extends MycatStatementImpl implements 
 		this.minCon = minCon;
 	}
 
-	public SQLExpr getBalance() {
+	public SQLIntegerExpr getBalance() {
 		return balance;
 	}
 
-	public void setBalance(SQLExpr balance) {
+	public void setBalance(SQLIntegerExpr balance) {
 		this.balance = balance;
 	}
 

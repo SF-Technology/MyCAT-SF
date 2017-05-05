@@ -90,7 +90,8 @@ public class MySQLDetector implements
 	public void heartbeat() {
 		lastSendQryTime = System.currentTimeMillis();
 		MySQLDataSource ds = heartbeat.getSource();
-		String databaseName = ds.getDbPool().getSchemas()[0];
+		String[] schemas = ds.getDbPool().getSchemas();
+		String databaseName = schemas.length == 0 ? "" : schemas[0];
 		String[] fetchColms={};
 		if (heartbeat.getSource().getHostConfig().isShowSlaveSql() ) {
 			fetchColms=MYSQL_SLAVE_STAUTS_COLMS;

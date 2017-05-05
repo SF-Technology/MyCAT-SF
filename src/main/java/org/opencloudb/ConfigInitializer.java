@@ -23,6 +23,7 @@
  */
 package org.opencloudb;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -74,6 +75,7 @@ public class ConfigInitializer {
 		this.firewall = configLoader.getFirewallConfig();
 		this.users = configLoader.getUserConfigs();
 		this.schemas = configLoader.getSchemaConfigs();
+		initMapFileFolder();
         if(loadDataHost)
         {
             this.dataHosts = initDataHosts(configLoader);
@@ -119,6 +121,27 @@ public class ConfigInitializer {
 				continue;
 			}
 		}
+	}
+	
+	/**
+	 * 如果classpath下面没有保存mapfile的文件夹，则新建
+	 */
+	private void initMapFileFolder() {
+		String classPath = SystemConfig.class.getClassLoader().getResource("").getPath().trim();
+		String folderPath = null;
+		
+		switch (classPath.charAt(classPath.length() - 1)) {
+		case '\\':
+		case '/':
+			folderPath = classPath + SystemConfig.getMapFileFolder();
+			break;
+
+		default:
+			folderPath = classPath + File.separatorChar + SystemConfig.getMapFileFolder();
+			break;
+		}
+		
+		new File(folderPath).mkdirs(); // 如果classpath下面没有MAP_FILE_FOLDER文件夹，则新建
 	}
 
 	public SystemConfig getSystem() {

@@ -27,6 +27,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.opencloudb.config.model.rule.RuleConfig;
+import org.opencloudb.config.util.ConfigException;
 import org.opencloudb.util.SplitUtil;
 
 /**
@@ -83,6 +84,12 @@ public class TableConfig {
 		if (theDataNodes == null || theDataNodes.length <= 0) {
 			throw new IllegalArgumentException("invalid table dataNodes: "
 					+ dataNode);
+		} else if (rule != null) {
+			int requiredNum = rule.getRuleAlgorithm().requiredNodeNum();
+			int limittedNum = theDataNodes.length;
+			if (requiredNum > limittedNum) {
+				throw new ConfigException("The node number of algorithm " + rule.getRuleAlgorithm().getClass().getName() + " is out of limit.");
+			}
 		}
 		dataNodes = new ArrayList<String>(theDataNodes.length);
 		for (String dn : theDataNodes) {

@@ -26,6 +26,14 @@ public abstract class AbstractPartitionAlgorithm implements RuleAlgorithm {
 	}
 	
 	/**
+	 * 计算分片算法需要的节点数
+	 * @return
+	 */
+	public int requiredNodeNum() {
+		return -1;
+	}
+	
+	/**
 	 * 对于存储数据按顺序存放的字段做范围路由，可以使用这个函数
 	 * @param algorithm
 	 * @param beginValue

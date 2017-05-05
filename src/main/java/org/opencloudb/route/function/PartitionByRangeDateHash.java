@@ -67,6 +67,11 @@ public class PartitionByRangeDateHash extends AbstractPartitionAlgorithm impleme
 
         }
     }
+    
+    @Override
+	public int requiredNodeNum() {
+    	return intGroupPartionSize;
+    }
 
     public Integer calculateStart(String columnValue)
     {

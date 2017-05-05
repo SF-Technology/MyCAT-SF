@@ -14,6 +14,7 @@ public final class ManagerParseMycatConfig {
 	public static final int DROP = 3;
 	public static final int ALTER = 4;
 	public static final int SET = 5;
+	public static final int SHOW = 6;
 	
 	public static int parse(String stmt, int offset) {
 		for(int i = offset + 1, len = stmt.length(); i < len; i++) {
@@ -37,7 +38,7 @@ public final class ManagerParseMycatConfig {
 					return dropCheck(stmt, i);
 				case 'S':
 				case 's':
-					return setCheck(stmt, i);
+					return sCheck(stmt, i);
 				default:
 					break;
 			}
@@ -109,15 +110,51 @@ public final class ManagerParseMycatConfig {
 		return OTHER;
 	}
 	
-	private static int setCheck(String stmt, int offset) {
-		if(stmt.length() > offset + "ET ".length()) {
-			char c1 = stmt.charAt(++offset); // E
-			char c2 = stmt.charAt(++offset); // T
-			char c3 = stmt.charAt(++offset); 
+	/**
+	 * SET或SHOW
+	 * @param stmt
+	 * @param offset
+	 * @return
+	 */
+	private static int sCheck(String stmt, int offset) {
+		if(stmt.length() > offset + 1) {
+			switch (stmt.charAt(++offset)) {
+			case 'E':
+			case 'e':
+				return seCheck(stmt, offset);
+			case 'H':
+			case 'h':
+				return shCheck(stmt, offset);
+			default:
+				break;
+			}
+		}
+		
+		return OTHER;
+	}
+	
+	private static int seCheck(String stmt, int offset) {
+		if(stmt.length() > offset + "T ".length()) {
+			char c1 = stmt.charAt(++offset); // T
+			char c2 = stmt.charAt(++offset);
 			
-			if((c1 == 'E' || c1 == 'e') && (c2 == 'T' || c2 == 't')
-					&& (c3 == ' ' || c3 == '\t' || c3 == '\r' || c3 == '\n')) {
+			if((c1 == 'T' || c1 == 't')
+					&& (c2 == ' ' || c2 == '\t' || c2 == '\r' || c2 == '\n')) {
 				return SET;
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int shCheck(String stmt, int offset) {
+		if(stmt.length() > offset + "OW ".length()) {
+			char c1 = stmt.charAt(++offset); // O
+			char c2 = stmt.charAt(++offset); // W
+			char c3 = stmt.charAt(++offset);
+			
+			if((c1 == 'O' || c1 == 'o') && (c2 == 'W' || c2 == 'w')
+					&& (c3 == ' ' || c3 == '\t' || c3 == '\r' || c3 == '\n')) {
+				return SHOW;
 			}
 		}
 		return OTHER;

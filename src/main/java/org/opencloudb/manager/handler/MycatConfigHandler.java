@@ -31,6 +31,9 @@ public class MycatConfigHandler {
 		case ManagerParseMycatConfig.SET:
 			MycatConfigSetHandler.handle(stmt.substring(offset).trim(), c);
 			break;
+		case ManagerParseMycatConfig.SHOW:
+			MycatConfigShowHandler.handle(stmt.substring(offset).trim(), c);
+			break;
 		default:
 			c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement : " + stmt);
 			break;

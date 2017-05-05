@@ -17,6 +17,13 @@
 		</rule>
 	</tableRule>
 	
+	<tableRule name="offerRule_one_node">
+		<rule>
+			<columns>member_id</columns>
+			<algorithm>func_one_node</algorithm>
+		</rule>
+	</tableRule>
+	
 	<tableRule name="dateRule">
 		<rule>
 			<columns>col_date</columns>
@@ -36,10 +43,16 @@
 			<algorithm>func1</algorithm>
 		</rule>
 	</tableRule>
-	<tableRule name="auto-sharding-long">
+	<tableRule name="auto-sharding-long-2">
 		<rule>
 			<columns>id</columns>
-			<algorithm>rang-long</algorithm>
+			<algorithm>rang-long-2</algorithm>
+		</rule>
+	</tableRule>
+	<tableRule name="auto-sharding-long-3">
+		<rule>
+			<columns>id</columns>
+			<algorithm>rang-long-3</algorithm>
 		</rule>
 	</tableRule>
 
@@ -66,13 +79,24 @@
 		<property name="partitionLength">8</property>
 		<property name="hashSlice">:8</property>
 	</function>
+	<!-- 只有一个分片的PartitionByString算法 -->
+	<function name="func_one_node"
+		class="org.opencloudb.route.function.PartitionByString">
+		<property name="partitionCount">1</property>
+		<property name="partitionLength">1024</property>
+		<property name="hashSlice">:8</property>
+	</function>
 	<function name="func2" class="org.opencloudb.route.function.PartitionByLong">
 		<property name="partitionCount">128</property>
 		<property name="partitionLength">8</property>
 	</function>
-	<function name="rang-long"
+	<function name="rang-long-2"
 		class="org.opencloudb.route.function.AutoPartitionByLong">
-		<property name="mapFile">autopartition-long.txt</property>
+		<property name="mapFile">autopartition-long-2.txt</property>
+	</function>
+	<function name="rang-long-3"
+		class="org.opencloudb.route.function.AutoPartitionByLong">
+		<property name="mapFile">autopartition-long-3.txt</property>
 	</function>
 	<function name="by-date"
 		class="org.opencloudb.route.function.PartitionByDate">                            

@@ -134,5 +134,15 @@ public final class PartitionByString extends AbstractPartitionAlgorithm implemen
         long hash = StringUtil.hash(key, start, end);
         return partitionUtil.partition(hash);
 	}
-
+	
+	@Override
+	public int requiredNodeNum() {
+		int nodeNum = 0;
+		
+		for (int item : count) {
+			nodeNum += item;
+		}
+		
+		return nodeNum;
+	}
 }

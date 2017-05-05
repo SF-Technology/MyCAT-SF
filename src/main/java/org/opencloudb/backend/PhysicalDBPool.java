@@ -300,7 +300,8 @@ public class PhysicalDBPool {
 
 		for (int i = 0; i < initSize; i++) {
 			try {
-				ds.getConnection(this.schemas[i % schemas.length], true, getConHandler, null);
+				
+				ds.getConnection(schemas.length == 0 ? "" : this.schemas[i % schemas.length], true, getConHandler, null);
 			} catch (Exception e) {
 				LOGGER.warn(getMessage(index, " init connection error."), e);
 			}
@@ -317,11 +318,14 @@ public class PhysicalDBPool {
 			}
 		}
 		LOGGER.info("init result :" + getConHandler.getStatusInfo());
+		
 //		for (BackendConnection c : list) {
 //			c.release();
 //		}
 		return !list.isEmpty();
 	}
+	
+
 
 	public void doHeartbeat() {
 
@@ -379,8 +383,9 @@ public class PhysicalDBPool {
 		LOGGER.info("clear datasours of pool " + this.hostName);
 		for (PhysicalDatasource source : this.allDs) {			
 			LOGGER.info("clear datasoure of pool  " + this.hostName + " ds:" + source.getConfig());
-			source.clearCons(reason);
 			source.stopHeartbeat();
+			source.clearCons(reason);
+			
 		}
 	}
 
@@ -629,4 +634,7 @@ public class PhysicalDBPool {
 		this.schemas = mySchemas;
 	}
 
+	public DataHostConfig getDataHostConfig() {
+		return dataHostConfig;
+	}
 }

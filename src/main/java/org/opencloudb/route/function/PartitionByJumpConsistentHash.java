@@ -22,6 +22,11 @@ public final class PartitionByJumpConsistentHash extends AbstractPartitionAlgori
     public Integer calculate(String columnValue) {
         return jumpConsistentHash(columnValue.hashCode(), totalBuckets);
     }
+    
+    @Override
+	public int requiredNodeNum() {
+    	return totalBuckets;
+    }
 
     public static int jumpConsistentHash(final long key, final int buckets) {
         checkBuckets(buckets);

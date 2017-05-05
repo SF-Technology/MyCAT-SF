@@ -2,6 +2,7 @@ package org.opencloudb.config.loader.xml.jaxb;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -9,6 +10,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
+import org.opencloudb.backend.PhysicalDBNode;
+import org.opencloudb.backend.PhysicalDBPool;
+import org.opencloudb.config.loader.xml.jaxb.DatabaseJAXB.DataHost.ReadHost;
+import org.opencloudb.config.loader.xml.jaxb.DatabaseJAXB.DataHost.WriteHost;
+import org.opencloudb.config.model.DBHostConfig;
+import org.opencloudb.config.model.DataHostConfig;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(namespace = "http://org.opencloudb/", name = "database")
@@ -18,6 +26,76 @@ public class DatabaseJAXB {
 	private List<DataNode> dataNodes = new ArrayList<DataNode>();
 	@XmlElement(name = "dataHost")
 	private List<DataHost> dataHosts = new ArrayList<DataHost>();
+	
+	public DatabaseJAXB() {
+	}
+	
+	public DatabaseJAXB(Map<String, PhysicalDBNode> dataNodes, Map<String, PhysicalDBPool> dataHosts) {
+		for (PhysicalDBNode physicalDBNode : dataNodes.values()) {
+			DataNode dataNode = new DataNode();
+			this.dataNodes.add(dataNode);
+			
+			dataNode.setName(physicalDBNode.getName());
+			dataNode.setDataHost(physicalDBNode.getDbPool().getHostName());
+			dataNode.setDatabase(physicalDBNode.getDatabase());
+		}
+		
+		for (PhysicalDBPool pool : dataHosts.values()) {
+			DataHost dataHost = new DataHost();
+			this.dataHosts.add(dataHost);
+
+			DataHostConfig hostConfig = pool.getDataHostConfig();
+			dataHost.setName(hostConfig.getName());
+			dataHost.setBalance(hostConfig.getBalance());
+			dataHost.setMaxCon(hostConfig.getMaxCon());
+			dataHost.setMinCon(hostConfig.getMinCon());
+			dataHost.setWriteType(hostConfig.getWriteType());
+			dataHost.setSwitchType(hostConfig.getSwitchType());
+			dataHost.setSlaveThreshold(hostConfig.getSlaveThreshold());
+			dataHost.setDbType(hostConfig.getDbType());
+			dataHost.setDbDriver(hostConfig.getDbDriver());
+	        dataHost.setHeartbeat(hostConfig.getHearbeatSQL());
+	        
+	        /*
+	         * 读取所有的writeHost
+	         */
+	        List<WriteHost> writeHosts = new ArrayList<WriteHost>();
+	        dataHost.setWriteHosts(writeHosts);
+	        DBHostConfig[] writeHostArray = hostConfig.getWriteHosts();
+	        for (int i = 0; i < writeHostArray.length; i ++) {
+	        	DBHostConfig writeHostConfig = writeHostArray[i];
+	        	
+	        	WriteHost writeHost = new WriteHost();
+	        	
+	        	writeHost.setHost(writeHostConfig.getHostName());
+	        	writeHost.setUrl(writeHostConfig.getUrl());
+	        	writeHost.setUser(writeHostConfig.getUser());
+	        	writeHost.setPassword(writeHostConfig.getPassword());
+	        	
+	        	/*
+	        	 * 获得writeHost下的所有readHost
+	        	 */
+	        	List<ReadHost> readHosts = new ArrayList<ReadHost>();
+	        	writeHost.setReadHosts(readHosts);
+	        	DBHostConfig[] readHostArray = hostConfig.getReadHosts().get(i);
+	        	if (readHostArray != null) {
+	        		for (DBHostConfig readHostConfig : readHostArray) {
+	        			ReadHost readHost = new ReadHost();
+	        			readHosts.add(readHost);
+	        			
+	        			readHost.setHost(readHostConfig.getHostName());
+	        			readHost.setUrl(readHostConfig.getUrl());
+	        			readHost.setUser(readHostConfig.getUser());
+	        			readHost.setPassword(readHostConfig.getPassword());
+	        		}
+	        	}
+	        	
+	        	writeHosts.add(writeHost);
+	        }
+		}
+ 	}
+	
+	
 	
 	@XmlAccessorType(XmlAccessType.FIELD) @XmlType(name = "dataNode")
 	public static class DataNode {
@@ -85,9 +163,9 @@ public class DatabaseJAXB {
             @XmlAttribute(required = true)
             private String url;
             @XmlAttribute(required = true)
-            private String password;
-            @XmlAttribute(required = true)
             private String user;
+            @XmlAttribute(required = true)
+            private String password;
             
             public String getHost() {
 				return host;
@@ -144,9 +222,9 @@ public class DatabaseJAXB {
             @XmlAttribute(required = true)
             private String url;
             @XmlAttribute(required = true)
-            private String password;
-            @XmlAttribute(required = true)
             private String user;
+            @XmlAttribute(required = true)
+            private String password;
             
             public String getHost() {
 				return host;

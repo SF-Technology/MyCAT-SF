@@ -24,11 +24,14 @@
 package org.opencloudb.route.function;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
 
+import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.rule.RuleAlgorithm;
+import org.opencloudb.route.function.PartitionByPrefixPattern.LongRange;
 
 /**
  * auto partition by Long ,can be used in auto increment primary key partition
@@ -73,6 +76,15 @@ public class AutoPartitionByLong extends AbstractPartitionAlgorithm implements R
 	}
 	
 	@Override
+	public int requiredNodeNum() {
+		int maxNodeIndex = -1;
+		for (LongRange range : longRongs) {
+			maxNodeIndex = maxNodeIndex > range.nodeIndx ? maxNodeIndex : range.nodeIndx;
+		}
+		return maxNodeIndex;
+	}
+	
+	@Override
 	public Integer[] calculateRange(String beginValue, String endValue) {
 		return AbstractPartitionAlgorithm.calculateSequenceRange(this, beginValue, endValue);
 	}
@@ -81,8 +93,8 @@ public class AutoPartitionByLong extends AbstractPartitionAlgorithm implements R
 		BufferedReader in = null;
 		try {
 			// FileInputStream fin = new FileInputStream(new File(fileMapPath));
-			InputStream fin = this.getClass().getClassLoader()
-					.getResourceAsStream(mapFile);
+			InputStream fin = SystemConfig.class.getClassLoader()
+					.getResourceAsStream(SystemConfig.getMapFileFolder() + File.separatorChar + mapFile);
 			if (fin == null) {
 				throw new RuntimeException("can't find class resource file "
 						+ mapFile);

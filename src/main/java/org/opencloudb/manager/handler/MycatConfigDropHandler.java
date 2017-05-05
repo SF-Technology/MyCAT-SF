@@ -7,6 +7,7 @@ import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropMapFileStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
@@ -35,15 +36,17 @@ public class MycatConfigDropHandler {
 			} else if(stmt instanceof MycatDropTableStatement) {
 				DropTableHandler.handle(c, (MycatDropTableStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropDataNodeStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop datanode stmt");
+				DropDataNodeHandler.handle(c, (MycatDropDataNodeStatement) stmt, sql);;
 			} else if(stmt instanceof MycatDropDataHostStatement) {
-				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "need to process drop datahost stmt");
+				DropDataHostHandler.handle(c, (MycatDropDataHostStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropUserStatement) {
 				DropUserHandler.handle(c, (MycatDropUserStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropRuleStatement){
 				DropRuleHandler.handle(c, (MycatDropRuleStatement) stmt, sql);
 			} else if(stmt instanceof MycatDropFunctionStatement){
 				DropFunctionHandler.handle(c, (MycatDropFunctionStatement)stmt, sql);
+			} else if(stmt instanceof MycatDropMapFileStatement){
+				DropMapFileHandler.handle(c, (MycatDropMapFileStatement)stmt, sql);
 			} else { // TODO more... 
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			}

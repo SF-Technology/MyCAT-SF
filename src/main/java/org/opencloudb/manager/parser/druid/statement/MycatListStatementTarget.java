@@ -10,4 +10,5 @@ public enum MycatListStatementTarget {
 	, USERS // list users
 	, SYSTEM_VARIABLES // system variables
 	, SQLWALL_VARIABLES // sqlwall variables
+	, MAPFILES // mapfiles
 }

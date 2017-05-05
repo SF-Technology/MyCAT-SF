@@ -239,6 +239,8 @@ public final class SystemConfig {
 	 */
 	public long sqlRecordInDiskPeriod;
 
+	/**限制并发查询度，控制cpu的消耗*/
+	public int limitConcurrentQuery;
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -433,7 +435,13 @@ public final class SystemConfig {
 		return fields;
 	}
 
+	public int getLimitConcurrentQuery() {
+		return limitConcurrentQuery;
+	}
 
+	public void setLimitConcurrentQuery(int limitConcurrentQuery) {
+		this.limitConcurrentQuery = limitConcurrentQuery;
+	}
 	public long getSqlRecordInDiskPeriod() {
 		return sqlRecordInDiskPeriod;
 	}

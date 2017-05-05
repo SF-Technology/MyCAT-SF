@@ -9,6 +9,7 @@ import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
 import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
+<<<<<<< HEAD
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
@@ -24,6 +25,12 @@ import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
+=======
+import org.opencloudb.manager.parser.druid.statement.MycatChecksumTableStatement;
+
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
+>>>>>>> origin
 import com.alibaba.druid.sql.parser.ParserException;
 
 import junit.framework.Assert;
@@ -53,6 +60,7 @@ public class MycatManageStatementParserTest {
 		stmt = parser.parseStatement();
 	}
 	
+<<<<<<< HEAD
 	@Test
 	public void testParseCreateSchemaStatementSuccess() {
 		String sql = "create schema TESTDB dataNode = 'dn1' checkSQLschema = true sqlMaxLimit = 10000;";
@@ -376,6 +384,23 @@ public class MycatManageStatementParserTest {
 				Assert.assertEquals(true, failOccur);
 			}
 		}
+=======
+	@Test(expected = ParserException.class)
+	public void testParseChecksumTableStatement() {
+		String sql = "checksum table TESTDB.hotnews";
+		MycatManageStatementParser parser = new MycatManageStatementParser(sql);
+		SQLStatement stmt = parser.parseStatement();
+		Assert.assertEquals(MycatChecksumTableStatement.class, stmt.getClass());
+		MycatChecksumTableStatement _stmt = (MycatChecksumTableStatement)stmt;
+		Assert.assertEquals("TESTDB.hotnews", _stmt.getTableName().toString());
+		SQLPropertyExpr tableName = (SQLPropertyExpr) _stmt.getTableName();
+		Assert.assertEquals("TESTDB", tableName.getOwner().toString());
+		Assert.assertEquals("hotnews", tableName.getSimpleName());
+	
+		sql = "checksum TESTDB.hotnews";
+		parser = new MycatManageStatementParser(sql);
+		stmt = parser.parseStatement();
+>>>>>>> origin
 	}
 	
 }

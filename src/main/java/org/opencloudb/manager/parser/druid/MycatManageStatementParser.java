@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.opencloudb.MycatServer;
 import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatChecksumTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
@@ -870,6 +871,9 @@ public class MycatManageStatementParser extends SQLStatementParser {
 				statementList.add(parseCheckTableConsistencyStatement());
 			}
 			return true;
+		} else if(identifierEquals("CHECKSUM")) {
+			statementList.add(parseCheckSumStatement());
+			return true;
 		}
 		
 		if(identifierEquals("LIST")) {
@@ -899,6 +903,19 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			accept(Token.EOF);
 		}
 //		}
+		return stmt;
+	}
+	
+	/**
+	 * 解析checksum table schema.tablename语句
+	 * @return
+	 */
+	public MycatChecksumTableStatement parseCheckSumStatement() {
+		acceptIdentifier("CHECKSUM");
+		accept(Token.TABLE);
+		MycatChecksumTableStatement stmt = new MycatChecksumTableStatement();
+		stmt.setTableName(exprParser.name());
+		accept(Token.EOF);
 		return stmt;
 	}
 	
@@ -1003,4 +1020,5 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		
 		return stmt;
 	}
+	
 }

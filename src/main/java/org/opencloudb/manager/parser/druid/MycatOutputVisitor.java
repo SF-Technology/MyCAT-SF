@@ -3,6 +3,7 @@ package org.opencloudb.manager.parser.druid;
 import java.util.List;
 
 import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatChecksumTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
@@ -42,13 +43,25 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 	public void endVisit(MycatCheckTbStructConsistencyStatement stmt) {
 		
 	}
+	
+	@Override
+	public boolean visit(MycatChecksumTableStatement stmt) {
+		print("CHECKSUM TABLE ");
+		stmt.getTableName().accept(this);
+		return false;
+	}
+	
+	@Override
+	public void endVisit(MycatChecksumTableStatement stmt) {
+		
+	}
 
 	@Override
 	public boolean visit(MycatDropSchemaStatement stmt) {
 		print("DROP SCHEMA " + stmt.getSchema());
 		return false;
 	}
-
+	
 	@Override
 	public void endVisit(MycatDropSchemaStatement stmt) {
 		
@@ -271,5 +284,5 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 	public void endVisit(MycatAlterUserStatement stmt) {
 		
 	}
-
+	
 }

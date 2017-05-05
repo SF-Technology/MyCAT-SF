@@ -28,6 +28,7 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.handler.*;
 import org.opencloudb.manager.handler.CheckHandler;
 import org.opencloudb.manager.handler.MycatConfigHandler;
+import org.opencloudb.manager.handler.ChecksumHandler;
 import org.opencloudb.net.handler.FrontendQueryHandler;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.parser.ManagerParse;
@@ -112,6 +113,9 @@ public class ManagerQueryHandler implements FrontendQueryHandler {
 //            case ManagerParse.DROP:
 //            	DropHandler.handle(sql, c);
 //            	break;
+            case ManagerParse.CHECKSUM:
+            	ChecksumHandler.handle(sql, c);
+            	break;
             case ManagerParse.CONFIGFILE:
                 ConfFileHandler.handle(sql, c);
                 break;

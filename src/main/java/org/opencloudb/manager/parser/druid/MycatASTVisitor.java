@@ -1,6 +1,7 @@
 package org.opencloudb.manager.parser.druid;
 
 import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatChecksumTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
@@ -21,6 +22,9 @@ public interface MycatASTVisitor extends SQLASTVisitor {
 	
 	boolean visit(MycatCheckTbStructConsistencyStatement stmt);
 	void endVisit(MycatCheckTbStructConsistencyStatement stmt);
+	
+	boolean visit(MycatChecksumTableStatement stmt);
+	void endVisit(MycatChecksumTableStatement stmt);
 	
 	boolean visit(MycatCreateSchemaStatement stmt);
 	void endVisit(MycatCreateSchemaStatement stmt);

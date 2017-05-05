@@ -48,14 +48,16 @@ public final class ServerParseSelect {
 	private static final char[] _IDENTITY = "IDENTITY".toCharArray();
 	private static final char[] _LAST_INSERT_ID = "LAST_INSERT_ID"
 			.toCharArray();
-	private static final char[] _DATABASE = "DATABASE()".toCharArray();
-	private static final char[] _CURRENT_USER = "CURRENT_USER()".toCharArray();
+	private static final char[] _DATABASE = "DATABASE".toCharArray();
+	private static final char[] _CURRENT_USER = "CURRENT_USER".toCharArray();
 
 	public static int parse(String stmt, int offset) {
 		int i = offset;
 		for (; i < stmt.length(); ++i) {
 			switch (stmt.charAt(i)) {
 			case ' ':
+			case '\t':
+			case '\n':
 				continue;
 			case '/':
 			case '#':
@@ -461,16 +463,16 @@ public final class ServerParseSelect {
 	 * SELECT DATABASE()
 	 */
 	static int databaseCheck(String stmt, int offset) {
-		int length = offset + _DATABASE.length;
-		if (stmt.length() >= length
-				&& ParseUtil.compare(stmt, offset, _DATABASE)) {
-			if (stmt.length() > length && stmt.charAt(length) != ' ') {
-				return OTHER;
-			} else {
-				return DATABASE;
-			}
-		}
-		return OTHER;
+		if (!ParseUtil.compare(stmt, offset, _DATABASE))
+			return OTHER;
+		
+		offset += _DATABASE.length;
+		
+		offset = ParseUtil.findCharIgnoreBlank(stmt, offset, '('); // 匹配左括号
+		
+		offset = ParseUtil.findCharIgnoreBlank(stmt, offset, ')'); // 匹配右括号
+		
+		return offset == -1 ? OTHER : DATABASE;
 	}
 
 	/**
@@ -500,16 +502,16 @@ public final class ServerParseSelect {
 	 * SELECT USER()
 	 */
 	static int currentUserCheck(String stmt, int offset) {
-		int length = offset + _CURRENT_USER.length;
-		if (stmt.length() >= length) {
-			if (ParseUtil.compare(stmt, offset, _CURRENT_USER)) {
-				if (stmt.length() > length && stmt.charAt(length) != ' ') {
-					return OTHER;
-				}
-				return USER;
-			}
-		}
-		return OTHER;
+		if (!ParseUtil.compare(stmt, offset, _CURRENT_USER))
+			return OTHER;
+		
+		offset += _CURRENT_USER.length;
+		
+		offset = ParseUtil.findCharIgnoreBlank(stmt, offset, '('); //先找左括号
+		
+		offset = ParseUtil.findCharIgnoreBlank(stmt, offset, ')'); // 再找右括号
+		
+		return offset == -1 ? OTHER : USER;
 	}
 
 	/**

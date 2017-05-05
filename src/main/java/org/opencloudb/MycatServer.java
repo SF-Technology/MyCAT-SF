@@ -47,6 +47,7 @@ import org.opencloudb.classloader.DynaClassLoader;
 import org.opencloudb.config.ZkConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.interceptor.SQLInterceptor;
+import org.opencloudb.lock.TableLockManager;
 import org.opencloudb.manager.ManagerConnectionFactory;
 import org.opencloudb.memory.MyCatMemory;
 import org.opencloudb.monitor.MonitorServer;
@@ -93,7 +94,7 @@ public class MycatServer {
 	private BufferPool bufferPool;
 	private boolean aio = false;
 	private final AtomicLong xaIDInc = new AtomicLong();
-
+	
 	/**
 	 * Mycat 内存管理类
 	 */
@@ -113,6 +114,8 @@ public class MycatServer {
 	private NameableExecutor timerExecutor;
 	private NameableExecutor updateMonitorInfoExecutor;
 	private ListeningExecutorService listeningExecutorService;
+	
+	private final TableLockManager tableLockManager;
 
 	public MycatServer() {
 		//载入配置文件
@@ -134,6 +137,7 @@ public class MycatServer {
 		catletClassLoader = new DynaClassLoader(SystemConfig.getHomePath()
 				+ File.separator + "catlet", config.getSystem()
 				.getCatletClassCheckSeconds());
+		this.tableLockManager = new TableLockManager(this.config.getSchemas().values());
 		this.startupTime = TimeUtil.currentTimeMillis();
 	}
 
@@ -735,5 +739,9 @@ public class MycatServer {
 
 	public ListeningExecutorService getListeningExecutorService() {
 		return listeningExecutorService;
+	}
+	
+	public TableLockManager getTableLockManager() {
+		return this.tableLockManager;
 	}
 }

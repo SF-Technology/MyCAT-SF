@@ -21,6 +21,8 @@
 		<property name="serverPort">8066</property> 
 		<property name="managerPort">9066</property> 
 		<property name="idleTimeout">300000</property>
+		 <!-- 后端连接空闲超时关闭时间,程序中默认300s,在大数据取数时加大该时间,单位为s -->
+		<property name="sqlExecuteTimeout">7200</property>
 		<property name="bindIp">0.0.0.0</property> 
 		<property name="frontWriteQueueSize">40960</property>
 	
@@ -50,6 +52,8 @@
 		<property name="topSqlExecuteCountN">100</property>
 		<!--每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位-->
 		<property name="sqlRecordInDiskPeriod">1</property>
+		<!--限制并发查询，控制CPU消耗 1开启,0关闭-->
+		<property name="limitConcurrentQuery">1</property>
 	</system>
 
 	<!-- 定义迁移到 user.xml -->

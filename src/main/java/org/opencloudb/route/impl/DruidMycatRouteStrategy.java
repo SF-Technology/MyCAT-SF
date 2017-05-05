@@ -9,8 +9,10 @@ import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.cache.LayerCachePool;
+import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.parser.druid.*;
+import org.opencloudb.parser.util.ParseUtil;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.route.util.RouterUtil;
@@ -55,6 +57,15 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		} catch (Exception t) {
 	        LOGGER.error("DruidMycatRouteStrategyError", t);
 			throw new SQLSyntaxErrorException(t);
+		}
+		
+		// 如果是dual表的select语句，那么去掉解析结果中的表信息
+		ParseUtil.modifySelectDualStament(statement);
+		
+		// 如果如果多表查询涉及行锁，则返回错误信息
+		if(ParseUtil.isSelectLockForMultiTable(statement)){
+			sc.writeErrMessage(ErrorCode.ER_YES, "Row lock for multiple tables is not supported.");
+			return null;
 		}
 
 		/**

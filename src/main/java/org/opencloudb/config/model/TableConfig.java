@@ -54,7 +54,7 @@ public class TableConfig {
 	private final boolean secondLevel;
 	private final boolean partionKeyIsPrimaryKey;
 	private final Random rand = new Random();
-
+	
 	public TableConfig(String name, String primaryKey, boolean autoIncrement,boolean needAddLimit, int tableType,
 			String dataNode,Set<String> dbType, RuleConfig rule, boolean ruleRequired,
 			TableConfig parentTC, boolean isChildTable, String joinKey,
@@ -236,5 +236,5 @@ public class TableConfig {
 	public boolean primaryKeyIsPartionKey() {
 		return partionKeyIsPrimaryKey;
 	}
-
+	
 }

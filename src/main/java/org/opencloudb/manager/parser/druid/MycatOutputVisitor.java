@@ -2,6 +2,7 @@ package org.opencloudb.manager.parser.druid;
 
 import java.util.List;
 
+import org.opencloudb.manager.parser.druid.statement.MycatChecksumTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
@@ -27,6 +28,18 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public void endVisit(MycatCheckTbStructConsistencyStatement stmt) {
+		
+	}
+
+	@Override
+	public boolean visit(MycatChecksumTableStatement stmt) {
+		print("CHECKSUM TABLE ");
+		stmt.getTableName().accept(this);
+		return false;
+	}
+
+	@Override
+	public void endVisit(MycatChecksumTableStatement stmt) {
 		
 	}
 

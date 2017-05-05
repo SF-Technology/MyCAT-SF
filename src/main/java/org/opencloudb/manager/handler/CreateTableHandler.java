@@ -69,7 +69,7 @@ public class CreateTableHandler {
 			String upperTableName = tableName.toUpperCase();
 			String primaryKey = stmt.getPrimaryKey() == null ? null : ((SQLCharExpr)stmt.getPrimaryKey()).getText();
 			boolean autoIncrement = false;
-			boolean needAddLimit = true;
+			boolean needAddLimit = stmt.isNeedAddLimit();
 			int tableType = stmt.isGlobal() ? TableConfig.TYPE_GLOBAL_TABLE : TableConfig.TYPE_GLOBAL_DEFAULT;
 			String dataNode = ((SQLCharExpr)stmt.getDataNodes()).getText();
 			String ruleName = stmt.getRule() == null ? null : ((SQLCharExpr)stmt.getRule()).getText();

@@ -126,8 +126,8 @@ public class SchemaJAXB {
 				if(tableConf.isGlobalTable()) {
 					table.setType("global");
 				}
-				if(tableConf.isNeedAddLimit()) {
-					table.setNeedAddLimit(new Boolean(true));
+				if(!tableConf.isNeedAddLimit()) {
+					table.setNeedAddLimit(new Boolean(false));
 				}
 				return table;
 			} 
@@ -215,8 +215,6 @@ public class SchemaJAXB {
                 private String joinKey;
                 @XmlAttribute(required = true)
                 private String parentKey;
-                @XmlAttribute
-                private Boolean needAddLimit;
                 
                 private List<ChildTable> childTable = new ArrayList<ChildTable>();
                 
@@ -230,9 +228,6 @@ public class SchemaJAXB {
                 	}
                 	if(tableConf.getPrimaryKey() != null) {
                 		childTable.setPrimaryKey(tableConf.getPrimaryKey().toLowerCase());
-                	}
-                	if(tableConf.isNeedAddLimit()) {
-                		childTable.setNeedAddLimit(new Boolean(true));
                 	}
                 	return childTable;
                 }
@@ -277,15 +272,6 @@ public class SchemaJAXB {
 					this.autoIncrement = autoIncrement;
 				}
 				
-
-				public Boolean getNeedAddLimit() {
-					return needAddLimit;
-				}
-
-				public void setNeedAddLimit(Boolean needAddLimit) {
-					this.needAddLimit = needAddLimit;
-				}
-
 				public List<ChildTable> getChildTable() {
 					return childTable;
 				}

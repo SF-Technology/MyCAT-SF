@@ -21,7 +21,7 @@ public class MycatCreateTableStatement extends MycatStatementImpl implements SQL
 	private SQLExpr dataNodes;
 	private SQLExpr rule;
 	private SQLName schema;
-	private boolean needAddLimit;
+	private boolean needAddLimit = true; // needAddLimit默认为true, 参考XMLSchemaLoader
 	
 	@Override
 	public void accept0(MycatASTVisitor visitor) {

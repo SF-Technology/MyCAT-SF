@@ -41,6 +41,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
     private long endTime = 0L;
     private final long ttl ;
     private long sqlExecTime = 0L;
+    private AtomicLong countInMaxAllowExecuteSqlTime = new AtomicLong(0);
     public SQLRecord(final long timeout){
         this.ttl = timeout;
     }
@@ -74,6 +75,15 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
 
     public void setExecutionTimes(AtomicLong executionTimes) {
         this.executionTimes = executionTimes;
+    }
+
+
+    public AtomicLong getCountInMaxAllowExecuteSqlTime() {
+        return countInMaxAllowExecuteSqlTime;
+    }
+
+    public void setCountInMaxAllowExecuteSqlTime(AtomicLong countInMaxAllowExecuteSqlTime) {
+        this.countInMaxAllowExecuteSqlTime = countInMaxAllowExecuteSqlTime;
     }
 
 

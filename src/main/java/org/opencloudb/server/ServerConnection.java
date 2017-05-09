@@ -29,8 +29,8 @@ import java.nio.channels.NetworkChannel;
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.SchemaConfig;
-import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.server.handler.InformationSchemaHandler;
@@ -266,8 +266,9 @@ public class ServerConnection extends FrontendConnection {
 			return;
 		}
 		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
-		SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
-		int enableSQLFirewall = systemConfig.getEnableSQLFirewall();
+		FirewallConfig firewallConf = MycatServer.getInstance().getConfig().getFirewall();
+
+		int enableSQLFirewall = firewallConf.getEnableSQLFirewall();
 		/**
 		 * 
 		 * sql 语句拦截
@@ -276,14 +277,14 @@ public class ServerConnection extends FrontendConnection {
 		 */
 		if(enableSQLFirewall >= 0) {
 			if (sqlFirewallServer.sqlMatcher(sql)) {
-				if (systemConfig.enableSQLFirewall == 1) {
+				if (enableSQLFirewall == 1) {
 					writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
 					return;
 				}
-				if (systemConfig.enableSQLFirewall == 2) {
+				if (enableSQLFirewall == 2) {
 					sqlFirewallServer.recordSQLReporter(sql, "sql exists in the blacklist.!".toUpperCase());
 				}
-				if (systemConfig.enableSQLFirewall == 0) {
+				if (enableSQLFirewall == 0) {
 					LOGGER.warn("'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
 				}
 			}

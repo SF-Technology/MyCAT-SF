@@ -23,6 +23,7 @@
  */
 package org.opencloudb;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -37,13 +38,16 @@ import org.opencloudb.config.loader.xml.XMLSchemaLoader;
 import org.opencloudb.config.model.DBHostConfig;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.DataNodeConfig;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
 import org.opencloudb.config.util.ConfigException;
 import org.opencloudb.jdbc.JDBCDatasource;
 import org.opencloudb.mysql.nio.MySQLDataSource;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 import org.opencloudb.sequence.handler.IncrSequenceTimeHandler;
 import org.opencloudb.sequence.handler.IncrSequenceMySQLHandler;
 
@@ -52,20 +56,26 @@ import org.opencloudb.sequence.handler.IncrSequenceMySQLHandler;
  */
 public class ConfigInitializer {
 	private volatile SystemConfig system;
+	private volatile FirewallConfig firewall;
 	private volatile MycatCluster cluster;
 	private volatile QuarantineConfig quarantine;
 	private volatile Map<String, UserConfig> users;
 	private volatile Map<String, SchemaConfig> schemas;
 	private volatile Map<String, PhysicalDBNode> dataNodes;
 	private volatile Map<String, PhysicalDBPool> dataHosts;
+	
+	private Map<String, TableRuleConfig> tableRules;
+	private Map<String, AbstractPartitionAlgorithm> functions;
 
 	public ConfigInitializer(boolean loadDataHost) {
 		SchemaLoader schemaLoader = new XMLSchemaLoader();
 		XMLConfigLoader configLoader = new XMLConfigLoader(schemaLoader);
 		schemaLoader = null;
 		this.system = configLoader.getSystemConfig();
+		this.firewall = configLoader.getFirewallConfig();
 		this.users = configLoader.getUserConfigs();
 		this.schemas = configLoader.getSchemaConfigs();
+		initMapFileFolder();
         if(loadDataHost)
         {
             this.dataHosts = initDataHosts(configLoader);
@@ -79,7 +89,10 @@ public class ConfigInitializer {
 		if(system.getSequnceHandlerType()==SystemConfig.SEQUENCEHANDLER_LOCAL_TIME){
 			IncrSequenceTimeHandler.getInstance().load();
         }
-
+		
+		this.tableRules = configLoader.getTableRules();
+		this.functions = configLoader.getFunctions();
+		
 		this.checkConfig();
 	}
 
@@ -109,9 +122,34 @@ public class ConfigInitializer {
 			}
 		}
 	}
+	
+	/**
+	 * 如果classpath下面没有保存mapfile的文件夹，则新建
+	 */
+	private void initMapFileFolder() {
+		String classPath = SystemConfig.class.getClassLoader().getResource("").getPath().trim();
+		String folderPath = null;
+		
+		switch (classPath.charAt(classPath.length() - 1)) {
+		case '\\':
+		case '/':
+			folderPath = classPath + SystemConfig.getMapFileFolder();
+			break;
+
+		default:
+			folderPath = classPath + File.separatorChar + SystemConfig.getMapFileFolder();
+			break;
+		}
+		
+		new File(folderPath).mkdirs(); // 如果classpath下面没有MAP_FILE_FOLDER文件夹，则新建
+	}
 
 	public SystemConfig getSystem() {
 		return system;
+	}
+	
+	public FirewallConfig getFirewall() {
+		return firewall;
 	}
 
 	public MycatCluster getCluster() {
@@ -136,6 +174,14 @@ public class ConfigInitializer {
 
 	public Map<String, PhysicalDBPool> getDataHosts() {
 		return this.dataHosts;
+	}
+	
+	public Map<String, TableRuleConfig> getTableRules() {
+		return tableRules;
+	}
+
+	public Map<String, AbstractPartitionAlgorithm> getFunctions() {
+		return functions;
 	}
 
 	private MycatCluster initCobarCluster(ConfigLoader configLoader) {

@@ -70,7 +70,9 @@ public class XMLRuleLoader {
 				.emptyMap() : tableRules);
 	}
 
-	
+	public Map<String, AbstractPartitionAlgorithm> getFunctions() {
+		return (Map<String, AbstractPartitionAlgorithm>) (functions.isEmpty() ? Collections.emptyMap() : functions);
+	}
 
 	
 	private void load(String dtdFile, String xmlFile) {
@@ -121,6 +123,7 @@ public class XMLRuleLoader {
 							+ name);
 				}
 				RuleConfig rule = loadRule((Element) ruleNodes.item(0));
+				rule.setName(name);
 				String funName = rule.getFunctionName();
 				AbstractPartitionAlgorithm func = functions.get(funName);
 				if (func == null) {

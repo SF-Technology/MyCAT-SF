@@ -45,14 +45,14 @@ public class PartitionByMod extends AbstractPartitionAlgorithm implements RuleAl
 	private int count;
 	@Override
 	public void init() {
-	
-		
 	}
-
-
 
 	public void setCount(int count) {
 		this.count = count;
+	}
+	
+	public int getCount() {
+		return count;
 	}
 
 	@Override
@@ -60,6 +60,11 @@ public class PartitionByMod extends AbstractPartitionAlgorithm implements RuleAl
 		columnValue = NumberParseUtil.eliminateQoute(columnValue);
 	BigInteger bigNum = new BigInteger(columnValue).abs();
 	 return (bigNum.mod(BigInteger.valueOf(count))).intValue();
+	}
+	
+	@Override
+	public int requiredNodeNum() {
+		return count;
 	}
 
 	private static void hashTest(){

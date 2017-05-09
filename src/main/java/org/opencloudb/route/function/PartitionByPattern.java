@@ -24,12 +24,16 @@
 package org.opencloudb.route.function;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
+import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.rule.RuleAlgorithm;
+import org.opencloudb.route.function.AutoPartitionByLong.LongRange;
 
 /**
  * auto partition by Long
@@ -49,13 +53,25 @@ public class PartitionByPattern extends AbstractPartitionAlgorithm implements Ru
 
 		initialize();
 	}
+	
+	public String getMapFile() {
+		return mapFile;
+	}
 
 	public void setMapFile(String mapFile) {
 		this.mapFile = mapFile;
 	}
+	
+	public int getPatternValue() {
+		return patternValue;
+	}
 
 	public void setPatternValue(int patternValue) {
 		this.patternValue = patternValue;
+	}
+	
+	public int getDefaultNode() {
+		return defaultNode;
 	}
 
 	public void setDefaultNode(int defaultNode) {
@@ -77,6 +93,15 @@ public class PartitionByPattern extends AbstractPartitionAlgorithm implements Ru
 		}
 		return rst;
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		int maxNodeIndex = -1;
+		for (LongRange range : longRongs) {
+			maxNodeIndex = maxNodeIndex > range.nodeIndx ? maxNodeIndex : range.nodeIndx;
+		}
+		return maxNodeIndex;
+	}
 
 	public static boolean isNumeric(String str) {
 		return pattern.matcher(str).matches();
@@ -86,8 +111,8 @@ public class PartitionByPattern extends AbstractPartitionAlgorithm implements Ru
 		BufferedReader in = null;
 		try {
 			// FileInputStream fin = new FileInputStream(new File(fileMapPath));
-			InputStream fin = this.getClass().getClassLoader()
-					.getResourceAsStream(mapFile);
+			InputStream fin = SystemConfig.class.getClassLoader()
+					.getResourceAsStream(SystemConfig.getMapFileFolder() + File.separatorChar + mapFile);
 			if (fin == null) {
 				throw new RuntimeException("can't find class resource file "
 						+ mapFile);

@@ -31,6 +31,8 @@ import org.opencloudb.route.function.AbstractPartitionAlgorithm;
  * @author mycat
  */
 public class RuleConfig {
+	
+	private String name;
 	private final String column;
 	private final String functionName;
 	private AbstractPartitionAlgorithm ruleAlgorithm;
@@ -71,6 +73,17 @@ public class RuleConfig {
 		return functionName;
 	}
 
-	
+
+
+	public String getName() {
+		return name;
+	}
+
+
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 
 }

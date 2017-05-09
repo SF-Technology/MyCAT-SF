@@ -15,6 +15,9 @@ public class PartitionByHashMod extends AbstractPartitionAlgorithm implements Ru
     private boolean watch = false;
     private int count;
 
+    public int getCount() {
+    	return count;
+    }
     public void setCount(int count) {
         this.count = count;
         if ((count & (count - 1)) == 0) {
@@ -49,6 +52,11 @@ public class PartitionByHashMod extends AbstractPartitionAlgorithm implements Ru
             return bigNum.intValue() & (count - 1);
         }
         return (bigNum.mod(BigInteger.valueOf(count))).intValue();
+    }
+    
+    @Override
+	public int requiredNodeNum() {
+    	return count;
     }
 
     @Override

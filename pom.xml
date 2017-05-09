@@ -231,6 +231,12 @@
 					<exclude>**/.svn/**</exclude>
 				</excludes>
 			</testResource>
+			<testResource>
+				<directory>src/test/java</directory>
+				<includes>
+					<include>**/*.txt</include>
+				</includes>
+			</testResource>
 		</testResources>
 		<pluginManagement>
 			<plugins>

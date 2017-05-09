@@ -224,7 +224,7 @@ public abstract class FrontendConnection extends AbstractConnection {
 		}
 		
 		Set<String> schemas = privileges.getUserSchemas(user);
-		if (schemas == null || schemas.size() == 0 || schemas.contains(db)) {
+		if (schemas.contains(db)) {
 			this.schema = db;
 			write(writeToBuffer(OkPacket.OK, allocate()));
 		} else {

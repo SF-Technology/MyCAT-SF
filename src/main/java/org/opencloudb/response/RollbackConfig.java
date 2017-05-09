@@ -36,8 +36,10 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 
 /**
  * @author mycat
@@ -74,6 +76,8 @@ public final class RollbackConfig {
 		Map<String, SchemaConfig> schemas = conf.getBackupSchemas();
 		Map<String, PhysicalDBNode> dataNodes = conf.getBackupDataNodes();
 		Map<String, PhysicalDBPool> dataHosts = conf.getBackupDataHosts();
+		Map<String, TableRuleConfig> tableRules = conf.getBackupTableRules();
+		Map<String, AbstractPartitionAlgorithm> functions = conf.getBackupFunctions();
 		MycatCluster cluster = conf.getBackupCluster();
 		QuarantineConfig quarantine = conf.getBackupQuarantine();
 
@@ -102,7 +106,9 @@ public final class RollbackConfig {
 		}
 
 		// 应用回滚
-		conf.rollback(users, schemas, dataNodes, dataHosts, cluster, quarantine);
+		conf.rollback(users, schemas, dataNodes, dataHosts,
+				tableRules, functions, 
+				cluster, quarantine);
 
 		// 处理旧的资源
 		for (PhysicalDBPool dn : cNodes.values()) {

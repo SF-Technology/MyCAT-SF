@@ -23,6 +23,7 @@
  */
 package org.opencloudb.response;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,7 +31,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import org.apache.log4j.Logger;
 import org.opencloudb.ConfigInitializer;
 import org.opencloudb.MycatCluster;
@@ -42,9 +42,11 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
 import org.opencloudb.config.util.DnPropertyUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 
 /**
  * @author mycat
@@ -75,10 +77,12 @@ public final class ReloadConfig {
 	private static boolean reload_all() {
 		// 载入新的配置
 		ConfigInitializer loader = new ConfigInitializer(true);
-		Map<String, UserConfig> users = loader.getUsers();
-		Map<String, SchemaConfig> schemas = loader.getSchemas();
-		Map<String, PhysicalDBNode> dataNodes = loader.getDataNodes();
-		Map<String, PhysicalDBPool> dataHosts = loader.getDataHosts();
+		Map<String, UserConfig> users = new HashMap<String, UserConfig>(loader.getUsers());
+		Map<String, SchemaConfig> schemas = new HashMap<String, SchemaConfig>(loader.getSchemas());
+		Map<String, PhysicalDBNode> dataNodes = new HashMap<String, PhysicalDBNode>(loader.getDataNodes());
+		Map<String, PhysicalDBPool> dataHosts = new HashMap<String, PhysicalDBPool>(loader.getDataHosts());
+		Map<String, TableRuleConfig> tableRules = loader.getTableRules();
+		Map<String, AbstractPartitionAlgorithm> functions = loader.getFunctions();
 		MycatCluster cluster = loader.getCluster();
 		QuarantineConfig quarantine = loader.getQuarantine();
 
@@ -116,7 +120,9 @@ public final class ReloadConfig {
 		}
 
 		// 应用重载
-		conf.reload(users, schemas, dataNodes, dataHosts, cluster, quarantine,true);
+		conf.reload(users, schemas, dataNodes, dataHosts, 
+				tableRules, functions, 
+				cluster, quarantine,true);
 
 		// 处理旧的资源
 		for (PhysicalDBPool dn : cNodes.values()) {
@@ -125,7 +131,7 @@ public final class ReloadConfig {
 		}
 
 		//清理缓存
-		 MycatServer.getInstance().getCacheService().clearCache();
+		MycatServer.getInstance().getCacheService().clearCache();
 		return true;
 	}
 
@@ -136,6 +142,8 @@ public final class ReloadConfig {
         Map<String, SchemaConfig> schemas = loader.getSchemas();
         Map<String, PhysicalDBNode> dataNodes = loader.getDataNodes();
         Map<String, PhysicalDBPool> dataHosts = loader.getDataHosts();
+        Map<String, TableRuleConfig> tableRules = loader.getTableRules();
+        Map<String, AbstractPartitionAlgorithm> functions = loader.getFunctions();
         MycatCluster cluster = loader.getCluster();
         QuarantineConfig quarantine = loader.getQuarantine();
 
@@ -144,7 +152,9 @@ public final class ReloadConfig {
         MycatConfig conf = instance.getConfig();
 
         // 应用重载
-        conf.reload(users, schemas, dataNodes, dataHosts, cluster, quarantine,false);
+        conf.reload(users, schemas, dataNodes, dataHosts, 
+        		tableRules, functions, 
+        		cluster, quarantine,false);
 
 
         //清理缓存

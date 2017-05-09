@@ -120,6 +120,9 @@ public class MySQLHeartbeat extends DBHeartbeat {
 		final ReentrantLock lock = this.lock;
 		lock.lock();
 		try {
+			if (isStop()) {
+				return; // 确保一旦调用stop方法停止heartbeat后就不会执行heartbeat任务
+			}
 			if (isChecking.compareAndSet(false, true)) {
 				MySQLDetector detector = this.detector;
 				if (detector == null || detector.isQuit()) {

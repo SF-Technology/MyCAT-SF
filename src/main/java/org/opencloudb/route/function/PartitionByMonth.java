@@ -78,6 +78,11 @@ public class PartitionByMonth extends AbstractPartitionAlgorithm implements
 			throw new java.lang.IllegalArgumentException(e);
 		}
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		return nPartition;
+	}
 
 	@Override
 	public Integer[] calculateRange(String beginValue, String endValue) {
@@ -85,12 +90,24 @@ public class PartitionByMonth extends AbstractPartitionAlgorithm implements
 				beginValue, endValue);
 	}
 
+	public String getsBeginDate() {
+		return sBeginDate;
+	}
+	
 	public void setsBeginDate(String sBeginDate) {
 		this.sBeginDate = sBeginDate;
+	}
+	
+	public String getDateFormat() {
+		return dateFormat;
 	}
 
 	public void setDateFormat(String dateFormat) {
 		this.dateFormat = dateFormat;
+	}
+	
+	public String getsEndDate() {
+		return sEndDate;
 	}
 
 	public void setsEndDate(String sEndDate) {

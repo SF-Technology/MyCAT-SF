@@ -30,10 +30,13 @@ import org.opencloudb.config.loader.SchemaLoader;
 import org.opencloudb.config.model.ClusterConfig;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.DataNodeConfig;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 
 /**
  * @author mycat
@@ -47,20 +50,27 @@ public class XMLConfigLoader implements ConfigLoader {
     /** unmodifiable */
     private final Map<String, SchemaConfig> schemas;
     private final SystemConfig system;
+    private final FirewallConfig firewall;
     /** unmodifiable */
     private final Map<String, UserConfig> users;
     private final QuarantineConfig quarantine;
     private final ClusterConfig cluster;
+    
+    private final Map<String, TableRuleConfig> tableRules;
+    private final Map<String, AbstractPartitionAlgorithm> functions;
 
     public XMLConfigLoader(SchemaLoader schemaLoader) {
         XMLServerLoader serverLoader = new XMLServerLoader();
         this.system = serverLoader.getSystem();
+        this.firewall = serverLoader.getFirewall();
         this.users = serverLoader.getUsers();
         this.quarantine = serverLoader.getQuarantine();
         this.cluster = serverLoader.getCluster();
         this.dataHosts = schemaLoader.getDataHosts();
         this.dataNodes = schemaLoader.getDataNodes();
         this.schemas = schemaLoader.getSchemas();
+        this.tableRules = schemaLoader.getTableRules();
+        this.functions = schemaLoader.getFunctions();
         schemaLoader = null;
     }
 
@@ -88,6 +98,12 @@ public class XMLConfigLoader implements ConfigLoader {
     public SystemConfig getSystemConfig() {
         return system;
     }
+    
+    @Override
+    public FirewallConfig getFirewallConfig() {
+    	return firewall;
+    }
+    
     @Override
     public Map<String, SchemaConfig> getSchemaConfigs() {
         return schemas;
@@ -107,5 +123,15 @@ public class XMLConfigLoader implements ConfigLoader {
     public SchemaConfig getSchemaConfig(String schema) {
         return schemas.get(schema);
     }
+
+	@Override
+	public Map<String, TableRuleConfig> getTableRules() {
+		return tableRules;
+	}
+
+	@Override
+	public Map<String, AbstractPartitionAlgorithm> getFunctions() {
+		return functions;
+	}
 
 }

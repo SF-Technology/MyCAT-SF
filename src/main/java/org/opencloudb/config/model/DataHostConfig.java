@@ -51,7 +51,7 @@ public class DataHostConfig {
 	private final String dbDriver;
 	private final DBHostConfig[] writeHosts;
 	private final Map<Integer, DBHostConfig[]> readHosts;
-	private String hearbeatSQL;
+	private String hearbeatSQL = "select user()";
     private boolean isShowSlaveSql=false;
     private boolean isShowClusterSql=false;
 	private String connectionInitSql;

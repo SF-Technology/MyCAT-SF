@@ -1,0 +1,5 @@
+create user usr02
+password = 'abcdefg';
+
+create user usr03
+schemas = 'testdb, testdb1';

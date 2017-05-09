@@ -1,0 +1,12 @@
+-- 没有提供datanode命名的情况
+create datanode 
+datahost = "dh1"
+database = 'db1';
+
+-- 没有提供datahost的情况
+create datanode dn1
+database = 'db1';
+
+-- 没有提供database的情况
+create datanode dn1
+datahost = 'dh1';

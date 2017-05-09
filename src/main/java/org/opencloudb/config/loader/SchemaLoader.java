@@ -28,14 +28,16 @@ import java.util.Map;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.DataNodeConfig;
 import org.opencloudb.config.model.SchemaConfig;
-import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 
 /**
  * @author mycat
  */
 public interface SchemaLoader {
     Map<String, TableRuleConfig> getTableRules();
+    
+    Map<String, AbstractPartitionAlgorithm> getFunctions();
 
     Map<String, DataHostConfig> getDataHosts();
 

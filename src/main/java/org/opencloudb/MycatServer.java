@@ -444,6 +444,43 @@ public class MycatServer {
 		}
 
 	}
+	
+	/**
+	 * 删除dnindex.properties文件中的dataHost属性
+	 * @param dataHost
+	 */
+	public synchronized void removeDataHostIndex(String dataHost) {
+
+		File file = new File(SystemConfig.getHomePath(), "conf"
+				+ File.separator + "dnindex.properties");
+		FileOutputStream fileOut = null;
+		try {
+			if (dnIndexProperties.containsKey(dataHost)) {
+				dnIndexProperties.remove(dataHost);
+				LOGGER.info("remove DataHost index  " + dataHost);
+			}
+
+			File parent = file.getParentFile();
+			if (parent != null && !parent.exists()) {
+				parent.mkdirs();
+			}
+
+			fileOut = new FileOutputStream(file);
+			dnIndexProperties.store(fileOut, "update");
+		} catch (Exception e) {
+			LOGGER.warn("drop DataNodeIndex err:", e);
+		} finally {
+			if (fileOut != null) {
+				try {
+					fileOut.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+
+	}
+	
+	
 
 	public RouteService getRouterService() {
 		return routerService;

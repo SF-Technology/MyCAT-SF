@@ -56,10 +56,11 @@
 		<property name="limitConcurrentQuery">0</property>
 	</system>
 
-	<user name="test">
+	<!-- 定义迁移到 user.xml -->
+	<!-- <user name="test">
 		<property name="password">test</property>
 		<property name="schemas">testdb</property>
-	</user>
+	</user> -->
 
 	<sqlwall>
 		<!-- SQL 防火墙总开关 -1 关闭防火墙，关闭拦截, 0开启防火墙 关闭拦截，不记录直接打印警告信息，1开启防火墙，打开拦截，2 开启防火墙，关闭拦截，并记录拦截信息-->

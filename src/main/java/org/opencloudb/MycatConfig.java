@@ -28,6 +28,7 @@ import java.net.StandardSocketOptions;
 import java.nio.channels.NetworkChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -35,11 +36,14 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.backend.PhysicalDBPool;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.model.rule.TableRuleConfig;
 import org.opencloudb.net.AbstractConnection;
+import org.opencloudb.route.function.AbstractPartitionAlgorithm;
 import org.opencloudb.util.TimeUtil;
 
 /**
@@ -51,6 +55,7 @@ public class MycatConfig {
     private static final int RELOAD_ALL = 3;
 
 	private volatile SystemConfig system;
+	private volatile FirewallConfig firewall;
 	private volatile MycatCluster cluster;
 	private volatile MycatCluster _cluster;
 	private volatile QuarantineConfig quarantine;
@@ -70,21 +75,31 @@ public class MycatConfig {
 
 	private ConcurrentHashMap<String,Map<String,String>> tableIndexMap = null;
 
+	private Map<String, TableRuleConfig> tableRules;
+	private Map<String, TableRuleConfig> _tableRules;
+	private Map<String, AbstractPartitionAlgorithm> functions;
+	private Map<String, AbstractPartitionAlgorithm> _functions;
 
 	public MycatConfig() {
 		ConfigInitializer confInit = new ConfigInitializer(true);
 		this.system = confInit.getSystem();
-		this.users = confInit.getUsers();
-		this.schemas = confInit.getSchemas();
-		this.dataHosts = confInit.getDataHosts();
+		this.firewall = confInit.getFirewall();
+		this.users = new HashMap<String, UserConfig>(confInit.getUsers());
+		this.schemas = new HashMap<String, SchemaConfig>(confInit.getSchemas());
+		this.dataHosts = new HashMap<String, PhysicalDBPool>(confInit.getDataHosts());
 
-		this.dataNodes = confInit.getDataNodes();
+		this.dataNodes = new HashMap<String, PhysicalDBNode>(confInit.getDataNodes());
 		for (PhysicalDBPool dbPool : dataHosts.values()) {
 			dbPool.setSchemas(getDataNodeSchemasOfDataHost(dbPool.getHostName()));
 		}
 		this.quarantine = confInit.getQuarantine();
 		this.cluster = confInit.getCluster();
-
+		
+		this.tableRules = confInit.getTableRules();
+		this.functions = confInit.getFunctions();
+		
+		initRootUser();
+		
 		this.reloadTime = TimeUtil.currentTimeMillis();
 		this.rollbackTime = -1L;
 		this.status = RELOAD;
@@ -93,11 +108,23 @@ public class MycatConfig {
 		this.tableIndexMap = new ConcurrentHashMap<String, Map<String, String>>();
 	}
 	
+	/**
+	 * 初始化built-in root用户
+	 */
+	private void initRootUser() {
+		UserConfig rootUserConf = new UserConfig();
+		rootUserConf.setName(system.getRootUser());
+		rootUserConf.setPassword(system.getRootPassword());
+		rootUserConf.setSchemas(new HashSet<String>(schemas.keySet()));
+		this.users.put(system.getRootUser(), rootUserConf);
+	}
 	
-	
-
 	public SystemConfig getSystem() {
 		return system;
+	}
+	
+	public FirewallConfig getFirewall() {
+		return firewall;
 	}
 
 	public ConcurrentHashMap<String,Map<String,String>> getTableIndexMap() {
@@ -193,6 +220,22 @@ public class MycatConfig {
 	public QuarantineConfig getBackupQuarantine() {
 		return _quarantine;
 	}
+	
+	public Map<String, TableRuleConfig> getTableRules() {
+		return tableRules;
+	}
+	
+	public Map<String, TableRuleConfig> getBackupTableRules() {
+		return _tableRules;
+	}
+	
+	public Map<String, AbstractPartitionAlgorithm> getFunctions() {
+		return functions;
+	}
+	
+	public Map<String, AbstractPartitionAlgorithm> getBackupFunctions() {
+		return _functions;
+	}
 
 	public ReentrantLock getLock() {
 		return lock;
@@ -205,20 +248,26 @@ public class MycatConfig {
 	public long getRollbackTime() {
 		return rollbackTime;
 	}
-
+	
 	public void reload(Map<String, UserConfig> users,
 			Map<String, SchemaConfig> schemas,
 			Map<String, PhysicalDBNode> dataNodes,
-			Map<String, PhysicalDBPool> dataHosts, MycatCluster cluster,
+			Map<String, PhysicalDBPool> dataHosts, 
+			Map<String, TableRuleConfig> tableRules,
+			Map<String, AbstractPartitionAlgorithm> functions,
+			MycatCluster cluster,
 			QuarantineConfig quarantine,boolean reloadAll) {
-		apply(users, schemas, dataNodes, dataHosts, cluster, quarantine,reloadAll);
+		apply(users, schemas, dataNodes, dataHosts, 
+				tableRules, functions,
+				cluster, quarantine,reloadAll);
 		this.reloadTime = TimeUtil.currentTimeMillis();
 		this.status = reloadAll?RELOAD_ALL:RELOAD;
 	}
 
 	public boolean canRollback() {
 		if (_users == null || _schemas == null || _dataNodes == null
-				|| _dataHosts == null || _cluster == null
+				|| _dataHosts == null || _tableRules == null
+				|| _functions == null || _cluster == null
 				|| _quarantine == null || status == ROLLBACK) {
 			return false;
 		} else {
@@ -229,9 +278,14 @@ public class MycatConfig {
 	public void rollback(Map<String, UserConfig> users,
 			Map<String, SchemaConfig> schemas,
 			Map<String, PhysicalDBNode> dataNodes,
-			Map<String, PhysicalDBPool> dataHosts, MycatCluster cluster,
+			Map<String, PhysicalDBPool> dataHosts, 
+			Map<String, TableRuleConfig> tableRules,
+			Map<String, AbstractPartitionAlgorithm> functions,
+			MycatCluster cluster,
 			QuarantineConfig quarantine) {
-		apply(users, schemas, dataNodes, dataHosts, cluster, quarantine,status==RELOAD_ALL);
+		apply(users, schemas, dataNodes, dataHosts, 
+				tableRules, functions,
+				cluster, quarantine,status==RELOAD_ALL);
 		this.rollbackTime = TimeUtil.currentTimeMillis();
 		this.status = ROLLBACK;
 	}
@@ -239,7 +293,10 @@ public class MycatConfig {
 	private void apply(Map<String, UserConfig> users,
 			Map<String, SchemaConfig> schemas,
 			Map<String, PhysicalDBNode> dataNodes,
-			Map<String, PhysicalDBPool> dataHosts, MycatCluster cluster,
+			Map<String, PhysicalDBPool> dataHosts,
+			Map<String, TableRuleConfig> tableRules,
+			Map<String, AbstractPartitionAlgorithm> functions,
+			MycatCluster cluster,
 			QuarantineConfig quarantine,boolean isLoadAll) {
 		final ReentrantLock lock = this.lock;
 		lock.lock();

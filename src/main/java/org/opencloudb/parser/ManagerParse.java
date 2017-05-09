@@ -51,6 +51,8 @@ public final class ManagerParse {
 	public static final int DELETE= 17;
 	public static final int CHECKSUM = 18;
 
+	public static final int MYCAT_CONFIG = 100;
+	
 	public static int parse(String stmt) {
 		for (int i = 0; i < stmt.length(); i++) {
 			switch (stmt.charAt(i)) {
@@ -90,15 +92,15 @@ public final class ManagerParse {
 			case 'D':
 			case 'd':
 				return dCheck(stmt, i);
+			case 'M':
+			case 'm':
+				return mCheck(stmt, i);
 			default:
 				return OTHER;
 			}
 		}
 		return OTHER;
 	}
-
-
-
 
 	/**
 	 * SQL update
@@ -123,7 +125,7 @@ public final class ManagerParse {
 		}
 		return OTHER;
 	}
-
+	
 	/**
 	 * SQL update
 	 * @param stmt
@@ -147,7 +149,7 @@ public final class ManagerParse {
 		}
 		return OTHER;
 	}
-
+	
 	/**
 	 * SQL insert
 	 * @param stmt
@@ -177,11 +179,10 @@ public final class ManagerParse {
 		String thePart = stmt.substring(offset).toUpperCase();
 		if (thePart.startsWith("LOG @@")) {
 			return LOGFILE;
-		} else {
-			return OTHER;
 		}
+		return OTHER;
 	}
-
+	
 	// config file check
 	private static int fCheck(String stmt, int offset) {
 		String thePart = stmt.substring(offset).toUpperCase();
@@ -334,7 +335,7 @@ public final class ManagerParse {
 		}
 		return OTHER;
 	}
-
+	
 	private static int seCheck(String stmt, int offset) {
 		if (stmt.length() > ++offset) {
 			switch (stmt.charAt(offset)) {
@@ -539,6 +540,33 @@ public final class ManagerParse {
 						return (offset << 8) | KILL_CONN;
 					}
 				}
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int mCheck(String stmt, int offset) {
+		if(stmt.length() > "MYCAT_CONFIG ".length()) {
+			char c1 = stmt.charAt(++offset); // Y
+			char c2 = stmt.charAt(++offset); // C
+			char c3 = stmt.charAt(++offset); // A
+			char c4 = stmt.charAt(++offset); // T
+			char c5 = stmt.charAt(++offset); // _
+			char c6 = stmt.charAt(++offset); // C
+			char c7 = stmt.charAt(++offset); // O
+			char c8 = stmt.charAt(++offset); // N
+			char c9 = stmt.charAt(++offset); // F
+			char c10 = stmt.charAt(++offset); // I
+			char c11 = stmt.charAt(++offset); // G
+			char c12 = stmt.charAt(++offset);
+			if((c1 == 'Y' || c1 == 'y') && (c2 == 'C' || c2 == 'c')
+					&& (c3 == 'A' || c3 == 'a') && (c4 == 'T' || c4 == 't')
+					&& (c5 == '_') && (c6 == 'C' || c6 == 'c') 
+					&& (c7 == 'O' || c7 == 'o') && (c8 == 'N' || c8 == 'n')
+					&& (c9 == 'F' || c9 == 'f') && (c10 == 'I' || c10 == 'i')
+					&& (c11 == 'G' || c11 == 'g')
+					&& (c12 == ' ' || c12 == '\t' || c12 == '\r' || c12 == '\n'))  {
+				return (offset << 8) | MYCAT_CONFIG;
 			}
 		}
 		return OTHER;

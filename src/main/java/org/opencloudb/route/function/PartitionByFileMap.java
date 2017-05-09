@@ -24,11 +24,13 @@
 package org.opencloudb.route.function;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.rule.RuleAlgorithm;
 
 /**
@@ -65,12 +67,24 @@ public class PartitionByFileMap extends AbstractPartitionAlgorithm implements Ru
 		initialize();
 	}
 
+	public String getMapFile() {
+		return mapFile;
+	}
+	
 	public void setMapFile(String mapFile) {
 		this.mapFile = mapFile;
 	}
 	
+	public int getType() {
+		return type;
+	}
+	
 	public void setType(int type) {
 		this.type = type;
+	}
+	
+	public int getDefaultNode() {
+		return defaultNode;
 	}
 
 	public void setDefaultNode(int defaultNode) {
@@ -92,13 +106,24 @@ public class PartitionByFileMap extends AbstractPartitionAlgorithm implements Ru
 		}
 		return rst;
 	}
+	
+	@Override
+	public int requiredNodeNum() {
+		int maxNodeIndex = -1;
+		
+		for (int nodeIndex : app2Partition.values()) {
+			maxNodeIndex = maxNodeIndex > nodeIndex ? maxNodeIndex : nodeIndex;
+		}
+		
+		return maxNodeIndex;
+	}
 
 	private void initialize() {
 		BufferedReader in = null;
 		try {
 			// FileInputStream fin = new FileInputStream(new File(fileMapPath));
-			InputStream fin = this.getClass().getClassLoader()
-					.getResourceAsStream(mapFile);
+			InputStream fin = SystemConfig.class.getClassLoader()
+					.getResourceAsStream(SystemConfig.getMapFileFolder() + File.separatorChar + mapFile);
 			if (fin == null) {
 				throw new RuntimeException("can't find class resource file "
 						+ mapFile);

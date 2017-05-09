@@ -26,7 +26,7 @@ package org.opencloudb.server;
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
-import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.net.handler.FrontendQueryHandler;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.server.handler.*;
@@ -68,8 +68,8 @@ public class ServerQueryHandler implements FrontendQueryHandler {
 		/**
 		 * TODO 使用druid sql wall 模块 做 SQL check，不允许sql执行
 		 */
-		SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
-		int enableSQLFirewall = systemConfig.getEnableSQLFirewall();
+		FirewallConfig firewallConf = MycatServer.getInstance().getConfig().getFirewall();
+		int enableSQLFirewall = firewallConf.getEnableSQLFirewall();
 
 		/**enableSQLFirewall =-1 表示关闭防火墙，关闭拦截*/
 		if (enableSQLFirewall >= 0) {

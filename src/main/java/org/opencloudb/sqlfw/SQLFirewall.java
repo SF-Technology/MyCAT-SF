@@ -4,7 +4,7 @@ import com.alibaba.druid.wall.WallConfig;
 import com.alibaba.druid.wall.WallProvider;
 import com.alibaba.druid.wall.spi.MySqlWallProvider;
 import org.opencloudb.MycatServer;
-import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.config.model.FirewallConfig;
 
 /**
  * SQL 防火墙功能
@@ -21,165 +21,99 @@ public final  class SQLFirewall {
     private static final SQLFirewall sqlFirewall = new SQLFirewall();
 
     private SQLFirewall(){
-        SystemConfig systemConfig = MycatServer.getInstance().getConfig().getSystem();
+        FirewallConfig firewallConf = MycatServer.getInstance().getConfig().getFirewall();
         /**
          * 配置druid parser wall功能
          */
 
-
         /**
          * SQL 防火墙配置默认配置
          */
-
-        //selelctAllow = true
-        wallConfig.setSelelctAllow(systemConfig.isSelelctAllow());
-
         //selectAllColumnAllow = true;
-        wallConfig.setSelectAllColumnAllow(systemConfig.isSelectAllColumnAllow());
-
-        // selectIntoAllow = true;
-        wallConfig.setSelectIntoAllow(systemConfig.isSelectIntoAllow());
-
-        //deleteAllow = true;
-        wallConfig.setDeleteAllow(systemConfig.isDeleteAllow());
-
-        //updateAllow= true;
-        wallConfig.setUpdateAllow(systemConfig.isUpdateAllow());
-
-        //insertAllow = true;
-        wallConfig.setInsertAllow(systemConfig.isInsertAllow());
-
-        //callAllow = true;
-        wallConfig.setCallAllow(systemConfig.isCallAllow());
-
-        // setAllow = true;
-        wallConfig.setSetAllow(systemConfig.isSetAllow());
-
-        // truncateAllow = true
-        wallConfig.setTruncateAllow(systemConfig.isTruncateAllow());
-
-        // createTableAllow = true
-        wallConfig.setCreateTableAllow(systemConfig.isCreateTableAllow());
-
-        // alterTableAllow = true
-        wallConfig.setAlterTableAllow(systemConfig.isAlterTableAllow());
-
-        //dropTableAllow = true
-        wallConfig.setDropTableAllow(systemConfig.isDropTableAllow());
-        // commentAllow = true
-        wallConfig.setCommentAllow(systemConfig.isCommentAllow());
+        wallConfig.setSelectAllColumnAllow(firewallConf.isSelectAllColumnAllow());
 
         //noneBaseStatementAllow=true;
-        wallConfig.setNoneBaseStatementAllow(true);
-
-        //multiStatementAllow = false
-        wallConfig.setMultiStatementAllow(systemConfig.isMultiStatementAllow());
-
-        // useAllow = true
-        wallConfig.setUseAllow(systemConfig.isUseAllow());
-
-        //describeAllow = true
-        wallConfig.setDescribeAllow(systemConfig.isDescribeAllow());
-
-        //showAllow = true
-        wallConfig.setShowAllow(systemConfig.isShowAllow());
-
-        //commitAllow = true
-        wallConfig.setCommitAllow(systemConfig.isCommitAllow());
-
-        //rollbackAllow = true
-        wallConfig.setRollbackAllow(systemConfig.isRollbackAllow());
-
-
+        wallConfig.setNoneBaseStatementAllow(firewallConf.isNoneBaseStatementAllow());
 
         /**
          * 拦截配置－永真条件
          */
         //selectWhereAlwayTrueCheck = true;
         wallConfig.
-                setSelectWhereAlwayTrueCheck(systemConfig.isSelectWhereAlwayTrueCheck());
+                setSelectWhereAlwayTrueCheck(firewallConf.isSelectWhereAlwayTrueCheck());
         //selectHavingAlwayTrueCheck = true;
         wallConfig.
-                setSelectHavingAlwayTrueCheck(systemConfig.isSelectHavingAlwayTrueCheck());
-
+                setSelectHavingAlwayTrueCheck(firewallConf.isSelectHavingAlwayTrueCheck());
         //deleteWhereAlwayTrueCheck = true;
         wallConfig.
-                setDeleteWhereAlwayTrueCheck(systemConfig.isDeleteWhereAlwayTrueCheck());
-
+                setDeleteWhereAlwayTrueCheck(firewallConf.isDeleteWhereAlwayTrueCheck());
         //deleteWhereNoneCheck = false;
         wallConfig.
-                setDeleteWhereNoneCheck(systemConfig.isDeleteWhereNoneCheck());
-
+                setDeleteWhereNoneCheck(firewallConf.isDeleteWhereNoneCheck());
         //updateWhereAlayTrueCheck = true;
         wallConfig.
-                setUpdateWhereAlayTrueCheck(systemConfig.isUpdateWhereAlayTrueCheck());
+                setUpdateWhereAlayTrueCheck(firewallConf.isUpdateWhereAlayTrueCheck());
         //updateWhereNoneCheck = false;
         wallConfig.
-                setUpdateWhereNoneCheck(systemConfig.isUpdateWhereNoneCheck());
+                setUpdateWhereNoneCheck(firewallConf.isUpdateWhereNoneCheck());
         //conditionAndAlwayTrueAllow = false;
         wallConfig.
-                setConditionAndAlwayTrueAllow(systemConfig.isConditionAndAlwayTrueAllow());
+                setConditionAndAlwayTrueAllow(firewallConf.isConditionAndAlwayTrueAllow());
         //conditionAndAlwayFalseAllow = false;
         wallConfig.
-                setConditionAndAlwayFalseAllow(systemConfig.isConditionAndAlwayFalseAllow());
+                setConditionAndAlwayFalseAllow(firewallConf.isConditionAndAlwayFalseAllow());
         //conditionLikeTrueAllow = true;
         wallConfig.
-                setConditionLikeTrueAllow(systemConfig.isConditionLikeTrueAllow());
+                setConditionLikeTrueAllow(firewallConf.isConditionLikeTrueAllow());
 
         /**
          * 其他拦截配置
          */
         // selectIntoOutfileAllow = false;
         wallConfig.
-                setSelectIntoOutfileAllow(systemConfig.isSelectIntoOutfileAllow());
+                setSelectIntoOutfileAllow(firewallConf.isSelectIntoOutfileAllow());
         // selectUnionCheck = true;
         wallConfig.
-                setSelectUnionCheck(systemConfig.isSelectUnionCheck());
+                setSelectUnionCheck(firewallConf.isSelectUnionCheck());
         //selectMinusCheck = true ;
         wallConfig.
-                setSelectMinusCheck(systemConfig.isSelectMinusCheck());
+                setSelectMinusCheck(firewallConf.isSelectMinusCheck());
         //selectExceptChec = true ;
         wallConfig.
-                setSelectExceptCheck(systemConfig.isSelectExceptChec());
+                setSelectExceptCheck(firewallConf.isSelectExceptChec());
         //selectIntersectCheck = true ;
         wallConfig.
-                setSelectIntersectCheck(systemConfig.isSelectIntersectCheck());
+                setSelectIntersectCheck(firewallConf.isSelectIntersectCheck());
         //this.mustParameterized = false;
         wallConfig.
-                setMustParameterized(systemConfig.isMustParameterized());
+                setMustParameterized(firewallConf.isMustParameterized());
         //strictSyntaxCheck = true ;
         wallConfig.
-                setStrictSyntaxCheck(systemConfig.isStrictSyntaxCheck());
+                setStrictSyntaxCheck(firewallConf.isStrictSyntaxCheck());
         //conditionOpXorAllow = false ;
         wallConfig.
-                setConditionOpXorAllow(systemConfig.isConditionOpXorAllow());
+                setConditionOpXorAllow(firewallConf.isConditionOpXorAllow());
         //conditionOpBitwseAllow = true ;
         wallConfig.
-                setConditionOpBitwseAllow(systemConfig.isConditionOpBitwseAllow());
+                setConditionOpBitwseAllow(firewallConf.isConditionOpBitwseAllow());
         //conditionDoubleConstAllow = false ;
         wallConfig.
-                setConditionDoubleConstAllow(systemConfig.isConditionDoubleConstAllow());
+                setConditionDoubleConstAllow(firewallConf.isConditionDoubleConstAllow());
         // minusAllow = true;
         wallConfig.
-                setMinusAllow(systemConfig.isMinusAllow());
+                setMinusAllow(firewallConf.isMinusAllow());
         //intersectAllow = true;
         wallConfig.
-                setIntersectAllow(systemConfig.isIntersectAllow());
+                setIntersectAllow(firewallConf.isIntersectAllow());
         //constArithmeticAllow = true ;
         wallConfig.
-                setConstArithmeticAllow(systemConfig.isConstArithmeticAllow());
+                setConstArithmeticAllow(firewallConf.isConstArithmeticAllow());
         //limitZeroAllow = false;
         wallConfig.
-                setLimitZeroAllow(systemConfig.isLimitZeroAllow());
-
-
+                setLimitZeroAllow(firewallConf.isLimitZeroAllow());
 
         provider = new MySqlWallProvider(wallConfig);
-
-        if (systemConfig.enableSQLFirewall >= 0)
-             provider.setBlackListEnable(true);
-        else
-            provider.setBlackListEnable(false);
+        provider.setBlackListEnable(true);
     }
 
     public WallConfig getWallConfig() {

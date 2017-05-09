@@ -27,26 +27,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.opencloudb.MycatConfig;
-import org.opencloudb.MycatServer;
 import org.opencloudb.config.Versions;
 import org.opencloudb.config.model.ClusterConfig;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
 import org.opencloudb.config.util.ConfigException;
 import org.opencloudb.config.util.ConfigUtil;
 import org.opencloudb.config.util.ParameterMapping;
-import org.opencloudb.util.DecryptUtil;
-import org.opencloudb.util.SplitUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -59,12 +53,14 @@ import com.alibaba.druid.wall.WallConfig;
 @SuppressWarnings("unchecked")
 public class XMLServerLoader {
     private final SystemConfig system;
+    private final FirewallConfig firewall;
     private final Map<String, UserConfig> users;
     private final QuarantineConfig quarantine;
     private ClusterConfig cluster;
 
     public XMLServerLoader() {
         this.system = new SystemConfig();
+        this.firewall = new FirewallConfig();
         this.users = new HashMap<String, UserConfig>();
         this.quarantine = new QuarantineConfig();
         this.load();
@@ -72,6 +68,10 @@ public class XMLServerLoader {
 
     public SystemConfig getSystem() {
         return system;
+    }
+    
+    public FirewallConfig getFirewall() {
+    	return firewall;
     }
 
     public Map<String, UserConfig> getUsers() {
@@ -94,7 +94,12 @@ public class XMLServerLoader {
             xml = XMLServerLoader.class.getResourceAsStream("/server.xml");
             Element root = ConfigUtil.getDocument(dtd, xml).getDocumentElement();
             loadSystem(root);
-            loadUsers(root);
+            
+            // 分离user标签到user.xml
+            XMLUserLoader userLoader = new XMLUserLoader(system);
+            this.users.putAll(userLoader.getUsers());
+            userLoader = null;
+            
             loadSqlWall(root);
             this.cluster = new ClusterConfig(root, system.getServerPort());
             loadQuarantine(root);
@@ -167,49 +172,55 @@ public class XMLServerLoader {
         
     }
 
-    private void loadUsers(Element root) {
-        NodeList list = root.getElementsByTagName("user");
-        for (int i = 0, n = list.getLength(); i < n; i++) {
-            Node node = list.item(i);
-            if (node instanceof Element) {
-                Element e = (Element) node;
-                String name = e.getAttribute("name");
-                UserConfig user = new UserConfig();
-                Map<String, Object> props = ConfigUtil.loadElements(e);
-                String password = (String)props.get("password");
-                String usingDecrypt = (String)props.get("usingDecrypt");
-                String passwordDecrypt = DecryptUtil.mycatDecrypt(usingDecrypt,name,password);
-                user.setName(name);
-                user.setPassword(passwordDecrypt);
-                user.setEncryptPassword(password);
-				
-				String benchmark = (String) props.get("benchmark");
-				if(null != benchmark) {
-					user.setBenchmark( Integer.parseInt(benchmark) );
-				}
-				
-				String benchmarkSmsTel = (String) props.get("benchmarkSmsTel");
-				if(null != benchmarkSmsTel) {
-					user.setBenchmarkSmsTel( benchmarkSmsTel );
-				}
-				
-				String readOnly = (String) props.get("readOnly");
-				if (null != readOnly) {
-					user.setReadOnly(Boolean.valueOf(readOnly));
-				}
-				
-				String schemas = (String) props.get("schemas");
-                if (schemas != null) {
-                    String[] strArray = SplitUtil.split(schemas, ',', true);
-                    user.setSchemas(new HashSet<String>(Arrays.asList(strArray)));
-                }
-                if (users.containsKey(name)) {
-                    throw new ConfigException("user " + name + " duplicated!");
-                }
-                users.put(name, user);
-            }
-        }
-    }
+//    private void loadUsers(Element root) {
+//        NodeList list = root.getElementsByTagName("user");
+//        for (int i = 0, n = list.getLength(); i < n; i++) {
+//            Node node = list.item(i);
+//            if (node instanceof Element) {
+//                Element e = (Element) node;
+//                String name = e.getAttribute("name");
+//                if(system.getRootUser().equalsIgnoreCase(name)) {
+//                	throw new ConfigException("user '" + name + "' has been defined as built-in root user, "
+//                			+ "if your need to use this user, "
+//                			+ "change the built-in root user defined in server.xml ,"
+//                			+ "using system property : <rootUser>${root_username}</rootUser>");
+//                }
+//                UserConfig user = new UserConfig();
+//                Map<String, Object> props = ConfigUtil.loadElements(e);
+//                String password = (String)props.get("password");
+//                String usingDecrypt = (String)props.get("usingDecrypt");
+//                String passwordDecrypt = DecryptUtil.mycatDecrypt(usingDecrypt,name,password);
+//                user.setName(name);
+//                user.setPassword(passwordDecrypt);
+//                user.setEncryptPassword(password);
+//				
+//				String benchmark = (String) props.get("benchmark");
+//				if(null != benchmark) {
+//					user.setBenchmark( Integer.parseInt(benchmark) );
+//				}
+//				
+//				String benchmarkSmsTel = (String) props.get("benchmarkSmsTel");
+//				if(null != benchmarkSmsTel) {
+//					user.setBenchmarkSmsTel( benchmarkSmsTel );
+//				}
+//				
+//				String readOnly = (String) props.get("readOnly");
+//				if (null != readOnly) {
+//					user.setReadOnly(Boolean.valueOf(readOnly));
+//				}
+//				
+//				String schemas = (String) props.get("schemas");
+//                if (schemas != null) {
+//                    String[] strArray = SplitUtil.split(schemas, ',', true);
+//                    user.setSchemas(new HashSet<String>(Arrays.asList(strArray)));
+//                }
+//                if (users.containsKey(name)) {
+//                    throw new ConfigException("user " + name + " duplicated!");
+//                }
+//                users.put(name, user);
+//            }
+//        }
+//    }
 
     private void loadSystem(Element root) throws IllegalAccessException, InvocationTargetException {
         NodeList list = root.getElementsByTagName("system");
@@ -251,7 +262,7 @@ public class XMLServerLoader {
             Node node = list.item(i);
             if (node instanceof Element) {
                 Map<String, Object> props = ConfigUtil.loadElements((Element) node);
-                ParameterMapping.mapping(system, props);
+                ParameterMapping.mapping(firewall, props);
             }
         }
     }

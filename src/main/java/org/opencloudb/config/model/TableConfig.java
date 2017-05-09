@@ -27,6 +27,7 @@ import java.util.Random;
 import java.util.Set;
 
 import org.opencloudb.config.model.rule.RuleConfig;
+import org.opencloudb.config.util.ConfigException;
 import org.opencloudb.util.SplitUtil;
 
 /**
@@ -55,6 +56,8 @@ public class TableConfig {
 	private final boolean partionKeyIsPrimaryKey;
 	private final Random rand = new Random();
 	
+	private final String dataNode;
+
 	public TableConfig(String name, String primaryKey, boolean autoIncrement,boolean needAddLimit, int tableType,
 			String dataNode,Set<String> dbType, RuleConfig rule, boolean ruleRequired,
 			TableConfig parentTC, boolean isChildTable, String joinKey,
@@ -74,12 +77,19 @@ public class TableConfig {
 		}
 
 		this.name = name.toUpperCase();
+		this.dataNode = dataNode;
 		String theDataNodes[] = SplitUtil.split(dataNode, ',', '$', '-');
 
 
 		if (theDataNodes == null || theDataNodes.length <= 0) {
 			throw new IllegalArgumentException("invalid table dataNodes: "
 					+ dataNode);
+		} else if (rule != null) {
+			int requiredNum = rule.getRuleAlgorithm().requiredNodeNum();
+			int limittedNum = theDataNodes.length;
+			if (requiredNum > limittedNum) {
+				throw new ConfigException("The node number of algorithm " + rule.getRuleAlgorithm().getClass().getName() + " is out of limit.");
+			}
 		}
 		dataNodes = new ArrayList<String>(theDataNodes.length);
 		for (String dn : theDataNodes) {
@@ -235,6 +245,10 @@ public class TableConfig {
 
 	public boolean primaryKeyIsPartionKey() {
 		return partionKeyIsPrimaryKey;
+	}
+
+	public String getDataNode() {
+		return dataNode;
 	}
 	
 }

@@ -21,16 +21,32 @@ public class PartitionDirectBySubString extends AbstractPartitionAlgorithm imple
     // 默认分区（在分区数量定义时，字串标示的分区编号不在分区数量内时，使用默认分区）
     private int defaultPartition;
 
+    public String getStartIndex() {
+    	return String.valueOf(startIndex);
+    }
+    
     public void setStartIndex(String str) {
         startIndex = Integer.parseInt(str);
+    }
+    
+    public String getSize() {
+    	return String.valueOf(size);
     }
 
     public void setSize(String str) {
         size = Integer.parseInt(str);
     }
+    
+    public String getPartitionCount() {
+    	return String.valueOf(partitionCount);
+    }
 
     public void setPartitionCount(String partitionCount) {
         this.partitionCount = Integer.parseInt(partitionCount);
+    }
+    
+    public String getDefaultPartition() {
+    	return String.valueOf(defaultPartition);
     }
 
     public void setDefaultPartition(String defaultPartition) {
@@ -49,4 +65,9 @@ public class PartitionDirectBySubString extends AbstractPartitionAlgorithm imple
         return partitionCount > 0 && partition >= partitionCount
                 ? defaultPartition : partition;
     }
+    
+	@Override
+	public int requiredNodeNum() {
+		return partitionCount;
+	}
 }

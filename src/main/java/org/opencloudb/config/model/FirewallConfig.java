@@ -124,8 +124,8 @@ public class FirewallConfig {
 		 */
 		this.enableSQLFirewall = -1;
 		this.maxAllowResultRow = 1000000;
-		this.maxAllowExecuteTimes = 100000;
-		this.maxAllowExecuteSqlTime = 3000;
+		this.maxAllowExecuteTimes = 2000000;
+		this.maxAllowExecuteSqlTime = 20000;
 		this.countInMaxAllowExecuteSqlTime = 100000;
 		this.maxAllowExecuteUnitTime = 2;
 		this.enableRegEx = false;

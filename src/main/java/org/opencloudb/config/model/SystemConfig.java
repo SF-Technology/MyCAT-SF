@@ -351,7 +351,7 @@ public final class SystemConfig {
 		this.topExecuteResultN = 100;
 		this.topSqlExecuteTimeN = 100;
 		this.topSqlExecuteCountN = 100;
-		this.sqlRecordInDiskPeriod = 1; //1 day
+		this.sqlRecordInDiskPeriod = 7; //7 day
 	}
 	
 	/**

@@ -13,8 +13,9 @@
 	
 		<property name="defaultSqlParser">druidparser</property>
 		<property name="handleDistributedTransactions">2</property>
-		<property name="useSqlStat">0</property> <!-- 0表示不开启sqlstat功能,该功能很影响tps,需要优化,默认先关闭,1表示开启 -->
-     
+		<!-- 0表示不开启sqlstat功能,该功能很影响tps,需要优化,默认先关闭,1表示开启 -->
+		<property name="useSqlStat">0</property>
+
 		<property name="processorBufferChunk">40960</property>
 		<property name="processors">8</property> 
 		<property name="processorExecutor">8</property> 
@@ -33,7 +34,7 @@
 		<!--off heap for merge/order/group/limit -->
 		<property name="useOffHeapForMerge">1</property>
 		<!--内存页大小,单位为m-->
-		<property name="memoryPageSize">64k</property>
+		<property name="memoryPageSize">32k</property>
 		<!--写文件临时buffer大小,单位为k -->
 		<property name="spillsFileBufferSize">32k</property>
 		<!--Mycat 系统预留内存,单位为m -->
@@ -51,7 +52,7 @@
 		<!--到当前时间 SQL 执行次数 TOP N ，sqlInMemDBPeriod/8周期汇聚一次-->
 		<property name="topSqlExecuteCountN">100</property>
 		<!--每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位-->
-		<property name="sqlRecordInDiskPeriod">1</property>
+		<property name="sqlRecordInDiskPeriod">7</property>
 		<!--限制并发查询，控制CPU消耗 1开启,0关闭-->
 		<property name="limitConcurrentQuery">0</property>
 	</system>
@@ -63,32 +64,29 @@
 	</user> -->
 
 	<sqlwall>
-		<!-- SQL 防火墙总开关 -1 关闭防火墙，关闭拦截, 0开启防火墙 关闭拦截，不记录直接打印警告信息，1开启防火墙，打开拦截，2 开启防火墙，关闭拦截，并记录拦截信息-->
+		<!-- SQL 防火墙总开关
+           -1 关闭防火墙，关闭拦截,
+            0 开启防火墙，关闭拦截，不记录监控表里，打印警告log日志信息，
+            1 开启防火墙，打开拦截，在client端提示信息
+            2 开启防火墙，关闭拦截，拦截信息记录到录监控表里，不打印log日志
+         -->
 		<property name="enableSQLFirewall">1</property>
-
 		<!-- 是否启用正则表达式匹配SQL-->
 		<property name="enableRegEx">false</property>
 		<!-- 允许结果集，超过了maxAllowResultRow 动态添加到SQL黑名单中 -->
 		<property name="maxAllowResultRow">1000000</property>
 		<!-- maxAllowExecuteUnitTime s 内最大允许执行次数，超过了动态添加到SQL黑名单中 -->
-		<property name="maxAllowExecuteTimes">20000</property>
+		<property name="maxAllowExecuteTimes">2000000</property>
 		<!-- 单位为s 默认配置1s-->
 		<property name="maxAllowExecuteUnitTime">1</property>
+
+
 		<!-- 单位为ms,一条sql执行的时间，超过了countInMaxAllowExecuteSqlTime次数, 则动态加入SQL黑名单中 -->
-		<property name="maxAllowExecuteSqlTime">2000</property>
-		<property name="countInMaxAllowExecuteSqlTime">10</property>
+		<property name="maxAllowExecuteSqlTime">20000</property>
+		<property name="countInMaxAllowExecuteSqlTime">1000000</property>
 
-		<property name="selectAllColumnAllow">true</property>
+		<!-- 配置规则 -->
 		<property name="strictSyntaxCheck">false</property>
-		<property name="describeAllow">false</property>
-
-		<property name="deleteWhereNoneCheck">false</property>
-		<property name="deleteWhereAlwayTrueCheck">false</property>
-		<property name="conditionLikeTrueAllow">true</property>
-		<property name="constArithmeticAllow">false</property>
-		<property name="limitZeroAllow">false</property>
-		<property name="conditionDoubleConstAllow">false</property>
-
 	</sqlwall>
 
 </mycat:server>

@@ -96,8 +96,16 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
           boolean canUseRadixSort,
           boolean enableSort) {
 
-    return new UnsafeExternalSorter(dataNodeMemoryManager, blockManager, serializerManager, recordComparator, prefixComparator, initialSize, pageSizeBytes, null,
-      canUseRadixSort,enableSort);
+        return new UnsafeExternalSorter(dataNodeMemoryManager,
+                blockManager,
+                serializerManager,
+                recordComparator,
+                prefixComparator,
+                initialSize,
+                pageSizeBytes,
+                null,
+                canUseRadixSort,
+                enableSort);
 
   }
 
@@ -382,7 +390,7 @@ public final class UnsafeExternalSorter extends MemoryConsumer {
   private void acquireNewPageIfNecessary(int required) {
     if (currentPage == null ||
       pageCursor + required > currentPage.getBaseOffset() + currentPage.size()) {
-      // TODO: try to find space on previous pages
+                //TODO: try to find space on previous pages
       currentPage = allocatePage(required);
       pageCursor = currentPage.getBaseOffset();
       allocatedPages.add(currentPage);

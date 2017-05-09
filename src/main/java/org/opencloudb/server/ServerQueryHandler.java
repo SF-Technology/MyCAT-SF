@@ -70,19 +70,23 @@ public class ServerQueryHandler implements FrontendQueryHandler {
 		 */
 		FirewallConfig firewallConf = MycatServer.getInstance().getConfig().getFirewall();
 		int enableSQLFirewall = firewallConf.getEnableSQLFirewall();
-		boolean enableRegEx = firewallConf.isEnableRegEx();
 
-		if(enableSQLFirewall !=0 && !enableRegEx && !sqlFirewallServer.checkSql(sql,c,enableSQLFirewall)){
-			if (enableSQLFirewall == 1){
-				return;
-			}else if (enableSQLFirewall == 2){
-				/**
-				 * Nothing ... checkSQL already report sql
-				 */
-			}else {
-				LOGGER.error(sql +  "have not record sql reporter");
+		/**enableSQLFirewall =-1 表示关闭防火墙，关闭拦截*/
+		if (enableSQLFirewall >= 0) {
+			if (!sqlFirewallServer.checkSql(sql, c, enableSQLFirewall)) {
+				if (enableSQLFirewall == 1) {
+					return;
+				} else if (enableSQLFirewall == 2) {
+					/**
+					 * Nothing ... checkSQL already report sql
+					 */
+				} else {
+					LOGGER.warn(sql + "have not record sql reporter");
+				}
 			}
 		}
+
+
 		int rs = ServerParse.parse(sql);
 		int sqlType = rs & 0xff;
 		

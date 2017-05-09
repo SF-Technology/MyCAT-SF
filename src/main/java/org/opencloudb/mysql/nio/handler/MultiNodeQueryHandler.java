@@ -109,7 +109,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			 * 使用Off Heap
 			 */
 			if(isOffHeapuseOffHeapForMerge == 1){
-				dataMergeSvr = new DataNodeMergeManager(this,rrs);
+				dataMergeSvr = new DataNodeMergeManager(this,rrs,session.getSource().getId());
 			}else {
 				dataMergeSvr = new DataMergeService(this,rrs);
 			}
@@ -139,6 +139,9 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 				getSystem().getLimitConcurrentQuery() == 1) {
 			int dataNodes = rrs.getNodes().length;
 			int cores = Runtime.getRuntime().availableProcessors()*2;
+			int processors = MycatServer.getInstance().
+					getConfig().getSystem().getProcessors();
+			cores = Math.min(cores,processors);
 			if (dataNodes >= cores){
 				/**最大并发度为cores*/
 				int  maxPermits = Math.round(cores*2/3);

@@ -42,11 +42,7 @@ import org.opencloudb.config.Isolations;
 /**
  * 系统基础配置项
  *
- * @author mycat
- */
-/**
- * @author 01140003
- * @version 2017年3月2日 下午4:04:48 
+ * @author mycat, 01140003
  */
 public final class SystemConfig {
 
@@ -196,7 +192,7 @@ public final class SystemConfig {
 	 * 写入到临时目录
 	 */
 	private String dataNodeSortedTempDir;
-	
+
 	/**
 	 * 定时采集监控信息入H2DB，间隔时间
 	 */
@@ -288,11 +284,12 @@ public final class SystemConfig {
 		/**
 		 * SQL 防火墙配置默认配置
 		 */
-//		this.enableSQLFirewall = 1;
+//		this.enableSQLFirewall = -1;
 //		this.maxAllowResultRow = 1000000;
 //		this.maxAllowExecuteTimes = 100000;
-//		this.maxAllowExecuteSqlTime = 3;
-//		this.maxAllowExecuteUnitTime = 1;
+//		this.maxAllowExecuteSqlTime = 3000;
+//		this.countInMaxAllowExecuteSqlTime = 100000;
+//		this.maxAllowExecuteUnitTime = 2;
 //		this.enableRegEx = false;
 //
 //		this.selelctAllow=true;
@@ -301,16 +298,13 @@ public final class SystemConfig {
 //		this.deleteAllow=true;
 //		this.updateAllow=true;
 //		this.insertAllow=true;
-//		this.replaceAllow=true;
-//		this.mergeAllow=true;
 //		this.callAllow=true;
 //		this.setAllow=true;
 //		this.truncateAllow=true;
 //		this.createTableAllow=true;
 //		this.alterTableAllow=true;
 //		this.dropTableAllow=true;
-//		this.commentAllow=true;
-//		this.noneBaseStatementAllow=true;
+//		this.commentAllow=false;
 //		this.multiStatementAllow=false;
 //		this.useAllow=true;
 //		this.describeAllow=true;
@@ -1054,11 +1048,11 @@ public final class SystemConfig {
 		this.useSqlStat = useSqlStat;
 	}
 
-	public String getRootUser() {
+    public String getRootUser() {
 		return rootUser;
 	}
-
-	public void setRootUser(String rootUser) {
+    
+    public void setRootUser(String rootUser) {
 		this.rootUser = rootUser;
 	}
 

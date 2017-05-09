@@ -268,20 +268,25 @@ public class ServerConnection extends FrontendConnection {
 		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
 		FirewallConfig firewallConf = MycatServer.getInstance().getConfig().getFirewall();
 
+		int enableSQLFirewall = firewallConf.getEnableSQLFirewall();
 		/**
 		 * 
 		 * sql 语句拦截
 		 * 1.基于sql blacklist 拦截 完整的sql 或者 sql正则表达式拦截
 		 * 2.基于结果集合和执行频度拦截
 		 */
-		if (sqlFirewallServer.sqlMatcher(sql)){
-			if (firewallConf.getEnableSQLFirewall() ==1) {
-				writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND,"'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
-				return;
-			} if (firewallConf.getEnableSQLFirewall() ==2){
-				sqlFirewallServer.recordSQLReporter(sql,"sql exists in the blacklist.!".toUpperCase());
-			} if (firewallConf.getEnableSQLFirewall() ==0){
-				LOGGER.warn("'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
+		if(enableSQLFirewall >= 0) {
+			if (sqlFirewallServer.sqlMatcher(sql)) {
+				if (enableSQLFirewall == 1) {
+					writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
+					return;
+				}
+				if (enableSQLFirewall == 2) {
+					sqlFirewallServer.recordSQLReporter(sql, "sql exists in the blacklist.!".toUpperCase());
+				}
+				if (enableSQLFirewall == 0) {
+					LOGGER.warn("'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
+				}
 			}
 		}
 

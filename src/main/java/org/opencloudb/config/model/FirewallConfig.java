@@ -49,6 +49,11 @@ public class FirewallConfig {
 	 * 单位为s,一条sql执行的时间，超过了, 则动态加入SQL黑名单中
 	 */
 	private int maxAllowExecuteSqlTime;
+	
+	/**
+	 *  单位为s,一条sql执行的时间大于maxAllowExecuteSqlTime，并超过了多少countInMaxAllowExecuteSqlTime次数则加入动态加入SQL黑名单中
+	 */
+	public int countInMaxAllowExecuteSqlTime;
 
 	/**
 	 * 单位为s 默认配置1s 与maxAllowExecuteTimes配合使用
@@ -112,6 +117,70 @@ public class FirewallConfig {
 	private boolean intersectAllow;		//true 是否允许SELECT * FROM A INTERSECT SELECT * FROM B这样的语句
 	private boolean constArithmeticAllow; //true 拦截常量运算的条件，比如说WHERE FID = 3 - 1，其中"3 - 1"是常量运算表达式。
 	private boolean limitZeroAllow;       	//false 是否允许limit 0这样的语句
+	
+	public FirewallConfig() {
+		/**
+		 * SQL 防火墙配置默认配置
+		 */
+		this.enableSQLFirewall = -1;
+		this.maxAllowResultRow = 1000000;
+		this.maxAllowExecuteTimes = 100000;
+		this.maxAllowExecuteSqlTime = 3000;
+		this.countInMaxAllowExecuteSqlTime = 100000;
+		this.maxAllowExecuteUnitTime = 2;
+		this.enableRegEx = false;
+
+		this.selelctAllow=true;
+		this.selectAllColumnAllow=true;
+		this.selectIntoAllow=true;
+		this.deleteAllow=true;
+		this.updateAllow=true;
+		this.insertAllow=true;
+		this.callAllow=true;
+		this.setAllow=true;
+		this.truncateAllow=true;
+		this.createTableAllow=true;
+		this.alterTableAllow=true;
+		this.dropTableAllow=true;
+		this.commentAllow=false;
+		this.multiStatementAllow=false;
+		this.useAllow=true;
+		this.describeAllow=true;
+		this.showAllow=true;
+		this.commitAllow=true;
+		this.rollbackAllow=true;
+
+        /**
+         * 拦截配置－永真条件
+         */
+        this.selectWhereAlwayTrueCheck = true;
+        this.selectHavingAlwayTrueCheck = true;
+        this.deleteWhereAlwayTrueCheck = true;
+        this.deleteWhereNoneCheck = false;
+        this.updateWhereAlayTrueCheck = true;
+        this.updateWhereNoneCheck = false;
+        this.conditionAndAlwayTrueAllow = false;
+        this.conditionAndAlwayFalseAllow = false;
+        this.conditionLikeTrueAllow = true;
+
+        /**
+         * 其他拦截配置
+         */
+        this.selectIntoOutfileAllow = false;
+        this.selectUnionCheck = true;
+        this.selectMinusCheck = true ;
+        this.selectExceptChec = true ;
+        this.selectIntersectCheck = true ;
+        this.mustParameterized = false;
+        this.strictSyntaxCheck = true ;
+        this.conditionOpXorAllow = false ;
+        this.conditionOpBitwseAllow = true ;
+        this.conditionDoubleConstAllow = false ;
+        this.minusAllow = true;
+        this.intersectAllow = true;
+        this.constArithmeticAllow = true ;
+        this.limitZeroAllow = false;
+	}
 	
 	/**
 	 * 获得sqlwall变量的当前值
@@ -495,6 +564,12 @@ public class FirewallConfig {
 	}
 	public void setLimitZeroAllow(boolean limitZeroAllow) {
 		this.limitZeroAllow = limitZeroAllow;
+	}
+	public int getCountInMaxAllowExecuteSqlTime() {
+		return countInMaxAllowExecuteSqlTime;
+	}
+	public void setCountInMaxAllowExecuteSqlTime(int countInMaxAllowExecuteSqlTime) {
+		this.countInMaxAllowExecuteSqlTime = countInMaxAllowExecuteSqlTime;
 	}
 	
 }

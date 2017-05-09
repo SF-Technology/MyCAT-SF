@@ -332,7 +332,6 @@ public class SQLFirewallServer {
             /**
              * 单位为s,一条sql执行的时间，超过了 max time, 则动态加入SQL黑名单中
              */
-            //long sqlExecuteTime = (sqlRecord.getEndTime() - sqlRecord.getStartTime());
             long sqlExecuteTime = sqlRecord.getSqlExecTime();
 
             if (LOGGER.isDebugEnabled()) {
@@ -346,10 +345,13 @@ public class SQLFirewallServer {
                             + firewallConf.getMaxAllowExecuteSqlTime());
                 }
 
-                addSqlToBlacklist(sql);
-                sqlRecordMap.remove(sql);
-
-                return true;
+                long count = sqlRecord.getCountInMaxAllowExecuteSqlTime().incrementAndGet();
+                if(count > firewallConf.getCountInMaxAllowExecuteSqlTime()) {
+                    addSqlToBlacklist(sql);
+                    sqlRecordMap.remove(sql);
+                    return true;
+                }
+                return false;
             }
 
             /**
@@ -386,7 +388,6 @@ public class SQLFirewallServer {
         if (enableRegEx) {
 
             for (String regex : sqlBlackListMap.values()) {
-
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("regEx  : " + regex);
                     LOGGER.debug("regEx matcher sql : " + sql);
@@ -420,7 +421,7 @@ public class SQLFirewallServer {
         WallCheckResult result =
                 sqlFirewall.getProvider().check(sql);
 
-        if (result.getViolations().size()>0){
+        if (result.getViolations().size() > 0){
             /**
              * 得到SQL语句检查结果
              */
@@ -434,12 +435,13 @@ public class SQLFirewallServer {
                     ((FrontendConnection) sc).writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND,
                             violation.getMessage() + ",  sql==> " + sql);
                 }
+
             }else if(enableSQLFirewall == 2){
                 /**
                  * 不拦截SQL，将sql记录在拦截reporter中
                  */
                 recordSQLReporter(sql,violation.getMessage().toUpperCase());
-            }else if (enableSQLFirewall ==0){
+            }else if (enableSQLFirewall == 0){
                 LOGGER.warn("'" + sql.toUpperCase() + "' that is ".toUpperCase() + violation.getMessage().toUpperCase());
             }
 

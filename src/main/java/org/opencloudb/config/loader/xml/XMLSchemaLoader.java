@@ -34,6 +34,7 @@ import org.opencloudb.config.loader.SchemaLoader;
 import org.opencloudb.config.model.DBHostConfig;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.DataNodeConfig;
+import org.opencloudb.config.model.ProcedureConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.config.model.TableConfigMap;
@@ -177,6 +178,9 @@ public class XMLSchemaLoader implements SchemaLoader {
 			if (schemas.containsKey(name)) {
 				throw new ConfigException("schema " + name + " duplicated!");
 			}
+			
+			// 加载procedure配置
+			Map<String, ProcedureConfig> procedures = loadProcedures(schemaElement);
 
 			// 设置了table的不需要设置dataNode属性，没有设置table的必须设置dataNode属性
 //			if (dataNode == null && tables.size() == 0) {
@@ -185,7 +189,7 @@ public class XMLSchemaLoader implements SchemaLoader {
 //			}
 
 			SchemaConfig schemaConfig = new SchemaConfig(name, dataNode,
-					tables, sqlMaxLimit, "true".equalsIgnoreCase(checkSQLSchemaStr));
+					tables, procedures, sqlMaxLimit, "true".equalsIgnoreCase(checkSQLSchemaStr));
 			
 			if (defaultDbType != null) {
 				schemaConfig.setDefaultDataNodeDbType(defaultDbType);
@@ -689,6 +693,27 @@ public class XMLSchemaLoader implements SchemaLoader {
 			hostConf.setLogTime(logTime);
 			dataHosts.put(hostConf.getName(), hostConf);
 		}
+	}
+	
+	/**
+	 * 加载procedure配置
+	 * @param schemaElement
+	 * @return
+	 */
+	private Map<String, ProcedureConfig> loadProcedures(Element schemaElement) {
+	    Map<String, ProcedureConfig> procedureMap = new HashMap<>();
+	    NodeList nodeList = schemaElement.getElementsByTagName("procedure");
+	    for (int i = 0, n = nodeList.getLength(); i < n; i++) {
+	        Element node = (Element) nodeList.item(i);
+	        String procedureName = node.getAttribute("name");
+	        String dataNode = node.getAttribute("dataNode");
+	        if (procedureMap.containsKey(procedureName)) {
+	            throw new ConfigException("procedure " + procedureName + " deplicate");
+	        }
+	        ProcedureConfig procedure = new ProcedureConfig(procedureName, dataNode);
+	        procedureMap.put(procedureName, procedure);
+	    }
+	    return procedureMap;
 	}
 
 }

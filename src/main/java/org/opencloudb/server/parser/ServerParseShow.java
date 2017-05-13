@@ -39,6 +39,7 @@ public final class ServerParseShow {
 	public static final int MYCAT_STATUS = 3;
 	public static final int MYCAT_CLUSTER = 4;
 	public static final int TABLES = 5;
+	public static final int PROCEDURES = 6;
     public static final int FULLTABLES =65;
 
 	public static int parse(String stmt, int offset) {
@@ -63,6 +64,9 @@ public final class ServerParseShow {
 			case 'T':
 			case 't':
 				return tableCheck(stmt, i);
+			case 'P':
+			case 'p':
+			    return procedureCheck(stmt, i);
 			default:
 				return OTHER;
 			}
@@ -206,6 +210,29 @@ public 	static int tableCheck(String stmt, int offset) {
 		return OTHER;
 
 	}
+
+    private static int procedureCheck(String stmt, int offset) {
+        if (stmt.length() == "procedures".length() + offset) {
+           char c1 = stmt.charAt(++offset); // r
+           char c2 = stmt.charAt(++offset); // o
+           char c3 = stmt.charAt(++offset); // c
+           char c4 = stmt.charAt(++offset); // e
+           char c5 = stmt.charAt(++offset); // d
+           char c6 = stmt.charAt(++offset); // u
+           char c7 = stmt.charAt(++offset); // r
+           char c8 = stmt.charAt(++offset); // e
+           char c9 = stmt.charAt(++offset); // s
+           // char c10 = stmt.charAt(++offset);
+           if ((c1 == 'r' || c1 == 'R') && (c2 == 'o' || c2 == 'O')
+                   && (c3 == 'c' || c3 == 'C') && (c4 == 'e' || c4 == 'E')
+                   && (c5 == 'd' || c5 == 'D') && (c6 == 'u' || c6 == 'U')
+                   && (c7 == 'r' || c7 == 'R') && (c8 == 'e' || c8 == 'E')
+                   && (c9 == 's' || c9 == 'S')) {
+               return PROCEDURES;
+           }
+        }
+        return OTHER;
+    }
 
 	private static boolean isShowTableMatched(String stmt, String pat1) {
 		Pattern pattern = Pattern.compile(pat1, Pattern.CASE_INSENSITIVE);

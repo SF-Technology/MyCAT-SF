@@ -12,6 +12,7 @@
 	<system>
 	
 		<property name="defaultSqlParser">druidparser</property>
+		<!-- 1 关闭分布式事务，2 开启分布式事务 -->
 		<property name="handleDistributedTransactions">2</property>
 		<!-- 0表示不开启sqlstat功能,该功能很影响tps,需要优化,默认先关闭,1表示开启 -->
 		<property name="useSqlStat">0</property>
@@ -20,7 +21,7 @@
 		<property name="processors">8</property> 
 		<property name="processorExecutor">8</property> 
 		<property name="serverPort">8066</property> 
-		<property name="managerPort">9066</property> 
+		<property name="managerPort">9066</property>
 		<property name="idleTimeout">300000</property>
 		 <!-- 后端连接空闲超时关闭时间,程序中默认300s,在大数据取数时加大该时间,单位为s -->
 		<property name="sqlExecuteTimeout">7200</property>

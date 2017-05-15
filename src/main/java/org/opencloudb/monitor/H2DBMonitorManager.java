@@ -33,7 +33,7 @@ public class H2DBMonitorManager {
     private static final H2DBMonitorManager h2DBMonitorManager = new H2DBMonitorManager();
 
     private H2DBMonitorManager(){
-        startMonitorServer();
+        //startMonitorServer();
         init();
     }
 

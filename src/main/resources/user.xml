@@ -17,7 +17,7 @@
 	
 	<user name="sfdba">
 		<property name="password">sf123456</property>
-		<property name="schemas">testdb, cjx</property>
+		<property name="schemas">testdb</property>
 	</user>
 	
 </mycat:user>

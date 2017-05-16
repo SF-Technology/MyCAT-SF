@@ -278,6 +278,8 @@ public class ServerConnection extends FrontendConnection {
 		if(enableSQLFirewall >= 0) {
 			if (sqlFirewallServer.sqlMatcher(sql)) {
 				if (enableSQLFirewall == 1) {
+					/**记录到sql_reporter中*/
+					sqlFirewallServer.recordSQLReporter(sql,"sql exists in the blacklist.!".toUpperCase());
 					writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "'" + sql.toUpperCase() + "' exists in the blacklist.".toUpperCase());
 					return;
 				}

@@ -432,6 +432,8 @@ public class SQLFirewallServer {
                  * 拦截SQL，并将出错信息返回给客户端
                  */
                 if(sc instanceof ServerConnection){
+                    /**记录到sql_reporter中*/
+                    recordSQLReporter(sql,violation.getMessage().toUpperCase());
                     ((FrontendConnection) sc).writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND,
                             violation.getMessage() + ",  sql==> " + sql);
                 }

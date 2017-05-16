@@ -144,8 +144,11 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			cores = Math.min(cores,processors);
 			if (dataNodes >= cores){
 				/**最大并发度为cores*/
-				int  maxPermits = Math.round(cores*2/3);
-				LOGGER.info("Max Concurrent Query Threads :" + maxPermits);
+				double processorsRatio = MycatServer.getInstance().
+						getConfig().getSystem().getProcessorsRatio();
+				int  maxPermits = (int) (Math.round(cores*processorsRatio));
+
+				LOGGER.info("Max Concurrent Query Threads :" + maxPermits + " processors Ratio :" + processorsRatio);
 				limitsqlExecute = new Semaphore(maxPermits);
 			}
 		}

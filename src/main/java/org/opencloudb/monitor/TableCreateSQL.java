@@ -203,7 +203,7 @@ public class TableCreateSQL {
      */
     public final static String T_SYSPARAM="CREATE TABLE t_sysparam(" +
             "var_name VARCHAR(32) PRIMARY KEY," +
-            "var_value VARCHAR(32)," +
+            "var_value VARCHAR(255)," +
             "describe VARCHAR(255))";
 
 

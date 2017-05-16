@@ -237,6 +237,8 @@ public final class SystemConfig {
 
 	/**限制并发查询度，控制cpu的消耗*/
 	public int limitConcurrentQuery;
+	/**大sql查询时,配置processor使用比例*/
+	public double processorsRatio;
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -352,6 +354,8 @@ public final class SystemConfig {
 		this.topSqlExecuteTimeN = 100;
 		this.topSqlExecuteCountN = 100;
 		this.sqlRecordInDiskPeriod = 7; //7 day
+		this.limitConcurrentQuery = 0;
+		this.processorsRatio = 0.5;
 	}
 	
 	/**
@@ -427,6 +431,15 @@ public final class SystemConfig {
 		fields.add("useStreamOutput");
 		
 		return fields;
+	}
+
+
+	public double getProcessorsRatio() {
+		return processorsRatio;
+	}
+
+	public void setProcessorsRatio(double processorRatio) {
+		this.processorsRatio = processorRatio;
 	}
 
 	public int getLimitConcurrentQuery() {

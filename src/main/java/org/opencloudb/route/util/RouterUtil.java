@@ -17,6 +17,7 @@ import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.cache.LayerCachePool;
 import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.model.ProcedureConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.config.model.rule.RuleConfig;
@@ -114,7 +115,31 @@ public class RouterUtil {
 		return rrs;
 	}
 
-
+	/**
+	 * 路由到procedure所配置的节点上
+	 * @param rrs
+	 * @param procedureName
+	 * @param stmt
+	 * @param schema
+	 * @return
+	 * @throws SQLNonTransientException
+	 */
+	public static RouteResultset routeToProcedureNode(RouteResultset rrs, String procedureName, String stmt, SchemaConfig schema) throws SQLNonTransientException {
+		Map<String, ProcedureConfig> procedures = schema.getProcedures();
+		ProcedureConfig procedure = procedures.get(procedureName.toLowerCase());
+		if (procedure == null) {
+			throw new SQLNonTransientException("procedure named : " + procedureName + " is not defined in schema : " + schema.getName());
+		}
+		List<String> dataNodes = procedure.getDataNodes();
+		RouteResultsetNode[] rrsNodes = new RouteResultsetNode[dataNodes.size()];
+		for (int i = 0, n = dataNodes.size(); i < n; i++) {
+			rrsNodes[i] = new RouteResultsetNode(dataNodes.get(i), ServerParse.CALL, stmt);
+		}
+		rrs.setNodes(rrsNodes);
+		rrs.setCallStatement(true);
+		rrs.setStatement(stmt);
+		return rrs;
+	}
 
 	/**
 	 * 修复DDL路由

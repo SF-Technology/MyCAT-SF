@@ -49,6 +49,7 @@ import org.opencloudb.mysql.nio.handler.RollbackReleaseHandler;
 import org.opencloudb.mysql.nio.handler.SingleNodeHandler;
 import org.opencloudb.mysql.nio.handler.UnLockTablesHandler;
 import org.opencloudb.mysql.nio.handler.LockTablesHandler;
+import org.opencloudb.mysql.nio.handler.MultiNodeCallHandler;
 import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.route.RouteResultset;
@@ -69,6 +70,7 @@ public class NonBlockingSession implements Session {
 	// life-cycle: each sql execution
 	private volatile SingleNodeHandler singleNodeHandler;
 	private volatile MultiNodeQueryHandler multiNodeHandler;
+	private volatile MultiNodeCallHandler multiNodeCallHandler;
 	private volatile RollbackNodeHandler rollbackHandler;
 	private final MultiNodeCoordinator multiNodeCoordinator;
 	private final CommitNodeHandler commitHandler;
@@ -141,19 +143,22 @@ public class NonBlockingSession implements Session {
 			}
 		} else {
 
-			SystemConfig sysConfig = MycatServer.getInstance().getConfig()
-					.getSystem();
-			int mutiNodeLimitType = sysConfig.getMutiNodeLimitType();
-
-			// 如果是路由到多个个分片的全局表查询，则使用MultiGlobalNodeQueryHandler作为 multiNodeHandler
-			// 如果是路由到多个分片的非全局表查询，则使用MultiNodeQueryHandler作为 multiNodeHandler
-			if(rrs.isGlobalTable() && type == ServerParse.SELECT){
-				multiNodeHandler = new GlobalTableMultiNodeQueryHandler(type, rrs, autocommit, this);
-			}else{
-				multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit, this);
-			}
-
 			try {
+			    
+			    if (type == ServerParse.CALL) {
+	                multiNodeCallHandler = new MultiNodeCallHandler(rrs, this);
+	                multiNodeCallHandler.execute();
+	                return ;
+	            }
+			    
+			    // 如果是路由到多个个分片的全局表查询，则使用MultiGlobalNodeQueryHandler作为 multiNodeHandler
+	            // 如果是路由到多个分片的非全局表查询，则使用MultiNodeQueryHandler作为 multiNodeHandler
+	            if (rrs.isGlobalTable() && type == ServerParse.SELECT){
+	                multiNodeHandler = new GlobalTableMultiNodeQueryHandler(type, rrs, autocommit, this);
+	            } else if (type != ServerParse.CALL) {
+	                multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit, this);
+	            }
+			    
 				if (((type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) || initCount > 1) {
 					checkDistriTransaxAndExecute(rrs, 2, autocommit);
 				} else {
@@ -434,6 +439,11 @@ public class NonBlockingSession implements Session {
 		if (multiHandler != null) {
 			multiHandler.clearResources();
 			multiNodeHandler = null;
+		}
+		MultiNodeCallHandler multiCallHandler = multiNodeCallHandler;
+		if (multiCallHandler != null) {
+		    multiCallHandler.clearResources();
+		    multiNodeCallHandler = null;
 		}
 	}
 

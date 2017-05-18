@@ -239,6 +239,8 @@ public final class SystemConfig {
 	public int limitConcurrentQuery;
 	/**大sql查询时,配置processor使用比例*/
 	public double processorsRatio;
+
+
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}

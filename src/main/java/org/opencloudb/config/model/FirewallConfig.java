@@ -24,7 +24,11 @@ public class FirewallConfig {
 	 */
 
 	/**
-	 *  SQL 防火墙开关 1开启，2 关闭，并记录拦截信息
+	 SQL 防火墙总开关
+	 -1 关闭防火墙，关闭拦截,
+	 0 开启防火墙，关闭拦截，不记录监控表里，打印警告log日志信息，
+	 1 开启防火墙，打开拦截，在client端提示信息
+	 2 开启防火墙，关闭拦截，拦截信息记录到录监控表里，不打印log日志
 	 */
 	private int enableSQLFirewall;
 
@@ -60,72 +64,70 @@ public class FirewallConfig {
 	 */
 	private int maxAllowExecuteUnitTime;
 
+
 	/**
 	 * 拦截配置－语句
 	 */
-	private boolean selelctAllow;	//true	是否允许执行SELECT语句
-	private boolean selectAllColumnAllow;	//true	是否允许执行SELECT * FROM T这样的语句。如果设置为false，不允许执行select * from t，但select * from (select id, name from t) a。这个选项是防御程序通过调用select *获得数据表的结构信息。
-	private boolean selectIntoAllow;	//true	SELECT查询中是否允许INTO字句
-	private boolean deleteAllow;	//true	是否允许执行DELETE语句
-	private boolean updateAllow;	//true	是否允许执行UPDATE语句
-	private boolean insertAllow;	//true	是否允许执行INSERT语句
-	private boolean replaceAllow;	//true	是否允许执行REPLACE语句
-	private boolean mergeAllow;	//true	是否允许执行MERGE语句，这个只在Oracle中有用
-	private boolean callAllow;	//true	是否允许通过jdbc的call语法调用存储过程
-	private boolean setAllow;	//true	是否允许使用SET语法
-	private boolean truncateAllow;	//true	truncate语句是危险，缺省打开，若需要自行关闭
-	private boolean createTableAllow;	//true	是否允许创建表
-	private boolean alterTableAllow;	//true	是否允许执行Alter Table语句
-	private boolean dropTableAllow;	//true	是否允许修改表
-	private boolean commentAllow;	//false	是否允许语句中存在注释，Oracle的用户不用担心，Wall能够识别hints和注释的区别
-	private boolean noneBaseStatementAllow;//false	是否允许非以上基本语句的其他语句，缺省关闭，通过这个选项就能够屏蔽DDL。
-	private boolean multiStatementAllow;	//false	是否允许一次执行多条语句，缺省关闭
-	private boolean useAllow;	//true	是否允许执行mysql的use语句，缺省打开
-	private boolean describeAllow;	//true	是否允许执行mysql的describe语句，缺省打开
-	private boolean showAllow;	//true	是否允许执行mysql的show语句，缺省打开
-	private boolean commitAllow;	//true	是否允许执行commit操作
-	private boolean rollbackAllow;	//true	是否允许执行roll back操作
+	public boolean selelctAllow;	//true	是否允许执行SELECT语句
+	public boolean selectAllColumnAllow;	//true	是否允许执行SELECT * FROM T这样的语句。如果设置为false，不允许执行select * from t，但select * from (select id, name from t) a。这个选项是防御程序通过调用select *获得数据表的结构信息。
+	public boolean selectIntoAllow;	//true	SELECT查询中是否允许INTO字句
+	public boolean deleteAllow;	//true	是否允许执行DELETE语句
+	public boolean updateAllow;	//true	是否允许执行UPDATE语句
+	public boolean insertAllow;	//true	是否允许执行INSERT语句
+	public boolean callAllow;	//true	是否允许通过jdbc的call语法调用存储过程
+	public boolean setAllow;	//true	是否允许使用SET语法
+	public boolean truncateAllow;	//true	truncate语句是危险，缺省打开，若需要自行关闭
+	public boolean createTableAllow;	//true	是否允许创建表
+	public boolean alterTableAllow;	//true	是否允许执行Alter Table语句
+	public boolean dropTableAllow;	//true	是否允许修改表
+	public boolean commentAllow;	//false	是否允许语句中存在注释，Oracle的用户不用担心，Wall能够识别hints和注释的区别
+	public boolean multiStatementAllow;	//false	是否允许一次执行多条语句，缺省关闭
+	public boolean useAllow;	//true	是否允许执行mysql的use语句，缺省打开
+	public boolean describeAllow;	//true	是否允许执行mysql的describe语句，缺省打开
+	public boolean showAllow;	//true	是否允许执行mysql的show语句，缺省打开
+	public boolean commitAllow;	//true	是否允许执行commit操作
+	public boolean rollbackAllow;	//true	是否允许执行roll back操作
 
 	/**
 	 * 拦截配置－永真条件
 	 */
-	private boolean selectWhereAlwayTrueCheck;	// true 检查SELECT语句的WHERE子句是否是一个永真条件
-	private boolean selectHavingAlwayTrueCheck;	// true 检查SELECT语句的HAVING子句是否是一个永真条件
-	private boolean deleteWhereAlwayTrueCheck;	// true 检查DELETE语句的WHERE子句是否是一个永真条件
-	private boolean deleteWhereNoneCheck;	    // false 检查DELETE语句是否无where条件，这是有风险的，但不是SQL注入类型的风险
-	private boolean updateWhereAlayTrueCheck;	// true 检查UPDATE语句的WHERE子句是否是一个永真条件
-	private boolean updateWhereNoneCheck;	    // false 检查UPDATE语句是否无where条件，这是有风险的，但不是SQL注入类型的风险
-	private boolean conditionAndAlwayTrueAllow;	// false检查查询条件(WHERE/HAVING子句)中是否包含AND永真条件
-	private boolean conditionAndAlwayFalseAllow;	// false 检查查询条件(WHERE/HAVING子句)中是否包含AND永假条件
-	private boolean conditionLikeTrueAllow;	    // true 检查查询条件(WHERE/HAVING子句)中是否包含LIKE永真条件
-
+	public boolean selectWhereAlwayTrueCheck;	// true 检查SELECT语句的WHERE子句是否是一个永真条件
+	public boolean selectHavingAlwayTrueCheck;	// true 检查SELECT语句的HAVING子句是否是一个永真条件
+	public boolean deleteWhereAlwayTrueCheck;	// true 检查DELETE语句的WHERE子句是否是一个永真条件
+	public boolean deleteWhereNoneCheck;	    // false 检查DELETE语句是否无where条件，这是有风险的，但不是SQL注入类型的风险
+	public boolean updateWhereAlayTrueCheck;	// true 检查UPDATE语句的WHERE子句是否是一个永真条件
+	public boolean updateWhereNoneCheck;	    // false 检查UPDATE语句是否无where条件，这是有风险的，但不是SQL注入类型的风险
+	public boolean conditionAndAlwayTrueAllow;	// false检查查询条件(WHERE/HAVING子句)中是否包含AND永真条件
+	public boolean conditionAndAlwayFalseAllow;	// false 检查查询条件(WHERE/HAVING子句)中是否包含AND永假条件
+	public boolean conditionLikeTrueAllow;	    // true 检查查询条件(WHERE/HAVING子句)中是否包含LIKE永真条件
 
 	/**
 	 * 其他拦截配置
 	 */
-	private boolean selectIntoOutfileAllow;		//false SELECT ... INTO OUTFILE 是否允许，这个是mysql注入攻击的常见手段，缺省是禁止的
-	private boolean selectUnionCheck;	       //true 检测SELECT UNION
-	private boolean selectMinusCheck;	       //true 检测SELECT MINUS
-	private boolean selectExceptChec;		   //true 检测SELECT EXCEPT
-	private boolean selectIntersectCheck;	   //true 检测SELECT INTERSECT
-	private boolean mustParameterized;		   //false 是否必须参数化，如果为True，则不允许类似WHERE ID = 1这种不参数化的SQL
-	private boolean strictSyntaxCheck;		   //true 是否进行严格的语法检测，Druid SQL Parser在某些场景不能覆盖所有的SQL语法，出现解析SQL出错，可以临时把这个选项设置为false，同时把SQL反馈给Druid的开发者。
-	private boolean conditionOpXorAllow;		   //false 查询条件中是否允许有XOR条件。XOR不常用，很难判断永真或者永假，缺省不允许。
-	private boolean conditionOpBitwseAllow;		//true 查询条件中是否允许有"&"、"~"、"|"、"^"运算符。
-	private boolean conditionDoubleConstAllow;		//false 查询条件中是否允许连续两个常量运算表达式
-    private boolean minusAllow;		//true 是否允许SELECT * FROM A MINUS SELECT * FROM B这样的语句
-	private boolean intersectAllow;		//true 是否允许SELECT * FROM A INTERSECT SELECT * FROM B这样的语句
-	private boolean constArithmeticAllow; //true 拦截常量运算的条件，比如说WHERE FID = 3 - 1，其中"3 - 1"是常量运算表达式。
-	private boolean limitZeroAllow;       	//false 是否允许limit 0这样的语句
-	
+	public boolean selectIntoOutfileAllow;	   //false SELECT ... INTO OUTFILE 是否允许，这个是mysql注入攻击的常见手段，缺省是禁止的
+	public boolean selectUnionCheck;	       //true 检测SELECT UNION
+	public boolean selectMinusCheck;	       //true 检测SELECT MINUS
+	public boolean selectExceptChec;		   //true 检测SELECT EXCEPT
+	public boolean selectIntersectCheck;	   //true 检测SELECT INTERSECT
+	public boolean mustParameterized;		   //false 是否必须参数化，如果为True，则不允许类似WHERE ID = 1这种不参数化的SQL
+	public boolean strictSyntaxCheck;		   //true 是否进行严格的语法检测，Druid SQL Parser在某些场景不能覆盖所有的SQL语法，出现解析SQL出错，可以临时把这个选项设置为false，同时把SQL反馈给Druid的开发者。
+	public boolean conditionOpXorAllow;		   //false 查询条件中是否允许有XOR条件。XOR不常用，很难判断永真或者永假，缺省不允许。
+	public boolean conditionOpBitwseAllow;	   //true 查询条件中是否允许有"&"、"~"、"|"、"^"运算符。
+	public boolean conditionDoubleConstAllow;  //false 查询条件中是否允许连续两个常量运算表达式
+	public boolean minusAllow;		          //true 是否允许SELECT * FROM A MINUS SELECT * FROM B这样的语句
+	public boolean intersectAllow;		      //true 是否允许SELECT * FROM A INTERSECT SELECT * FROM B这样的语句
+	public boolean constArithmeticAllow;     //true 拦截常量运算的条件，比如说WHERE FID = 3 - 1，其中"3 - 1"是常量运算表达式。
+	public boolean limitZeroAllow;       	//false 是否允许limit 0这样的语句
+
+
 	public FirewallConfig() {
 		/**
 		 * SQL 防火墙配置默认配置
 		 */
 		this.enableSQLFirewall = -1;
 		this.maxAllowResultRow = 1000000;
-		this.maxAllowExecuteTimes = 2000000;
-		this.maxAllowExecuteSqlTime = 20000;
+		this.maxAllowExecuteTimes = 100000;
+		this.maxAllowExecuteSqlTime = 3000;
 		this.countInMaxAllowExecuteSqlTime = 100000;
 		this.maxAllowExecuteUnitTime = 2;
 		this.enableRegEx = false;
@@ -150,36 +152,36 @@ public class FirewallConfig {
 		this.commitAllow=true;
 		this.rollbackAllow=true;
 
-        /**
-         * 拦截配置－永真条件
-         */
-        this.selectWhereAlwayTrueCheck = true;
-        this.selectHavingAlwayTrueCheck = true;
-        this.deleteWhereAlwayTrueCheck = true;
-        this.deleteWhereNoneCheck = false;
-        this.updateWhereAlayTrueCheck = true;
-        this.updateWhereNoneCheck = false;
-        this.conditionAndAlwayTrueAllow = false;
-        this.conditionAndAlwayFalseAllow = false;
-        this.conditionLikeTrueAllow = true;
+		/**
+		 * 拦截配置－永真条件
+		 */
+		this.selectWhereAlwayTrueCheck = true;
+		this.selectHavingAlwayTrueCheck = true;
+		this.deleteWhereAlwayTrueCheck = true;
+		this.deleteWhereNoneCheck = false;
+		this.updateWhereAlayTrueCheck = true;
+		this.updateWhereNoneCheck = false;
+		this.conditionAndAlwayTrueAllow = false;
+		this.conditionAndAlwayFalseAllow = false;
+		this.conditionLikeTrueAllow = true;
 
-        /**
-         * 其他拦截配置
-         */
-        this.selectIntoOutfileAllow = false;
-        this.selectUnionCheck = true;
-        this.selectMinusCheck = true ;
-        this.selectExceptChec = true ;
-        this.selectIntersectCheck = true ;
-        this.mustParameterized = false;
-        this.strictSyntaxCheck = true ;
-        this.conditionOpXorAllow = false ;
-        this.conditionOpBitwseAllow = true ;
-        this.conditionDoubleConstAllow = false ;
-        this.minusAllow = true;
-        this.intersectAllow = true;
-        this.constArithmeticAllow = true ;
-        this.limitZeroAllow = false;
+		/**
+		 * 其他拦截配置
+		 */
+		this.selectIntoOutfileAllow = false;
+		this.selectUnionCheck = true;
+		this.selectMinusCheck = true ;
+		this.selectExceptChec = true ;
+		this.selectIntersectCheck = true ;
+		this.mustParameterized = false;
+		this.strictSyntaxCheck = true ;
+		this.conditionOpXorAllow = false ;
+		this.conditionOpBitwseAllow = true ;
+		this.conditionDoubleConstAllow = false ;
+		this.minusAllow = true;
+		this.intersectAllow = true;
+		this.constArithmeticAllow = true ;
+		this.limitZeroAllow = false;
 	}
 	
 	/**
@@ -331,18 +333,7 @@ public class FirewallConfig {
 	public void setInsertAllow(boolean insertAllow) {
 		this.insertAllow = insertAllow;
 	}
-	public boolean isReplaceAllow() {
-		return replaceAllow;
-	}
-	public void setReplaceAllow(boolean replaceAllow) {
-		this.replaceAllow = replaceAllow;
-	}
-	public boolean isMergeAllow() {
-		return mergeAllow;
-	}
-	public void setMergeAllow(boolean mergeAllow) {
-		this.mergeAllow = mergeAllow;
-	}
+
 	public boolean isCallAllow() {
 		return callAllow;
 	}
@@ -385,12 +376,7 @@ public class FirewallConfig {
 	public void setCommentAllow(boolean commentAllow) {
 		this.commentAllow = commentAllow;
 	}
-	public boolean isNoneBaseStatementAllow() {
-		return noneBaseStatementAllow;
-	}
-	public void setNoneBaseStatementAllow(boolean noneBaseStatementAllow) {
-		this.noneBaseStatementAllow = noneBaseStatementAllow;
-	}
+
 	public boolean isMultiStatementAllow() {
 		return multiStatementAllow;
 	}

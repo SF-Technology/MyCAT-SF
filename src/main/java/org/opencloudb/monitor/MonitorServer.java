@@ -14,6 +14,7 @@ import org.opencloudb.cache.CachePool;
 import org.opencloudb.cache.CacheService;
 import org.opencloudb.cache.CacheStatic;
 import org.opencloudb.cache.LayerCachePool;
+import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.heartbeat.DBHeartbeat;
@@ -113,6 +114,8 @@ public class MonitorServer {
         this.updateMonitorInfoExecutor = executor;
         this.mainThreadId = threadId;
         timer.schedule(doUpateMonitorInfo(),0L,systemConfig.getMonitorUpdatePeriod());
+
+        /**TODO 改成定时更新*/
         updataDBInfo();
         updateSystemParam();
         /**
@@ -734,9 +737,33 @@ public class MonitorServer {
         }
 
 
-        int len1 = SystemParameter.SYS_PARAM_BOOL.length;
-        for (int i = 0; i <len1 ; i++) {
-            String sysParamBool[] = SystemParameter.SYS_PARAM_BOOL[i];
+        FirewallConfig firewallConfig  = MycatServer.getInstance().getConfig().getFirewall();
+        for (int i = 0; i < SystemParameter.SQLFIREWALL_PARAM.length ;i++) {
+            String sysParam[] = SystemParameter.SQLFIREWALL_PARAM[i];
+            String varName = sysParam[0];
+            String desc = sysParam[1];
+            Object value = null;
+            SystemParameter sysParameter = new SystemParameter();
+            sysParameter.setVarName(varName);
+            sysParameter.setDescribe(desc);
+
+            try {
+                Method method = null;
+                String upperName = varName.substring(0,1).toUpperCase()
+                        + varName.substring(1);
+                method = firewallConfig.getClass()
+                        .getMethod("get" + upperName);
+                value = method.invoke(firewallConfig);
+                sysParameter.setVarValue(String.valueOf(value));
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage());
+            }
+
+            sysParameter.update();
+        }
+
+        for (int i = 0; i <SystemParameter.SQLFIREWALL_PARAM_BOOL.length ; i++) {
+            String sysParamBool[] = SystemParameter.SQLFIREWALL_PARAM_BOOL[i];
             String varName = sysParamBool[0];
             String desc = sysParamBool[1];
             Object value = null;
@@ -747,17 +774,17 @@ public class MonitorServer {
                 Method method = null;
                 String upperName = varName.substring(0,1).toUpperCase()
                         + varName.substring(1);
-                method = systemConfig.getClass()
+                method = firewallConfig.getClass()
                         .getMethod("is" + upperName);
-                value = method.invoke(systemConfig);
+                value = method.invoke(firewallConfig);
                 sysParameter.setVarValue(String.valueOf(value));
             } catch (Exception e) {
                 LOGGER.error(e.getMessage());
             }
             sysParameter.update();
         }
-
     }
+
 
     /**
      * 更新 Processor信息

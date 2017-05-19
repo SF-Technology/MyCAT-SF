@@ -202,11 +202,10 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
             prefixComputer = new RowPrefixComputer(schema);
 
 
-
             prefixComparator = getPrefixComparator(orderCols);
 
             dataNodeMemoryManager =
-                    new DataNodeMemoryManager(memoryManager,Thread.currentThread().getId());
+                    new DataNodeMemoryManager(memoryManager, Thread.currentThread().getId());
 
             /**
              * 默认排序，只是将数据连续存储到内存中即可。
@@ -249,7 +248,7 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
 
 
             dataNodeMemoryManager = new DataNodeMemoryManager(memoryManager,
-                            Thread.currentThread().getId());
+                    Thread.currentThread().getId());
 
             globalMergeResult = new UnsafeExternalRowSorter(
                     dataNodeMemoryManager,
@@ -413,7 +412,7 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
             }
 
         } catch (final Exception e) {
-           
+
             multiQueryHandler.handleDataProcessException(e);
         } finally {
             running.set(false);
@@ -428,22 +427,25 @@ public class DataNodeMergeManager extends AbstractDataNodeMerge {
      */
     public void clear() {
         unsafeRows.clear();
-        synchronized (this)
-        {
+        synchronized (this) {
             if (unsafeRowGrouper != null) {
                 unsafeRowGrouper.free();
                 unsafeRowGrouper = null;
             }
         }
 
-        if(globalSorter != null){
-            globalSorter.cleanupResources();
-            globalSorter = null;
+        synchronized (this) {
+            if (globalSorter != null) {
+                globalSorter.cleanupResources();
+                globalSorter = null;
+            }
         }
 
-        if (globalMergeResult != null){
-            globalMergeResult.cleanupResources();
-            globalMergeResult = null;
+        synchronized (this) {
+            if (globalMergeResult != null) {
+                globalMergeResult.cleanupResources();
+                globalMergeResult = null;
+            }
         }
     }
 }

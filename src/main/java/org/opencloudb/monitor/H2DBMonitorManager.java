@@ -53,6 +53,19 @@ public class H2DBMonitorManager {
             }
 
             conn = DriverManager.getConnection(URL,user, password);
+
+            /**
+             * MyCat内存监控表
+             * table:t_dmemory
+             */
+            createH2dbTable(conn,TableCreateSQL.T_DIRECT_MEMORY,"t_dmemory");
+
+            /**
+             * MyCat内存监控表
+             * table:t_dmemory_detail
+             */
+            createH2dbTable(conn,TableCreateSQL.T_DMEMORY_DETAIL,"t_dmemory_detail");
+
             /**
              * MyCat内存监控表
              * table:t_memory

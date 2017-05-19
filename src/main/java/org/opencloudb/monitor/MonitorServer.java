@@ -826,6 +826,12 @@ public class MonitorServer {
             processorInfo.update();
         }
     }
+
+    private void updateDirectMemory()
+    {
+        //
+
+    }
     /**
      * 获取系统内存运行状态，写入H2DB库中
      */

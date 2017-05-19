@@ -11,11 +11,28 @@ package org.opencloudb.monitor;
 public class TableCreateSQL {
 
     /**
+     * T_DMEMORY
+     */
+    public final static String T_DIRECT_MEMORY = "CREATE TABLE t_dmemory(id INT PRIMARY KEY," +
+            "memory_type VARCHAR(64)," +
+            "used BIGINT," +
+            "max BIGINT," +
+            "total BIGINT)";
+
+    /**
+     * T_DMEMORY_DETAIL
+     */
+    public final static String T_DMEMORY_DETAIL = "CREATE TABLE t_dmemory_detail(thread_id BIGINT PRIMARY KEY," +
+            "thread_name VARCHAR(64)," +
+            "memory_type VARCHAR(64)," +
+            "used BIGINT)";
+
+    /**
      * T_MEMORY
      */
-    public final static String   T_MEMORY = "CREATE TABLE t_memory(thread_id BIGINT PRIMARY KEY," +
-            "thread_name VARCHAR(255)," +
-            "memory_type VARCHAR(255)," +
+    public final static String T_MEMORY = "CREATE TABLE t_memory(thread_id BIGINT PRIMARY KEY," +
+            "thread_name VARCHAR(64)," +
+            "memory_type VARCHAR(64)," +
             "used BIGINT," +
             "max BIGINT," +
             "total BIGINT)";
@@ -269,4 +286,7 @@ public class TableCreateSQL {
             "schema VARCHAR(32)," +
             "tables VARCHAR(255)," +
             "exec_count BIGINT);";
+
+
+
 }

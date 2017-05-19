@@ -27,6 +27,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.log4j.Logger;
 
@@ -48,30 +50,35 @@ public final class BufferPool {
 	// The statistics variable newCreated: no need to be accurate for performance consideration!
 	// @author Uncle-pan
 	// @since 2016-04-05
-    private volatile int newCreated;
+   // private volatile int newCreated;
+	private final AtomicInteger newDirectBufferCreated = new AtomicInteger(0);
+	private final AtomicInteger newTempBufferByteCreated = new AtomicInteger(0);
+
 	private final long threadLocalCount;
 	private final long capactiy;
 	private long totalBytes = 0;
 	private long totalCounts = 0;
 
 	public BufferPool(long bufferSize, int chunkSize, int threadLocalPercent) {
+
 		this.chunkSize = chunkSize;
 		long size = bufferSize / chunkSize;
+
 		size = (bufferSize % chunkSize == 0) ? size : size + 1;
 		this.capactiy = size;
+
 		threadLocalCount = threadLocalPercent * capactiy / 100;
 		for (long i = 0; i < capactiy; i++) {
 			items.offer(createDirectBuffer(chunkSize));
 		}
-		localBufferPool = new ThreadLocalBufferPool(
-				threadLocalCount);
+
+		localBufferPool = new ThreadLocalBufferPool(threadLocalCount);
 	}
 
 	private static final boolean isLocalCacheThread() {
 		final String thname = Thread.currentThread().getName();
 		return (thname.length() < LOCAL_BUF_THREAD_PREX.length()) ? false
 				: (thname.charAt(0) == '$' && thname.charAt(1) == '_');
-
 	}
 
 	public int getChunkSize() {
@@ -87,7 +94,7 @@ public final class BufferPool {
 	}
 
 	public long capacity() {
-		return capactiy + newCreated;
+		return capactiy + newDirectBufferCreated.get();
 	}
 
 	public ByteBuffer allocate() {
@@ -106,12 +113,13 @@ public final class BufferPool {
 			// @since 2016-03-30
 			try{
 				node = this.createDirectBuffer(chunkSize);
-				++newCreated;
+				newDirectBufferCreated.addAndGet(1);
 			}catch(final OutOfMemoryError oom){
 				LOGGER.warn("Direct buffer OOM occurs: so allocate from heap", oom);
 				node = this.createTempBuffer(chunkSize);
 			}
 		}
+
 		return node;
 	}
 
@@ -131,9 +139,11 @@ public final class BufferPool {
 	}
 
 	public void recycle(ByteBuffer buffer) {
+
 		if (!checkValidBuffer(buffer)) {
 			return;
 		}
+
 		if (isLocalCacheThread()) {
 			BufferQueue localQueue = localBufferPool.get();
 			if (localQueue.snapshotSize() < threadLocalCount) {
@@ -148,7 +158,6 @@ public final class BufferPool {
 			sharedOptsCount++;
 			items.offer(buffer);
 		}
-
 	}
 
 	public int getAvgBufSize() {
@@ -168,10 +177,18 @@ public final class BufferPool {
 			}
 		}
 		return false;
+	}
 
+	/**
+	 * 临时 ByteBuffer 创建计数
+	 * @return
+	 */
+	public AtomicInteger getNewTempBufferByteCreated() {
+		return newTempBufferByteCreated;
 	}
 
 	private ByteBuffer createTempBuffer(int size) {
+		newTempBufferByteCreated.addAndGet(1);
 		return ByteBuffer.allocate(size);
 	}
 
@@ -181,12 +198,17 @@ public final class BufferPool {
 	}
 
 	public ByteBuffer allocate(int size) {
+
 		if (size <= this.chunkSize) {
+
 			return allocate();
+
 		} else {
+
 			LOGGER.warn("allocate buffer size large than default chunksize:"
 					+ this.chunkSize + " he want " + size);
 			return createTempBuffer(size);
+
 		}
 	}
 

@@ -23,7 +23,6 @@ public class TableCreateSQL {
      * T_DMEMORY_DETAIL
      */
     public final static String T_DMEMORY_DETAIL = "CREATE TABLE t_dmemory_detail(thread_id BIGINT PRIMARY KEY," +
-            "thread_name VARCHAR(64)," +
             "memory_type VARCHAR(64)," +
             "used BIGINT)";
 

@@ -29,6 +29,7 @@ public class DirectMemoryInfo {
     public int getId() {
         return id;
     }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -80,7 +81,7 @@ public class DirectMemoryInfo {
 
         try {
 
-            String sql = "select id  from t_memory where id = " + getId();
+            String sql = "select id  from t_dmemory where id = " + getId();
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
@@ -113,10 +114,10 @@ public class DirectMemoryInfo {
         String sql = null;
 
         if(isAdd){
-            sql = "INSERT INTO t_memory VALUES(" + getId()+ ",'" +  getMemoryType() + "'," + getUsed() + ","
+            sql = "INSERT INTO t_dmemory VALUES(" + getId()+ ",'" +  getMemoryType() + "'," + getUsed() + ","
                     + getMax() + "," + getTotal() +")";
         }else {
-            sql = "UPDATE t_memory SET used = " + getUsed() + ","  +
+            sql = "UPDATE t_dmemory SET used = " + getUsed() +
                     " WHERE id = " + getId();
         }
 
@@ -130,7 +131,6 @@ public class DirectMemoryInfo {
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }finally {
-
             try {
                 if(stmt !=null){
                     stmt.close();

@@ -19,6 +19,8 @@ import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.heartbeat.DBHeartbeat;
 import org.opencloudb.jdbc.JDBCConnection;
+import org.opencloudb.memory.MyCatMemory;
+import org.opencloudb.memory.unsafe.Platform;
 import org.opencloudb.mysql.nio.MySQLConnection;
 import org.opencloudb.net.BackendAIOConnection;
 import org.opencloudb.net.FrontendConnection;
@@ -40,10 +42,7 @@ import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE;
 
@@ -241,6 +240,7 @@ public class MonitorServer {
                     @Override
                     public void run() {
                         updateMemoryInfo();
+                        updateNetConnection();
                         updateHeartBeat();
                         updateDataNode();
                         updateDataSource();
@@ -827,15 +827,16 @@ public class MonitorServer {
         }
     }
 
-    private void updateDirectMemory()
-    {
-        //
-
-    }
     /**
      * 获取系统内存运行状态，写入H2DB库中
      */
-    private void updateMemoryInfo(){
+    private void updateMemoryInfo() {
+
+        BufferPool bufferPool = MycatServer.getInstance().getBufferPool();
+        MyCatMemory myCatMemory = MycatServer.getInstance().getMyCatMemory();
+        ConcurrentHashMap<Long,Long> bufferPooMap = null;
+        ConcurrentHashMap<Long ,Long> mergeMemoryMap = null;
+
         /**
          * 更新memory info
          */
@@ -845,13 +846,114 @@ public class MonitorServer {
         long used = (total - rt.freeMemory());
         MemoryInfo memoryInfo = new MemoryInfo();
         memoryInfo.setThreadId(mainThreadId);
-        memoryInfo.setThreadName("Main-" +mainThreadId);
+        memoryInfo.setThreadName("Main-" + mainThreadId);
         memoryInfo.setMemoryType(MemoryType.ONHEAP.getName());
         memoryInfo.setUsed(used);
         memoryInfo.setMax(max);
         memoryInfo.setTotal(total);
         memoryInfo.update();
+        /**
+         * 更新 结果集汇聚 Direct Memory
+         */
+        used = 0;
+        DirectMemoryInfo mergeDirectMemoryInfo = new DirectMemoryInfo();
+        /**id =1 表示是结果汇聚堆外内存*/
+        mergeDirectMemoryInfo.setId(1);
+        mergeDirectMemoryInfo.setMemoryType(MemoryType.MergeMemory.getName());
+        mergeDirectMemoryInfo.setMax(myCatMemory.getResultSetBufferSize());
+        /**统计当前结果集汇聚使用的内存*/
+        mergeMemoryMap =
+                myCatMemory.getResultMergeMemoryManager().getDirectMemorUsage();
+        for (Map.Entry<Long,Long> entry:mergeMemoryMap.entrySet()) {
+            used += entry.getValue();
+        }
+        mergeDirectMemoryInfo.setUsed(used);
+        mergeDirectMemoryInfo.setTotal(Platform.getMaxDirectMemory());
+        mergeDirectMemoryInfo.update();
 
+        /**
+         * 更新 网络packe 处理 Direct Memory
+         */
+
+
+        used = 0;
+        DirectMemoryInfo netDirectMemoryInfo = new DirectMemoryInfo();
+        /**id =2 表示是网络堆外内存*/
+        netDirectMemoryInfo.setId(2);
+        netDirectMemoryInfo.setMemoryType(MemoryType.NetMemory.getName());
+
+
+        /**统计当前表示是网络处理使用的堆外内存*/
+        bufferPooMap = bufferPool.getMemoryUsage();
+        for (Map.Entry<Long,Long> entry:bufferPooMap.entrySet()) {
+            used += entry.getValue();
+        }
+        netDirectMemoryInfo.setUsed(used);
+
+        netDirectMemoryInfo.setMax(bufferPool.capacity()*bufferPool.getChunkSize());
+        netDirectMemoryInfo.setTotal(Platform.getMaxDirectMemory());
+        netDirectMemoryInfo.update();
+
+        /**
+         * 网络packe 处理 Direct Memory 不够时，会创建临时on heap ByteBuffer
+         */
+
+        int tempByteBufferCount = bufferPool.getNewTempBufferByteCreated().get();
+        if(tempByteBufferCount > 0) {
+            DirectMemoryInfo tempOnHeapMemoryInfo = new DirectMemoryInfo();
+            /**id =3 表示是网络处理时，堆外内存不够时，使用on heap 临时ByteBuffer*/
+            tempOnHeapMemoryInfo.setId(3);
+            tempOnHeapMemoryInfo.setMemoryType(MemoryType.ONHEAP.getName());
+            tempOnHeapMemoryInfo.setUsed(tempByteBufferCount*bufferPool.getChunkSize());
+            tempOnHeapMemoryInfo.setMax(rt.maxMemory());
+            tempOnHeapMemoryInfo.setTotal(rt.totalMemory());
+            tempOnHeapMemoryInfo.update();
+        }
+
+
+
+        /**
+         * 输出详细的 Direct Memory
+         */
+        /**输出当前网络处理使用的内存详细情况*/
+        mergeMemoryMap =
+                myCatMemory.getResultMergeMemoryManager().getDirectMemorUsage();
+
+        if (mergeMemoryMap.size() == 0){
+            DirectMemoryDetailInfo.delete(MemoryType.MergeMemory.getName());
+        }
+
+        for (Map.Entry<Long,Long> entry:mergeMemoryMap.entrySet()) {
+            DirectMemoryDetailInfo  dmd = new DirectMemoryDetailInfo();
+            LOGGER.info("use megre :" + entry.getValue());
+            dmd.setThreadId(entry.getKey());
+            dmd.setMemoryType(MemoryType.MergeMemory.getName());
+            dmd.setUsed(entry.getValue());
+            dmd.update();
+        }
+
+        /**输出当前结果集汇聚使用的内存详细情况*/
+        bufferPooMap = bufferPool.getMemoryUsage();
+        if (bufferPooMap.size() == 0){
+            DirectMemoryDetailInfo.delete(MemoryType.NetMemory.getName());
+        }
+
+        for (Map.Entry<Long,Long> entry:bufferPooMap.entrySet()) {
+            DirectMemoryDetailInfo  dmd = new DirectMemoryDetailInfo();
+            dmd.setThreadId(entry.getKey());
+            dmd.setMemoryType(MemoryType.NetMemory.getName());
+            dmd.setUsed(entry.getValue());
+            dmd.update();
+        }
+
+    }
+
+
+    /**
+     * 更新网络连接相关新。thread pool， connection pool， client connection等
+     */
+
+    private void updateNetConnection(){
         /**
          * 更新thread pool
          */

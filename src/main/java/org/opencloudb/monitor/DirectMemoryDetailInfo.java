@@ -21,7 +21,6 @@ public class DirectMemoryDetailInfo {
             LoggerFactory.getLogger(DirectMemoryDetailInfo.class);
 
     private long threadId;
-    private String threadName;
     private String memoryType;
     private long used;
 
@@ -32,14 +31,6 @@ public class DirectMemoryDetailInfo {
 
     public void setThreadId(long threadId) {
         this.threadId = threadId;
-    }
-
-    public String getThreadName() {
-        return threadName;
-    }
-
-    public void setThreadName(String threadName) {
-        this.threadName = threadName;
     }
 
     public String getMemoryType() {
@@ -58,11 +49,7 @@ public class DirectMemoryDetailInfo {
         this.used = used;
     }
 
-
-
-
     public void update() {
-
         /**
          * 1.查询是已经存在
          */
@@ -74,7 +61,7 @@ public class DirectMemoryDetailInfo {
 
         try {
 
-            String sql = "select thread_id  from t_memory where thread_id = " + getThreadId();
+            String sql = "select thread_id  from t_dmemory_detail where thread_id = " + getThreadId();
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
@@ -82,18 +69,18 @@ public class DirectMemoryDetailInfo {
 
             stmt = h2DBConn.createStatement();
             rset = stmt.executeQuery(sql);
-            if (rset.next()){
+            if (rset.next()) {
                 isAdd = false;
             }
 
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }finally {
+        } finally {
             try {
-                if(stmt !=null){
+                if (stmt != null) {
                     stmt.close();
                 }
-                if (rset !=null){
+                if (rset != null) {
                     rset.close();
                 }
             } catch (SQLException e) {
@@ -106,13 +93,11 @@ public class DirectMemoryDetailInfo {
          */
         String sql = null;
 
-        if(isAdd){
-            sql = "INSERT INTO t_memory VALUES(" + getThreadId()+ ",'" + getThreadName() + "','"
-                    + getMemoryType() + "'," + getUsed()  +")";
-        }else {
-            sql = "UPDATE t_memory SET thread_name ='" + getThreadName() +"'," +
-                    "memory_type ='" + getMemoryType() + "',"  +
-                    "used = " + getUsed() + ","  +
+        if (isAdd) {
+            sql = "INSERT INTO t_dmemory_detail VALUES(" + getThreadId() + ",'"
+                    + getMemoryType() + "'," + getUsed() + ")";
+        } else {
+            sql = "UPDATE t_dmemory_detail SET used = " + getUsed() +
                     " WHERE thread_id = " + getThreadId();
         }
 
@@ -125,14 +110,14 @@ public class DirectMemoryDetailInfo {
             stmt.executeUpdate(sql);
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
-        }finally {
+        } finally {
 
             try {
-                if(stmt !=null){
+                if (stmt != null) {
                     stmt.close();
                 }
 
-                if (rset !=null){
+                if (rset != null) {
                     rset.close();
                 }
 
@@ -140,5 +125,39 @@ public class DirectMemoryDetailInfo {
                 LOGGER.error(e.getMessage());
             }
         }
+    }
+
+
+    public static void delete(String memoryType) {
+
+        if (memoryType == null)
+            return;
+        final Connection h2DBConn =
+                H2DBMonitorManager.getH2DBMonitorManager().getH2DBMonitorConn();
+        Statement stmt = null;
+
+        try {
+            String sql = "UPDATE t_dmemory_detail SET used = " + 0 +
+                    " where memory_type ='" + memoryType.trim() + "'";
+
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("sql === >  " + sql);
+            }
+
+            stmt = h2DBConn.createStatement();
+            stmt.execute(sql);
+
+        } catch (SQLException e) {
+            LOGGER.error(e.getMessage());
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+
     }
 }

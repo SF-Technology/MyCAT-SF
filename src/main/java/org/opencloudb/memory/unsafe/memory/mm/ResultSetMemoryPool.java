@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.concurrent.GuardedBy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by zagnix on 2016/6/6.
@@ -37,11 +38,17 @@ public class ResultSetMemoryPool extends MemoryPool {
         return "off-heap memory";
     }
 
+
+
     /**
      * Map from taskAttemptId -> memory consumption in bytes
      */
-    @GuardedBy("lock")
-    private HashMap<Long,Long> memoryForConnection = new HashMap<Long, Long>();
+    private ConcurrentHashMap<Long,Long> memoryForConnection = new ConcurrentHashMap<Long,Long>();
+
+
+    public ConcurrentHashMap<Long, Long> getMemoryForConnection() {
+        return memoryForConnection;
+    }
 
     @Override
     protected long memoryUsed() {

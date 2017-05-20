@@ -75,6 +75,7 @@ import org.opencloudb.util.TimeUtil;
  * @author mycat
  */
 public class MycatServer {
+
 	public static final String NAME = "MyCat";
 	private static final long LOG_WATCH_DELAY = 60000L;
 	private static final long TIME_UPDATE_PERIOD = 20L;
@@ -94,6 +95,7 @@ public class MycatServer {
 	private BufferPool bufferPool;
 	private boolean aio = false;
 	private final AtomicLong xaIDInc = new AtomicLong();
+	private long totalNetWorkBufferSize = 0L;
 	
 	/**
 	 * Mycat 内存管理类
@@ -251,10 +253,12 @@ public class MycatServer {
 		long processBuferPool = system.getProcessorBufferPool();
 		int processBufferChunk = system.getProcessorBufferChunk();
 		int socketBufferLocalPercent = system.getProcessorBufferLocalPercent();
-		long totalNetWorkBufferSize = 0L;
+
+
 		bufferPool = new BufferPool(processBuferPool, processBufferChunk,
 				socketBufferLocalPercent / processorCount);
 		totalNetWorkBufferSize = processBuferPool;
+
 		/**
 		 * Off Heap For Merge/Order/Group/Limit 初始化
 		 */
@@ -730,6 +734,14 @@ public class MycatServer {
 				});
 			}
 		};
+	}
+
+	public long getTotalNetWorkBufferSize() {
+		return totalNetWorkBufferSize;
+	}
+
+	public void setTotalNetWorkBufferSize(long totalNetWorkBufferSize) {
+		this.totalNetWorkBufferSize = totalNetWorkBufferSize;
 	}
 	
 

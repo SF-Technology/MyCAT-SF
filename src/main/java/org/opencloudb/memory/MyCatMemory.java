@@ -27,7 +27,7 @@ import org.opencloudb.memory.unsafe.utils.MycatPropertyConf;
 public class MyCatMemory {
 	private static Logger LOGGER = Logger.getLogger(MyCatMemory.class);
 
-	private final  static double DIRECT_SAFETY_FRACTION  = 1.0;
+	public final  static double DIRECT_SAFETY_FRACTION  = 0.9;
 	private final long systemReserveBufferSize;
 
 	private final long memoryPageSize;
@@ -189,6 +189,8 @@ public class MyCatMemory {
 	public long getResultSetBufferSize() {
 		return resultSetBufferSize;
 	}
+
+	public String getResultSetBufferSizeAsMB(){ return JavaUtils.bytesToString2(resultSetBufferSize);}
 
 	public MemoryManager getResultMergeMemoryManager() {
 		return resultMergeMemoryManager;

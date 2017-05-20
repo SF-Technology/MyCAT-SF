@@ -89,7 +89,6 @@ public class MemoryInfo {
         if (total != that.total) return false;
         if (threadName != null ? !threadName.equals(that.threadName) : that.threadName != null) return false;
         return memoryType != null ? memoryType.equals(that.memoryType) : that.memoryType == null;
-
     }
 
     @Override

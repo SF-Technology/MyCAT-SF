@@ -259,9 +259,10 @@ public final class SystemConfig {
 		this.processorExecutor = (DEFAULT_PROCESSORS != 1) ? DEFAULT_PROCESSORS * 2 : 4;
 		this.managerExecutor = 2;
 		/**
-		 * 大结果集时 需增大 network buffer pool pages.
+		 * 大结果集时 需增大 network buffer pool size = processors*16M
 		 */
-		processorBufferPool = DEFAULT_BUFFER_CHUNK_SIZE * processors * 1500;
+		processorBufferPool = 4*DEFAULT_BUFFER_CHUNK_SIZE * processors * 1024;
+
 		this.processorBufferLocalPercent = 100;
 		this.timerExecutor = 2;
 		this.idleTimeout = DEFAULT_IDLE_TIMEOUT;

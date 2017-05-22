@@ -2,6 +2,7 @@ package org.opencloudb.monitor;
 
 
 
+import com.alibaba.druid.sql.ast.SQLExpr;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
@@ -19,6 +20,7 @@ import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.heartbeat.DBHeartbeat;
 import org.opencloudb.jdbc.JDBCConnection;
+import org.opencloudb.manager.handler.CheckTableStructureConsistencyHandler;
 import org.opencloudb.memory.MyCatMemory;
 import org.opencloudb.memory.unsafe.Platform;
 import org.opencloudb.mysql.nio.MySQLConnection;
@@ -246,6 +248,7 @@ public class MonitorServer {
                         updateDataSource();
                         updateCacheInfo();
                         updateProcessor();
+                        CheckTableStructureConsistency();
                     }
                 });
             }
@@ -827,6 +830,7 @@ public class MonitorServer {
         }
     }
 
+
     /**
      * 获取系统内存运行状态，写入H2DB库中
      */
@@ -945,7 +949,22 @@ public class MonitorServer {
             dmd.setUsed(entry.getValue());
             dmd.update();
         }
+    }
 
+    /**
+     * 定时检查schema各分片节点表结构是否一致
+     */
+    public void CheckTableStructureConsistency()
+    {
+        Set<String>  schemaList =  MycatServer.getInstance().getConfig().getSchemas().keySet();
+        for (String schema: schemaList) {
+            CheckTableStructureConsistencyHandler handler = new CheckTableStructureConsistencyHandler(schema,null,false);
+            try {
+                handler.handle();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 

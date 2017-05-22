@@ -169,6 +169,12 @@ public class H2DBMonitorManager {
              */
             createH2dbTable(conn,TableCreateSQL.T_TOPNROWS,"t_topnrows");
 
+            /**
+             * 表结构一致性监控信息表
+             * table:t_tsc
+             */
+            createH2dbTable(conn,TableCreateSQL.T_TSC,"t_tsc");
+
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         } finally {

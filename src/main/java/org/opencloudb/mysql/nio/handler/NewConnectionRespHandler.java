@@ -39,11 +39,8 @@ public class NewConnectionRespHandler implements ResponseHandler{
 
 	@Override
 	public void connectionAcquired(BackendConnection conn) {
-		//
 		conn.release();
 		LOGGER.info("connectionAcquired "+conn);
-		
-		
 	}
 
 	@Override

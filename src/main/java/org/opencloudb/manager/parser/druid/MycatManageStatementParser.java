@@ -6,8 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.opencloudb.MycatServer;
+import org.opencloudb.manager.handler.MycatConfigBackupHandler;
 import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatChecksumTableStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatConfigBackupStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatConfigRollbackStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
@@ -104,6 +107,16 @@ public class MycatManageStatementParser extends SQLStatementParser {
 
             if (lexer.token() == Token.ALTER) {
                 statementList.add(parseAlter());
+                continue;
+            }
+            
+            if (identifierEquals("ROLLBACK")) {
+                statementList.add(parseRollback(true));
+                continue;
+            }
+            
+            if (identifierEquals("BACKUP")) {
+                statementList.add(parseBackup(true));
                 continue;
             }
 
@@ -811,6 +824,38 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		}
 	}
 	
+	public SQLStatement parseRollback(boolean acceptRollback) {
+		if (acceptRollback) {
+			acceptIdentifier("ROLLBACK");
+		}
+		accept(Token.TO);
+		
+		MycatConfigRollbackStatement stmt = new MycatConfigRollbackStatement();
+		
+		Token token = lexer.token();
+		
+		if (token == Token.LITERAL_INT) {
+			int index = Integer.parseInt(lexer.numberString());
+			stmt.setIndex(index);
+			lexer.nextToken();
+			
+			return stmt;
+		} else {
+			throw new ParserException("Unsupport Statement : rollback " + token);
+		}
+		
+	}
+	
+	public SQLStatement parseBackup(boolean acceptBackup) {
+		if (acceptBackup) {
+			acceptIdentifier("BACKUP");
+		}
+		
+		MycatConfigBackupStatement stmt = new MycatConfigBackupStatement();
+		
+		return stmt;
+	}
+	
 	public SQLStatement parseAlterUser(boolean acceptAlter) {
 		if(acceptAlter) {
 			accept(Token.ALTER);
@@ -962,6 +1007,9 @@ public class MycatManageStatementParser extends SQLStatementParser {
 //			stmt.setTarget(MycatListStatementTarget.SQLWALL_VARIABLES);
 		} else if(identifierEquals("MAPFILES")) {
 			stmt.setTarget(MycatListStatementTarget.MAPFILES);
+			lexer.nextToken();
+		} else if(identifierEquals("BACKUPS")) {
+			stmt.setTarget(MycatListStatementTarget.BACKUPS);
 			lexer.nextToken();
 		} else {
 			throw new ParserException("Unsupport Statement : list " + lexer.stringVal());

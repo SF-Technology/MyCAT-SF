@@ -422,7 +422,7 @@ public class ConfigTar {
 		 */
 		private String tarFileOperation (String fileName) {
 			int beginIndex = 0;
-			int endIndex = fileName.indexOf('_');
+			int endIndex = fileName.lastIndexOf('_');
 			
 			if (beginIndex < 0 || endIndex < 0 || beginIndex >= endIndex) { // 如果tar备份文件名不合法
 				throw new RuntimeException("Illegal backup file name.");

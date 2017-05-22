@@ -45,7 +45,7 @@ public class MycatConfigRollbackHandler {
 			int index = stmt.getIndex();
 			
 			if (! ConfigTar.getBackupFileMap().containsIndex(index)) {
-				c.writeErrMessage(ErrorCode.ER_FILE_NOT_FOUND, "Rollback " + index + " is not found.");
+				c.writeErrMessage(ErrorCode.ER_FILE_NOT_FOUND, "Rollback index " + index + " is out of boundary.");
 				return;
 			}
 			

@@ -11,6 +11,7 @@ import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.loader.xml.jaxb.UserJAXB;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
@@ -41,6 +42,7 @@ public class CreateUserHandler {
 		mycatConfig.getLock().lock();
 		
 		try {
+			c.setLastOperation("create user " + stmt.getUserName().getSimpleName()); // 记录操作
 			
 			String newUserName = StringUtil.removeBackquote(stmt.getUserName().getSimpleName());
 			// 判断user是否已经存在
@@ -81,6 +83,13 @@ public class CreateUserHandler {
             	c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "flush user.xml fail");
             	return ;
             }
+            
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
             
             ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));

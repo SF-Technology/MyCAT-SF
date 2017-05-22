@@ -346,6 +346,8 @@ public class MycatConfig {
 			this.functions = functions;
 			this.cluster = cluster;
 			this.quarantine = quarantine;
+			
+			initRootUser(); // 载入内建的root用户
 		} finally {
 			lock.unlock();
 		}

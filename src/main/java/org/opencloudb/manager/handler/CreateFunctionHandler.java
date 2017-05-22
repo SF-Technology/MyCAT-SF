@@ -10,6 +10,7 @@ import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.loader.xml.jaxb.RuleJAXB;
 import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.config.util.ParameterMapping;
 import org.opencloudb.manager.ManagerConnection;
@@ -36,6 +37,8 @@ public class CreateFunctionHandler {
 		mycatConfig.getLock().lock();
 		
 		try {
+			c.setLastOperation("create function " + stmt.getFunction()); // 记录操作
+			
 			if (functions.get(name) != null) { // function exists
 				c.writeErrMessage(ErrorCode.ER_CANT_CREATE_FUNCTION, "Function named " + name + " already exists.");
 				return;
@@ -60,6 +63,13 @@ public class CreateFunctionHandler {
 			
 			// rule.xml刷成功之后，更新内存中的配置信息
 			functions.put(name, function);
+			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
 		} catch (ReflectiveOperationException e) {
 			c.writeErrMessage(ErrorCode.ER_CANT_CREATE_FUNCTION, "can not mapping the parameters to the " + name + " object.");
 			LOGGER.error("can not mapping the parameters to the " + name + " object.", e);
@@ -69,8 +79,10 @@ public class CreateFunctionHandler {
 			LOGGER.error("fail to instantiate class " + className,e);
 			return;
 		} catch (Exception e) {
-			c.writeErrMessage(ErrorCode.ER_FLUSH_FAILED, "flush rule.xml fail");
-			LOGGER.error("flush rule.xml fail",e);
+			c.setLastOperation("create function " + stmt.getFunction()); // 记录操作
+			
+			LOGGER.error(e.getMessage(), e);
+			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 			return;
 		} finally {
 			mycatConfig.getLock().unlock();

@@ -10,6 +10,7 @@ import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.model.SchemaConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
@@ -40,6 +41,7 @@ public class CreateSchemaHandler {
 		MycatConfig mycatConfig = MycatServer.getInstance().getConfig();
 		mycatConfig.getLock().lock();
 		try {
+			c.setLastOperation("create schema " + stmt.getSchema().getSimpleName()); // 记录操作
 			
 			// 检查schema是否已经存在
 			if(mycatConfig.getSchemas().containsKey(schemaName)) {
@@ -71,10 +73,19 @@ public class CreateSchemaHandler {
 			schemas.put(schemaName, schema);
 			mycatConfig.getUsers().get(c.getUser()).getSchemas().add(schemaName);
 			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
+			
 			// 响应客户端
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 		} catch(Exception e) {
+			c.setLastOperation("create schema " + stmt.getSchema().getSimpleName()); // 记录操作
+			
 			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {

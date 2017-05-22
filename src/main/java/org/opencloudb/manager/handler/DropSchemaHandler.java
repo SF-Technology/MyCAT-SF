@@ -13,6 +13,7 @@ import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.loader.xml.jaxb.UserJAXB;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.UserConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
@@ -42,6 +43,7 @@ public class DropSchemaHandler {
 		mycatConf.getLock().lock();
 		
 		try {
+			c.setLastOperation("drop schema " + schemaName); // 记录操作
 			
 			Map<String, SchemaConfig> schemas = mycatConf.getSchemas();
 			// 检查schema是否存在
@@ -96,10 +98,20 @@ public class DropSchemaHandler {
 				c.setSchema(null);
 			}
 			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
+			
+			// 响应客户端
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 			
 		} catch(Exception e) {
+			c.setLastOperation("drop schema " + schemaName); // 记录操作
+			
 			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {

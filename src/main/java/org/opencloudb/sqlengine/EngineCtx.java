@@ -57,10 +57,8 @@ public class EngineCtx {
 	public void executeNativeSQLParallJob(String[] dataNodes, String sql,
 			SQLJobHandler jobHandler) {
 		for (String dataNode : dataNodes) {
-			SQLJob job = new SQLJob(jobId.incrementAndGet(), sql, dataNode,
-					jobHandler, this);
+			SQLJob job = new SQLJob(jobId.incrementAndGet(),sql,dataNode,jobHandler,this);
 			bachJob.addJob(job, true);
-
 		}
 	}
 

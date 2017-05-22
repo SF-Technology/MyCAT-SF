@@ -14,8 +14,7 @@ import java.util.List;
  */
 
 
-public class MySQLInfoSchemaResultHandler implements
-        SQLJobHandler {
+public class MySQLInfoSchemaResultHandler implements SQLJobHandler {
     public static final Logger LOGGER =
             Logger.getLogger(MySQLInfoSchemaResultHandler.class);
     private final MySQLInfoSchemaProcessor ctx;

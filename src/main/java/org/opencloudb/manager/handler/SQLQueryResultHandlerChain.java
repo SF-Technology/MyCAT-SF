@@ -27,6 +27,7 @@ public abstract class SQLQueryResultHandlerChain<T> implements SQLQueryResultLis
 	
 	public void handle() throws Exception {
 		MySQLInfoSchemaProcessor infoSchemaProcessor = new MySQLInfoSchemaProcessor(schema, sql, this);
+
 		infoSchemaProcessor.processSQL();
 	}
 	

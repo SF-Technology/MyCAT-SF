@@ -459,7 +459,9 @@ public class CheckTableStructureConsistencyHandler {
 			// 回收资源
 			tableColumnsMap.clear();
 			tableColumnsMap = null;
-			
+
+
+
 		}
 		
 		private void checkAddOrDelete(Map<String, Map<String, TableColumns>> tableColumnsMap,

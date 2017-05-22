@@ -151,8 +151,9 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
 
     @Override
     public void onAllJobFinished(EngineCtx ctx) {
-        LOGGER.info("onAllJobFinished");
-
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("onAllJobFinished");
+        }
     }
 
     public void endJobInput(String dataNode, boolean failed) {
@@ -161,7 +162,9 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
                 integer.getAndSet(0);
                 ctx.endJobInput();
                 addPack(END_FLAG_PACK);
-                LOGGER.info("All Jobs Finished " + integer.get());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("All Jobs Finished " + integer.get());
+                }
             }
         }
     }

@@ -286,6 +286,12 @@ public class TableCreateSQL {
             "tables VARCHAR(255)," +
             "exec_count BIGINT);";
 
-
-
+    /**
+     * 监控表结构一致性的记录表
+     * t_tsc
+     */
+    public final static String T_TSC = "CREATE TABLE t_tsc(" +
+            "schema VARCHAR(64) PRIMARY KEY, " +
+            "consistency VARCHAR(32)," +
+            "desc VARCHAR(2048));";
 }

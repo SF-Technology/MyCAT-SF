@@ -29,7 +29,7 @@ public class CheckHandler {
 				for(SQLExpr sqlExpr : _stmt.getNameList()) {
 					schemaList.add(sqlExpr.toString());
 				}
-				CheckTableStructureConsistencyHandler handler = new CheckTableStructureConsistencyHandler(schemaList.get(0), c);
+				CheckTableStructureConsistencyHandler handler = new CheckTableStructureConsistencyHandler(schemaList.get(0), c,true);
 				handler.handle();
 			} else {
 				c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement : " + sql);

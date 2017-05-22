@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.alibaba.druid.support.logging.Log;
 import org.opencloudb.MycatServer;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.config.ErrorCode;
@@ -24,6 +25,7 @@ import org.opencloudb.manager.handler.CheckTableStructureConsistencyHandler.Tabl
 import org.opencloudb.manager.handler.CheckTableStructureConsistencyHandler.TableCheckResult.DiffItem;
 import org.opencloudb.manager.handler.CheckTableStructureConsistencyHandler.TableColumns.Column;
 import org.opencloudb.manager.handler.CheckTableStructureConsistencyHandler.TableIndexes.Index;
+import org.opencloudb.monitor.CheckTableStructureConsistencyInfo;
 import org.opencloudb.mysql.MySQLMessage;
 import org.opencloudb.mysql.PacketUtil;
 import org.opencloudb.net.FrontendConnection;
@@ -45,13 +47,12 @@ import com.google.common.base.Joiner;
  *
  */
 public class CheckTableStructureConsistencyHandler {
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(CheckTableStructureConsistencyHandler.class);
 	private static final int FIELD_COUNT = 1; // 返回结果集列数量
 	private static final ResultSetHeaderPacket header = PacketUtil.getHeader(FIELD_COUNT);
 	private static final FieldPacket[] fields = new FieldPacket[FIELD_COUNT];
 	private static final EOFPacket eof = new EOFPacket();
-	
+	private boolean isManagerConnection = true;
 	/*
 	 *  定义返回结果集header和field
 	 */
@@ -375,9 +376,13 @@ public class CheckTableStructureConsistencyHandler {
 
 		@Override
 		public void processResult(HashMap<String, LinkedList<byte[]>> mapHostData) {
-			
-			ManagerConnection c = CheckTableStructureConsistencyHandler.this.source;
-			String charset = c.getCharset();
+			ManagerConnection c = null;
+			String charset = "utf8";
+			if (isManagerConnection) {
+				 c = CheckTableStructureConsistencyHandler.this.source;
+				 charset = c.getCharset();
+			}
+
 			Map<String, Map<String, TableColumns>> tableColumnsMap = new HashMap<String, Map<String, TableColumns>>();
 			int colSize = MYSQL_INFO_SCHEMA_TCOLUMNS.length;
 			int colIdxOfTableSchema = COL_IDX_OF_TABLE_SCHEMA;
@@ -459,9 +464,6 @@ public class CheckTableStructureConsistencyHandler {
 			// 回收资源
 			tableColumnsMap.clear();
 			tableColumnsMap = null;
-
-
-
 		}
 		
 		private void checkAddOrDelete(Map<String, Map<String, TableColumns>> tableColumnsMap,
@@ -564,7 +566,11 @@ public class CheckTableStructureConsistencyHandler {
 		public void processResult(HashMap<String, LinkedList<byte[]>> mapHostData) {
 			
 			ManagerConnection c = CheckTableStructureConsistencyHandler.this.source;
-			String charset = c.getCharset();
+			String charset = null;
+			if (c != null)
+				charset= c.getCharset();
+			else
+				charset  = "utf8";
 			
 			int colSize = MYSQL_INFO_SCHEMA_TSTATISTICS.length;
 			int colIdxOfTableSchema = COL_IDX_OF_TABLE_SCHEMA;
@@ -650,7 +656,11 @@ public class CheckTableStructureConsistencyHandler {
 			try {
 				response(resultMap);
 			} catch (Exception e) {
-				c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
+				if (c != null) {
+					c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
+				}else {
+					LOGGER.error(e.getMessage());
+				}
 			}
 			
 		}
@@ -739,13 +749,74 @@ public class CheckTableStructureConsistencyHandler {
 		}
 		
 	}
+
+	/**
+	 *
+	 * @param schemaName
+	 * @param c
+	 * @param isManagerConnection true表示是mycat管理端口发送check命令，false表示定时check命令
+	 */
 	
-	public CheckTableStructureConsistencyHandler(String schemaName, ManagerConnection c) {
+	public CheckTableStructureConsistencyHandler(String schemaName, ManagerConnection c,boolean isManagerConnection) {
 		this.schemaName = schemaName;
 		this.source = c;
+		this.isManagerConnection = isManagerConnection;
 	}
 
+
 	public void handle() throws Exception {
+		if (isManagerConnection){
+			handleWithManagerConnection();
+		}else {
+			handleNotWithManagerConnection();
+		}
+	}
+
+	public void handleNotWithManagerConnection() throws Exception{
+
+		Map<String, SchemaConfig> schemaMap = MycatServer.getInstance().getConfig().getSchemas();
+		// 1. 获取选择的schema
+		SchemaConfig selSchemaCfg = schemaMap.get(this.schemaName);
+		if(selSchemaCfg == null) {
+			LOGGER.error("can not find schema [ " + this.schemaName + " ] in mycat schema.xml");
+			return ;
+		}
+		// 2. 收集对应的分片表和全局表,待下一步处理
+		List<TableConfig> tableCfgList = new ArrayList<TableConfig>();
+		Set<String> tableSet = new TreeSet<String>();
+		for(String tableName : selSchemaCfg.getTables().keySet()) {
+			TableConfig tableCfg = selSchemaCfg.getTables().get(tableName);
+			if(tableCfg.getRule() != null || tableCfg.isGlobalTable()) {
+				tableCfgList.add(tableCfg);
+				tableSet.add("'" + tableName + "'");
+			}
+		}
+
+		Set<String> realSchemaSet = getRealSchemaSet(tableCfgList);
+		sql1 = "select " + Joiner.on(",").join(MYSQL_INFO_SCHEMA_TCOLUMNS)
+				+ " from INFORMATION_SCHEMA.COLUMNS where table_schema in ( "
+				+ Joiner.on(",").join(realSchemaSet) + " ) and table_name in ( "
+				+ Joiner.on(",").join(tableSet) + " )";
+
+
+		sql2 = "select " + Joiner.on(",").join(MYSQL_INFO_SCHEMA_TSTATISTICS)
+				+ " from INFORMATION_SCHEMA.STATISTICS where table_schema in ( "
+				+ Joiner.on(",").join(realSchemaSet) + " ) and table_name in ( "
+				+ Joiner.on(",").join(tableSet) + " )";
+
+		if(LOGGER.isDebugEnabled()) {
+			LOGGER.debug("fetch information_schema.columns data : " + sql1);
+			LOGGER.debug("fetch information_schema.statistics data : " + sql2);
+		}
+
+		this.handler2 = new CheckTableIdxDefConsistencyHandler(null, schemaName, sql2);
+		this.handler1 = new CheckTableColDefConsistencyHandler(null, schemaName, sql1);
+		this.handler1.setNextHandler(this.handler2);
+		this.handler1.handle();
+	}
+
+	public void handleWithManagerConnection() throws Exception {
+
 		
 		ManagerConnection c = this.source;
 		Map<String, SchemaConfig> schemaMap = MycatServer.getInstance().getConfig().getSchemas();
@@ -871,8 +942,110 @@ public class CheckTableStructureConsistencyHandler {
 		}
 		return Joiner.on(", " + LINE_SEP).join(strList);
 	}
-	
+
 	private void response(Map<String, TableCheckResult> resultMap) throws IOException {
+		if (isManagerConnection) {
+			responseWithManagerConnection(resultMap);
+		}else
+		{
+			responseNotWithManagerConnection(resultMap);
+		}
+	}
+
+
+	private void responseNotWithManagerConnection(Map<String, TableCheckResult> resultMap) throws IOException
+	{
+			getDhDbToDnMap();
+
+			//String hr = "\n";
+			StringWriter strWriter = new StringWriter();
+			BufferedWriter bufWriter = new BufferedWriter(strWriter);
+			boolean consistent = true;
+			for(String tableName : resultMap.keySet()) {
+				TableCheckResult result = resultMap.get(tableName);
+				if(result.isConsistent()) {
+					continue;
+				}
+				consistent = false;
+
+
+				bufWriter.write("TABLE : " + tableName);
+				if(!result.isColDefConsistent()) {
+					bufWriter.write("[COLUMN DEFINE] : ");
+					if(result.addColItems.size() > 0) {
+						bufWriter.write("[ADD] : ");
+						int no = 1;
+						for(AddItem addItem : result.addColItems) {
+							bufWriter.write("(" + no + ") " + printAddItem(addItem));
+							bufWriter.newLine();
+							no++;
+						}
+					}
+					if(result.delColItems.size() > 0) {
+						bufWriter.write("[DELETE] : ");
+						int no = 1;
+						for(DeleteItem delItem : result.delColItems) {
+							bufWriter.write("(" + no + ") " + printDelItem(delItem));
+							bufWriter.newLine();
+							no++;
+						}
+					}
+					if(result.diffColItems.size() > 0) {
+						bufWriter.write("[DIFF] : ");
+						int no = 1;
+						for(DiffItem diffItem : result.diffColItems) {
+							bufWriter.write("(" + no + ") " + diffItem.key + " : " + LINE_SEP + printDiffGroup(diffItem));
+							bufWriter.newLine();
+							no++;
+						}
+					}
+				}
+				if(!result.isIdxDefConsistent()) {
+					bufWriter.write("[INDEX DEFINE] : ");
+					if(result.addIdxItems.size() > 0) {
+						bufWriter.write("[ADD] : ");
+						int no = 1;
+						for(AddItem addItem : result.addIdxItems) {
+							bufWriter.write("(" + no + ") " + printAddItem(addItem));
+							bufWriter.newLine();
+							no++;
+						}
+					}
+					if(result.delIdxItems.size() > 0) {
+						bufWriter.write("[DELETE] : ");
+						int no = 1;
+						for(DeleteItem delItem : result.delIdxItems) {
+							bufWriter.write("(" + no + ") " + printDelItem(delItem));
+							no++;
+						}
+					}
+					if(result.diffIdxItems.size() > 0) {
+						bufWriter.write("[DIFF] : ");
+						int no = 1;
+						for(DiffItem diffItem : result.diffIdxItems) {
+							bufWriter.write("(" + no + ")" + diffItem.key + " : " + LINE_SEP + printDiffGroup(diffItem));
+							no++;
+						}
+					}
+				}
+			}
+
+		bufWriter.flush();
+		CheckTableStructureConsistencyInfo checkTscInfo = new CheckTableStructureConsistencyInfo();
+
+		if(!consistent){
+			checkTscInfo.setSchemaName(schemaName);
+			checkTscInfo.setConsistency("NO");
+			checkTscInfo.setDesc(strWriter.toString().replaceAll("'","").replaceAll(LINE_SEP,"   -|-   "));
+		} else {
+			checkTscInfo.setSchemaName(schemaName);
+			checkTscInfo.setConsistency("OK");
+			checkTscInfo.setDesc("Table Structure Consistency All The Same !");
+		}
+		checkTscInfo.update();
+	}
+
+	private void responseWithManagerConnection(Map<String, TableCheckResult> resultMap) throws IOException {
 		
 		getDhDbToDnMap();
 		

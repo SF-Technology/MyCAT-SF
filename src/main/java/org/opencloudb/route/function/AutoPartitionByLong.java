@@ -81,7 +81,7 @@ public class AutoPartitionByLong extends AbstractPartitionAlgorithm implements R
 		for (LongRange range : longRongs) {
 			maxNodeIndex = maxNodeIndex > range.nodeIndx ? maxNodeIndex : range.nodeIndx;
 		}
-		return maxNodeIndex;
+		return maxNodeIndex + 1;
 	}
 	
 	@Override

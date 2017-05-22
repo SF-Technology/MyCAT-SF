@@ -68,9 +68,12 @@ public class PartitionByRangeDateHash extends AbstractPartitionAlgorithm impleme
         }
     }
     
+    /*
+     * 所需的分片数数是不确定的，理论上可以无限，暂不对此分片算法做校验
+     */
     @Override
 	public int requiredNodeNum() {
-    	return intGroupPartionSize;
+    	return -1;
     }
 
     public Integer calculateStart(String columnValue)

@@ -34,6 +34,12 @@ public class MycatConfigHandler {
 		case ManagerParseMycatConfig.SHOW:
 			MycatConfigShowHandler.handle(stmt.substring(offset).trim(), c);
 			break;
+		case ManagerParseMycatConfig.ROLLBACK:
+			MycatConfigRollbackHandler.handle(stmt.substring(offset).trim(), c);
+			break;
+		case ManagerParseMycatConfig.BACKUP:
+			MycatConfigBackupHandler.handle(stmt.substring(offset).trim(), c);
+			break;
 		default:
 			c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement : " + stmt);
 			break;

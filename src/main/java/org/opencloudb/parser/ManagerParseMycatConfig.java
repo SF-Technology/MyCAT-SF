@@ -15,6 +15,8 @@ public final class ManagerParseMycatConfig {
 	public static final int ALTER = 4;
 	public static final int SET = 5;
 	public static final int SHOW = 6;
+	public static final int ROLLBACK = 7;
+	public static final int BACKUP = 8;
 	
 	public static int parse(String stmt, int offset) {
 		for(int i = offset + 1, len = stmt.length(); i < len; i++) {
@@ -39,6 +41,12 @@ public final class ManagerParseMycatConfig {
 				case 'S':
 				case 's':
 					return sCheck(stmt, i);
+				case 'R':
+				case 'r':
+					return rollbackCheck(stmt, i);
+				case 'B':
+				case 'b':
+					return backupCheck(stmt, i);
 				default:
 					break;
 			}
@@ -105,6 +113,58 @@ public final class ManagerParseMycatConfig {
 					&& (c3 == 'P' || c3 == 'p')
 					&& (c4 == ' ' || c4 == '\t' || c4 == '\r' || c4 == '\n')) {
 				return DROP;
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int rollbackCheck(String stmt, int offset) {
+		if(stmt.length() > offset + "OLLBACK ".length()) {
+			char c1 = stmt.charAt(++offset); // O
+			char c2 = stmt.charAt(++offset); // L
+			char c3 = stmt.charAt(++offset); // L
+			char c4 = stmt.charAt(++offset); // B
+			char c5 = stmt.charAt(++offset); // A
+			char c6 = stmt.charAt(++offset); // C
+			char c7 = stmt.charAt(++offset); // K
+			char c8 = stmt.charAt(++offset);
+			if((c1 == 'O' || c1 == 'o') && (c2 == 'L' || c2 == 'l')
+					&& (c3 == 'L' || c3 == 'l') && (c4 == 'B' || c4 == 'b')
+					&& (c5 == 'A' || c5 == 'a') && (c6 == 'C' || c6 == 'c')
+					&& (c7 == 'K' || c7 == 'k')
+					&& (c8 == ' ' || c8 == '\t' || c8 == '\r' || c8 == '\n')) {
+				return ROLLBACK;
+			}
+		}
+		return OTHER;
+	}
+	
+	private static int backupCheck(String stmt, int offset) {
+		if(stmt.length() > offset + "ACKUP ".length()) {
+			char c1 = stmt.charAt(++offset); // A
+			char c2 = stmt.charAt(++offset); // C
+			char c3 = stmt.charAt(++offset); // K
+			char c4 = stmt.charAt(++offset); // U
+			char c5 = stmt.charAt(++offset); // P
+			char c6 = stmt.charAt(++offset);
+			if((c1 == 'A' || c1 == 'a') && (c2 == 'C' || c2 == 'c')
+					&& (c3 == 'K' || c3 == 'k') && (c4 == 'U' || c4 == 'u')
+					&& (c5 == 'P' || c5 == 'p') 
+					&& (c6 == ' ' || c6 == '\t' || c6 == '\r' || c6 == '\n')) {
+				return BACKUP;
+			}
+		} 
+		
+		else if (stmt.length() == offset + "ACKUP ".length()) {
+			char c1 = stmt.charAt(++offset); // A
+			char c2 = stmt.charAt(++offset); // C
+			char c3 = stmt.charAt(++offset); // K
+			char c4 = stmt.charAt(++offset); // U
+			char c5 = stmt.charAt(++offset); // P
+			if((c1 == 'A' || c1 == 'a') && (c2 == 'C' || c2 == 'c')
+					&& (c3 == 'K' || c3 == 'k') && (c4 == 'U' || c4 == 'u')
+					&& (c5 == 'P' || c5 == 'p')) {
+				return BACKUP;
 			}
 		}
 		return OTHER;

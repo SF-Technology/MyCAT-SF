@@ -100,7 +100,7 @@ public class PartitionByPattern extends AbstractPartitionAlgorithm implements Ru
 		for (LongRange range : longRongs) {
 			maxNodeIndex = maxNodeIndex > range.nodeIndx ? maxNodeIndex : range.nodeIndx;
 		}
-		return maxNodeIndex;
+		return maxNodeIndex + 1;
 	}
 
 	public static boolean isNumeric(String str) {

@@ -14,6 +14,7 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.loader.xml.jaxb.DatabaseJAXB;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
@@ -32,6 +33,7 @@ public class DropDataNodeHandler {
 		mycatConf.getLock().lock();
 
 		try {
+			c.setLastOperation("drop datanode " + stmt.getDataNode().getSimpleName()); // 记录操作
 			Map<String, PhysicalDBNode> dataNodes = mycatConf.getDataNodes();
 			Map<String, PhysicalDBPool> dataHosts = mycatConf.getDataHosts();
 
@@ -59,11 +61,20 @@ public class DropDataNodeHandler {
 
 			// 更新内存中的dataNode信息
 			dataNodes.remove(nodeName);
+			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
 
 			// 响应客户端
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 		} catch (Exception e) {
+			c.setLastOperation("drop datanode " + stmt.getDataNode().getSimpleName()); // 记录操作
+			
 			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {

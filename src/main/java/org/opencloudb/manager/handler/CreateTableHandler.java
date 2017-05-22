@@ -13,6 +13,7 @@ import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.config.model.rule.RuleConfig;
 import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
@@ -43,6 +44,7 @@ public class CreateTableHandler {
 		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
 		mycatConf.getLock().lock();
 		try {
+			c.setLastOperation("create table " + stmt.getTable().getSimpleName()); // 记录操作
 			
 			String schemaName = (stmt.getSchema() == null ? c.getSchema() : StringUtil.removeBackquote(stmt.getSchema().getSimpleName()));
 			
@@ -118,11 +120,20 @@ public class CreateTableHandler {
 			// 更新datanode, Tips: 引入的table有可能增加新的datanode
 			schemaConf.updateDataNodesMeta();
 			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
 			
+			// 响应客户端
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 				
 		} catch(Exception e) {
+			c.setLastOperation("create table " + stmt.getTable().getSimpleName()); // 记录操作
+			
 			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {

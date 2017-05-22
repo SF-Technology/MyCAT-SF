@@ -12,6 +12,7 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
@@ -36,6 +37,7 @@ public class DropTableHandler {
 		
 		mycatConf.getLock().lock();
 		try {
+			c.setLastOperation("drop table " + stmt.getTable().getSimpleName()); // 记录操作
 			
 			// 获取当前schema
 			String schemaName = c.getSchema();
@@ -92,10 +94,20 @@ public class DropTableHandler {
 			// 重新更新SchemaConfig datanode集合
 			schemaConf.updateDataNodesMeta();
 			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
+			
+			// 响应客户端
 			ByteBuffer buffer = c.allocate();
 			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 			
 		} catch(Exception e) {
+			c.setLastOperation("drop table " + stmt.getTable().getSimpleName()); // 记录操作
+			
 			LOGGER.error(e.getMessage(), e);
 			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {

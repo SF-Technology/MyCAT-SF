@@ -45,6 +45,7 @@ import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.UserConfig;
 import org.opencloudb.config.model.rule.TableRuleConfig;
 import org.opencloudb.config.util.ConfigException;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.jdbc.JDBCDatasource;
 import org.opencloudb.mysql.nio.MySQLDataSource;
 import org.opencloudb.route.function.AbstractPartitionAlgorithm;
@@ -75,7 +76,9 @@ public class ConfigInitializer {
 		this.firewall = configLoader.getFirewallConfig();
 		this.users = configLoader.getUserConfigs();
 		this.schemas = configLoader.getSchemaConfigs();
-		initMapFileFolder();
+		initMapFileFolder(); // 初始化保存mapfile的文件夹
+		initConfBak(); // 初始化保存备份文件的文件夹
+		initBackups(); // 初始化备份文件
         if(loadDataHost)
         {
             this.dataHosts = initDataHosts(configLoader);
@@ -143,6 +146,28 @@ public class ConfigInitializer {
 		
 		new File(folderPath).mkdirs(); // 如果classpath下面没有MAP_FILE_FOLDER文件夹，则新建
 	}
+	
+	/**
+	 * 如果homepath下没有ConfBak文件夹，则新建
+	 */
+	private void initConfBak () {
+		File confBakFolder = new File(SystemConfig.getHomePath(), SystemConfig.getConfBak());
+		confBakFolder.mkdirs();
+	}
+	
+	/**
+	 * @throws Exception
+	 */
+	private void initBackups (){
+		if (ConfigTar.getBackupFileMap().getTarFileMap().isEmpty()) {
+			try {
+				ConfigTar.tarConfig("Initialize backup");
+			} catch (Exception e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}
+	}
+	
 
 	public SystemConfig getSystem() {
 		return system;

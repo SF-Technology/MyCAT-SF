@@ -21,6 +21,7 @@ import org.opencloudb.config.model.DBHostConfig;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.util.ConfigException;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.DnPropertyUtil;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.jdbc.JDBCDatasource;
@@ -47,28 +48,26 @@ public class CreateDataHostHandler {
 	private static final int DEFAULT_WEIGHT = PhysicalDBPool.WEIGHT;
 
 	public static void handle(ManagerConnection c, MycatCreateDataHostStatement stmt, String sql) {
-		final ReentrantLock lock = MycatServer.getInstance().getConfig().getLock();
-		lock.lock();
-		try {
-			ListenableFuture<Boolean> listenableFuture = MycatServer.getInstance().getListeningExecutorService()
-					.submit(new CreateDataHostTask(stmt));
-			Futures.addCallback(listenableFuture, new CreateDataHostCallBack(c),
-					MycatServer.getInstance().getListeningExecutorService());
-		} finally {
-			lock.unlock();
-		}
+		c.setLastOperation("create datahost " + stmt.getDatahost().getSimpleName()); // 记录操作
+
+		ListenableFuture<Boolean> listenableFuture = MycatServer.getInstance().getListeningExecutorService()
+				.submit(new CreateDataHostTask(c, stmt));
+		Futures.addCallback(listenableFuture, new CreateDataHostCallBack(c),
+				MycatServer.getInstance().getListeningExecutorService());
 	}
 
 	private static class CreateDataHostTask implements Callable<Boolean> {
 		private MycatCreateDataHostStatement stmt;
+		private ManagerConnection c;
 
-		public CreateDataHostTask(MycatCreateDataHostStatement stmt) {
+		public CreateDataHostTask(ManagerConnection c, MycatCreateDataHostStatement stmt) {
+			this.c = c;
 			this.stmt = stmt;
 		}
 
 		@Override
 		public Boolean call() throws Exception {
-			return createDataHost(stmt);
+			return createDataHost(c, stmt);
 		}
 
 	}
@@ -101,51 +100,67 @@ public class CreateDataHostHandler {
 		}
 	}
 
-	public static boolean createDataHost(MycatCreateDataHostStatement stmt) throws Exception {
+	public static boolean createDataHost(ManagerConnection c, MycatCreateDataHostStatement stmt) throws Exception {
 		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
+		final ReentrantLock lock = mycatConf.getLock();
+		lock.lock();
+		
+		try {
+			Map<String, PhysicalDBNode> dataNodes = mycatConf.getDataNodes();
+			Map<String, PhysicalDBPool> dataHosts = mycatConf.getDataHosts();
 
-		Map<String, PhysicalDBNode> dataNodes = mycatConf.getDataNodes();
-		Map<String, PhysicalDBPool> dataHosts = mycatConf.getDataHosts();
+			String hostName = stmt.getDatahost().getSimpleName();
 
-		String hostName = stmt.getDatahost().getSimpleName();
+			if (dataHosts.containsKey(hostName)) {
+				throw new Exception("DataHost " + hostName + " already exists.");
+			}
 
-		if (dataHosts.containsKey(hostName)) {
-			throw new Exception("DataHost " + hostName + " already exists.");
+			// 生成datahost对应的连接池对象
+			PhysicalDBPool pool = createPool(stmt);
+			pool.setSchemas(new String[] {}); // 初始化的datahost没有datanode引用，所以为空数组
+
+			// 初始化datahost对应的连接池
+			String index = DnPropertyUtil.loadDnIndexProps().getProperty(pool.getHostName(), "0");
+			if (!"0".equals(index)) {
+				LOGGER.info("init datahost: " + pool.getHostName() + "  to use datasource index:" + index);
+			}
+
+			pool.init(Integer.valueOf(index));
+			pool.startHeartbeat();
+
+			if (!pool.isInitSuccess()) {
+				pool.stopHeartbeat();
+				pool.clearDataSources("init datahost " + pool.getHostName() + " failed.");
+				throw new Exception("init datahost " + pool.getHostName() + " failed.");
+			}
+
+			// 生成dataHosts信息的副本，更新副本的信息，然后将其刷入文件中
+			Map<String, PhysicalDBPool> dataHostsCopy = new TreeMap<String, PhysicalDBPool>(dataHosts);
+			dataHostsCopy.put(pool.getHostName(), pool);
+
+			DatabaseJAXB databaseJAXB = JAXBUtil.toDatabaseJAXB(dataNodes, dataHostsCopy);
+			
+			if (!JAXBUtil.flushDatabase(databaseJAXB)) {
+				throw new Exception("flush database.xml failed.");
+			}
+
+			// 更新内存中的dataNode信息
+			dataHosts.put(pool.getHostName(), pool);
+			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
+			
+			return true;
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			lock.unlock();
 		}
-
-		// 生成datahost对应的连接池对象
-		PhysicalDBPool pool = createPool(stmt);
-		pool.setSchemas(new String[] {}); // 初始化的datahost没有datanode引用，所以为空数组
-
-		// 初始化datahost对应的连接池
-		String index = DnPropertyUtil.loadDnIndexProps().getProperty(pool.getHostName(), "0");
-		if (!"0".equals(index)) {
-			LOGGER.info("init datahost: " + pool.getHostName() + "  to use datasource index:" + index);
-		}
-
-		pool.init(Integer.valueOf(index));
-		pool.startHeartbeat();
-
-		if (!pool.isInitSuccess()) {
-			pool.stopHeartbeat();
-			pool.clearDataSources("init datahost " + pool.getHostName() + " failed.");
-			throw new Exception("init datahost " + pool.getHostName() + " failed.");
-		}
-
-		// 生成dataHosts信息的副本，更新副本的信息，然后将其刷入文件中
-		Map<String, PhysicalDBPool> dataHostsCopy = new TreeMap<String, PhysicalDBPool>(dataHosts);
-		dataHostsCopy.put(pool.getHostName(), pool);
-
-		DatabaseJAXB databaseJAXB = JAXBUtil.toDatabaseJAXB(dataNodes, dataHostsCopy);
-
-		if (!JAXBUtil.flushDatabase(databaseJAXB)) {
-			throw new Exception("flush database.xml failed.");
-		}
-
-		// 更新内存中的dataNode信息
-		dataHosts.put(pool.getHostName(), pool);
-
-		return true;
+		
 	}
 
 	public static PhysicalDBPool createPool(MycatCreateDataHostStatement stmt) {

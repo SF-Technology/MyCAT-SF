@@ -342,6 +342,8 @@ public class MycatConfig {
             }
 			this.users = users;
 			this.schemas = schemas;
+			this.tableRules =tableRules;
+			this.functions = functions;
 			this.cluster = cluster;
 			this.quarantine = quarantine;
 		} finally {

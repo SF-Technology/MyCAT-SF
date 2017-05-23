@@ -100,7 +100,7 @@ public class PartitionByPrefixPattern extends AbstractPartitionAlgorithm impleme
 		for (LongRange range : longRongs) {
 			maxNodeIndex = maxNodeIndex > range.nodeIndx ? maxNodeIndex : range.nodeIndx;
 		}
-		return maxNodeIndex;
+		return maxNodeIndex + 1;
 	}
 
 	private void initialize() {

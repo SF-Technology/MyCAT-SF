@@ -11,4 +11,5 @@ public enum MycatListStatementTarget {
 	, SYSTEM_VARIABLES // system variables
 	, SQLWALL_VARIABLES // sqlwall variables
 	, MAPFILES // mapfiles
+	, BACKUPS // backups, 配置信息的备份文件
 }

@@ -23,6 +23,8 @@
  */
 package org.opencloudb.response;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -43,6 +45,7 @@ import org.opencloudb.config.model.QuarantineConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.UserConfig;
 import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.DnPropertyUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.net.mysql.OkPacket;
@@ -69,6 +72,31 @@ public final class ReloadConfig {
                 }
             });
 			Futures.addCallback(listenableFuture, new ReloadCallBack(c),  MycatServer.getInstance().getListeningExecutorService());
+		} finally {
+			lock.unlock();
+		}
+	}
+	
+	/**
+	 * 处理rollback 配置文件后配置信息的reload
+	 * @param c
+	 * @param index 备份文件的下标
+	 */
+	public static void rollbackReload(ManagerConnection c, int index) {
+		final ReentrantLock lock = MycatServer.getInstance().getConfig()
+				.getLock();
+		lock.lock();
+		try {
+			ListenableFuture<Boolean> listenableFuture = MycatServer.getInstance().getListeningExecutorService().submit(new Callable<Boolean>()
+            {
+                @Override
+                public Boolean call() throws Exception
+                {
+
+                    return reload_all();
+                }
+            });
+			Futures.addCallback(listenableFuture, new RollBackCallBack(c, index),  MycatServer.getInstance().getListeningExecutorService());
 		} finally {
 			lock.unlock();
 		}
@@ -190,6 +218,54 @@ public final class ReloadConfig {
 		@Override
 		public void onFailure(Throwable t) {
 			mc.writeErrMessage(ErrorCode.ER_YES, "Reload config failure");
+		}
+	}
+	
+	/**
+	 * 处理rollback配置后的回调类。
+	 */
+	private static class RollBackCallBack implements FutureCallback<Boolean> {
+
+		private ManagerConnection mc;
+		private long timestamp;
+
+		private RollBackCallBack(ManagerConnection c, int index) {
+			this.mc = c;
+			this.timestamp = ConfigTar.getBackupFileMap().acquireTimestamp(index);
+		}
+
+		@Override
+		public void onSuccess(Boolean result) {
+			if (result) {
+				LOGGER.warn("send ok package to client " + String.valueOf(mc));
+				OkPacket ok = new OkPacket();
+				ok.packetId = 1;
+				ok.affectedRows = 0;
+				ok.serverStatus = 2;
+				ok.message = ("Rollback successful to " + toTime(timestamp)).getBytes();
+				ok.write(mc);
+			} else {
+				mc.writeErrMessage(ErrorCode.ER_YES, "Rollback failed.");
+			}
+		}
+
+		@Override
+		public void onFailure(Throwable t) {
+			mc.writeErrMessage(ErrorCode.ER_YES, "Rollback failed.");
+		}
+		
+		/**
+		 * 将时间戳转化为日期
+		 * @param timestamp
+		 * @return
+		 */
+		private String toTime(long timestamp) {
+			Calendar cal = Calendar.getInstance();
+			cal.setTimeInMillis(timestamp);
+			
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			
+			return format.format(cal.getTime());
 		}
 	}
 }

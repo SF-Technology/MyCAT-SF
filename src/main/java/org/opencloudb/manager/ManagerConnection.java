@@ -35,6 +35,8 @@ import org.opencloudb.util.TimeUtil;
 public class ManagerConnection extends FrontendConnection {
 	private static final long AUTH_TIMEOUT = 15 * 1000L;
 
+	private volatile String lastOperation = "No operation"; // 对上一次操作的描述
+	
 	public ManagerConnection(NetworkChannel channel) throws IOException {
 		super(channel);
 	}
@@ -52,6 +54,14 @@ public class ManagerConnection extends FrontendConnection {
 	@Override
 	public void handle(final byte[] data) {
 		handler.handle(data);
+	}
+
+	public String getLastOperation() {
+		return lastOperation;
+	}
+
+	public void setLastOperation(String lastOperation) {
+		this.lastOperation = lastOperation;
 	}
 
 }

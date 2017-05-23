@@ -115,7 +115,7 @@ public class PartitionByFileMap extends AbstractPartitionAlgorithm implements Ru
 			maxNodeIndex = maxNodeIndex > nodeIndex ? maxNodeIndex : nodeIndex;
 		}
 		
-		return maxNodeIndex;
+		return maxNodeIndex + 1;
 	}
 
 	private void initialize() {

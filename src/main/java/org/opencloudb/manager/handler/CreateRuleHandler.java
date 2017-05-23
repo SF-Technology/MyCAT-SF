@@ -11,6 +11,7 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.loader.xml.jaxb.RuleJAXB;
 import org.opencloudb.config.model.rule.RuleConfig;
 import org.opencloudb.config.model.rule.TableRuleConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.JAXBUtil;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
@@ -36,6 +37,7 @@ public class CreateRuleHandler {
 		mycatConfig.getLock().lock();
 		
 		try {
+			c.setLastOperation("create rule " + stmt.getRule()); // 记录操作
 			// 分片规则已经存在
 			if (tableRules.get(name) != null) {
 				c.writeErrMessage(ErrorCode.ER_CANT_CREATE_RULE, "Table rule named " + name + " already exists.");
@@ -65,16 +67,25 @@ public class CreateRuleHandler {
 			
 			// rule.xml刷成功之后，更新内存中的配置信息
 			tableRules.put(name, new TableRuleConfig(name, ruleConfig));
+			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
+			
+			// 向客户端发送ok包
+			ByteBuffer buffer = c.allocate();
+			c.write(c.writeToBuffer(OkPacket.OK, buffer));
 		} catch (Exception e) {
-			c.writeErrMessage(ErrorCode.ER_FLUSH_FAILED, "flush rule.xml fail");
-			LOGGER.error("flush rule.xml fail",e);
-			return ;
+			c.setLastOperation("create rule " + stmt.getRule()); // 记录操作
+			
+			LOGGER.error(e.getMessage(), e);
+			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		} finally {
 			mycatConfig.getLock().unlock();
 		}
 		
-		// 向客户端发送ok包
-		ByteBuffer buffer = c.allocate();
-		c.write(c.writeToBuffer(OkPacket.OK, buffer));
 	}
 }

@@ -6,6 +6,7 @@ import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.MycatManageStatementParser;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListVariablesStatement;
+import org.opencloudb.manager.response.ListBackups;
 import org.opencloudb.manager.response.ListDataHosts;
 import org.opencloudb.manager.response.ListDataNodes;
 import org.opencloudb.manager.response.ListFunctions;
@@ -65,6 +66,9 @@ public class MycatConfigListHandler {
 				case MAPFILES:
 					handleListMapFiles(c);
 					break;
+				case BACKUPS:
+					handleListBackups(c);
+					break;
 				default:
 					c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statment : " + sql);
 					break;
@@ -107,6 +111,10 @@ public class MycatConfigListHandler {
 	
 	public static void handleListFunctions(ManagerConnection c) {
 		ListFunctions.response(c);
+	}
+	
+	public static void handleListBackups(ManagerConnection c) {
+		ListBackups.response(c);
 	}
 	
 	public static void handleListMapFiles(ManagerConnection c) {

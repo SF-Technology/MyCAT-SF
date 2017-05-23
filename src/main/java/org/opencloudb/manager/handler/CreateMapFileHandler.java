@@ -8,46 +8,74 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.opencloudb.MycatConfig;
+import org.opencloudb.MycatServer;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateMapFileStatement;
 import org.opencloudb.net.mysql.OkPacket;
+
+import com.sun.tools.internal.jxc.gen.config.Config;
 
 
 public class CreateMapFileHandler {
 	private static final Logger LOGGER = Logger.getLogger(CreateMapFileHandler.class);
 
 	public static void handle(ManagerConnection c, MycatCreateMapFileStatement stmt, String sql) {
-		String fileName = stmt.getFileName();
-		List<String> lines = stmt.getLines();
-		
-		File mapFile = null;
+		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
+
+		mycatConf.getLock().lock();
+
 		try {
-			mapFile = new File(acquireMapFilePath(fileName));
+			c.setLastOperation("create mapfile " + stmt.getFileName()); // 记录操作
 			
-			if (mapFile.exists()) {
-				c.writeErrMessage(ErrorCode.ER_FILE_EXISTS_ERROR, "mapfile " + fileName + " exists.");
+			String fileName = stmt.getFileName();
+			List<String> lines = stmt.getLines();
+			
+			File mapFile = null;
+			try {
+				mapFile = new File(acquireMapFilePath(fileName));
+				
+				if (mapFile.exists()) {
+					c.writeErrMessage(ErrorCode.ER_FILE_EXISTS_ERROR, "mapfile " + fileName + " exists.");
+					return;
+				}
+				
+			} catch (IOException e) {
+				c.writeErrMessage(ErrorCode.ER_FILE_USED, "fail to acquire mapfile path.");
+				LOGGER.error("fail to acquire mapfile path.", e);
 				return;
 			}
 			
-		} catch (IOException e) {
-			c.writeErrMessage(ErrorCode.ER_FILE_USED, "fail to acquire mapfile path.");
-			LOGGER.error("fail to acquire mapfile path.", e);
-			return;
+			try {
+				writeToFile(lines, mapFile);
+			} catch (Exception e) {
+				c.writeErrMessage(ErrorCode.ER_FILE_USED, "fail to write mapfile.");
+				LOGGER.error("fail to acquire mapfile.", e);
+				return;
+			}
+			
+			// 对配置信息进行备份
+			try {
+				ConfigTar.tarConfig(c.getLastOperation());
+			} catch (Exception e) {
+				throw new Exception("Fail to do backup.");
+			}
+			
+			// 向客户端发送ok包
+			ByteBuffer buffer = c.allocate();
+			c.write(c.writeToBuffer(OkPacket.OK, buffer));
+		} catch (Exception e) {
+			c.setLastOperation("create mapfile " + stmt.getFileName()); // 记录操作
+			
+			LOGGER.error(e.getMessage(), e);
+			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
+		} finally {
+			mycatConf.getLock().unlock();
 		}
-		
-		try {
-			writeToFile(lines, mapFile);
-		} catch (IOException e) {
-			c.writeErrMessage(ErrorCode.ER_FILE_USED, "fail to write mapfile.");
-			LOGGER.error("fail to acquire mapfile.", e);
-			return;
-		}
-		
-		// 向客户端发送ok包
-		ByteBuffer buffer = c.allocate();
-		c.write(c.writeToBuffer(OkPacket.OK, buffer));
+
 	}
 
 	/**

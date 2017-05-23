@@ -1,11 +1,11 @@
-dump all_schemas;
+dump all;
 dump all_tables;
 dump schemas db1;
 dump schemas db1,db2,db3;
 dump tables tb1;
 dump tables tb1,tb2,tb3;
 
-dump all_schemas into 'dump_all_schemas.sql';
+dump all into 'dump_all_schemas.sql';
 dump all_tables into 'dump_all_tables.sql';
 dump schemas db1 into 'dump_db1.sql';
 dump tables tb1 into 'dump_tb1.sql';

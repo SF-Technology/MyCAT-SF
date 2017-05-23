@@ -17,9 +17,6 @@ import org.opencloudb.manager.ManagerConnection;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateMapFileStatement;
 import org.opencloudb.net.mysql.OkPacket;
 
-import com.sun.tools.internal.jxc.gen.config.Config;
-
-
 public class CreateMapFileHandler {
 	private static final Logger LOGGER = Logger.getLogger(CreateMapFileHandler.class);
 

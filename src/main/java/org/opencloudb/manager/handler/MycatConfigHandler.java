@@ -25,6 +25,9 @@ public class MycatConfigHandler {
 		case ManagerParseMycatConfig.DROP:
 			MycatConfigDropHandler.handle(stmt.substring(offset).trim(), c);
 			break;
+		case ManagerParseMycatConfig.DUMP:
+            MycatConfigDumpHandler.handle(stmt.substring(offset).trim(), c);
+            break;
 		case ManagerParseMycatConfig.ALTER:
 			MycatConfigAlterHandler.handle(stmt.substring(offset).trim(), c);
 			break;

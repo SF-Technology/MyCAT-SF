@@ -3,11 +3,14 @@ package org.opencloudb.manager.parser.druid.statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.opencloudb.config.model.DBHostConfig;
+import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.manager.parser.druid.MycatASTVisitor;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLName;
 import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import com.alibaba.druid.sql.ast.statement.SQLDDLStatement;
 
@@ -44,7 +47,7 @@ public class MycatCreateDataHostStatement extends MycatStatementImpl implements 
 		private SQLExpr password;
 		
 		private List<Host> readHosts = new ArrayList<Host>();
-
+		
 		public SQLExpr getHost() {
 			return host;
 		}
@@ -91,6 +94,42 @@ public class MycatCreateDataHostStatement extends MycatStatementImpl implements 
 	public void accept0(MycatASTVisitor visitor) {
 		visitor.visit(this);
         visitor.endVisit(this);
+	}
+	
+	public static MycatCreateDataHostStatement from(DataHostConfig dhConf) {
+	    MycatCreateDataHostStatement stmt = new MycatCreateDataHostStatement();
+	    stmt.setDatahost(new SQLIdentifierExpr(dhConf.getName()));
+	    stmt.setMaxCon(new SQLIntegerExpr(dhConf.getMaxCon()));
+	    stmt.setMinCon(new SQLIntegerExpr(dhConf.getMinCon()));
+	    stmt.setBalance(new SQLIntegerExpr(dhConf.getBalance()));
+	    stmt.setmDbType(new SQLCharExpr(dhConf.getDbType()));
+	    stmt.setDbDriver(new SQLCharExpr(dhConf.getDbDriver()));
+	    stmt.setSwitchType(new SQLIntegerExpr(dhConf.getSwitchType()));
+	    
+	    // 处理写节点
+	    for (int i = 0; i < dhConf.getWriteHosts().length; i++) {
+	        DBHostConfig whConf = dhConf.getWriteHosts()[i];
+	        Host writeHost = stmt.new Host();
+	        writeHost.setHost(new SQLCharExpr(whConf.getHostName()));
+	        writeHost.setUrl(new SQLCharExpr(whConf.getUrl()));
+	        writeHost.setUser(new SQLCharExpr(whConf.getUser()));
+	        writeHost.setPassword(new SQLCharExpr(whConf.getPassword()));
+	        stmt.getWriteHosts().add(writeHost);
+	        // 处理读节点
+	        if (dhConf.getReadHosts().size() <= 0) {
+	            continue;
+	        }
+	        for (DBHostConfig rhConf : dhConf.getReadHosts().get(i)) {
+	            Host readHost = stmt.new Host();
+	            readHost.setHost(new SQLCharExpr(rhConf.getHostName()));
+	            readHost.setUrl(new SQLCharExpr(rhConf.getUrl()));
+	            readHost.setUser(new SQLCharExpr(rhConf.getUser()));
+	            readHost.setPassword(new SQLCharExpr(rhConf.getPassword()));
+	            writeHost.getReadHosts().add(readHost);
+	        }
+	    }
+	    
+	    return stmt;
 	}
 
 	public SQLName getDatahost() {

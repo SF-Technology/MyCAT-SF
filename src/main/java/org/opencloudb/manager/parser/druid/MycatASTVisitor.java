@@ -6,6 +6,9 @@ import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsisten
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateMapFileStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
@@ -65,4 +68,12 @@ public interface MycatASTVisitor extends SQLASTVisitor {
 	void visit(MycatAlterUserStatement stmt);
 	void endVisit(MycatAlterUserStatement stmt);
 	
+	void visit(MycatCreateFunctionStatement stmt);
+    void endVisit(MycatCreateFunctionStatement stmt);
+    
+    void visit(MycatCreateRuleStatement stmt);
+    void endVisit(MycatCreateRuleStatement stmt);
+    
+    void visit(MycatCreateMapFileStatement stmt);
+    void endVisit(MycatCreateMapFileStatement stmt);
 }

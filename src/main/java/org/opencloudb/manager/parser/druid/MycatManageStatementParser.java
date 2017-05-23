@@ -25,6 +25,8 @@ import org.opencloudb.manager.parser.druid.statement.MycatDropRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDumpStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDumpStatementTarget;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatListStatementTarget;
 import org.opencloudb.manager.parser.druid.statement.MycatListVariablesStatement;
@@ -927,6 +929,12 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			return true;
 		}
 		
+		if (identifierEquals("DUMP")) {
+		    lexer.nextToken();
+		    statementList.add(parseDumpStatement(false));
+		    return true;
+		}
+		
 		return false;
 	}
 	
@@ -1067,6 +1075,40 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		stmt.setTarget(MycatListStatementTarget.SQLWALL_VARIABLES);
 		
 		return stmt;
+	}
+	
+	private MycatDumpStatement parseDumpStatement(boolean acceptDump) {
+	    if (acceptDump) {
+	        acceptIdentifier("DUMP");
+	    }
+	    MycatDumpStatement stmt = new MycatDumpStatement();
+	    if (lexer.token() == Token.ALL) {
+	       accept(Token.ALL);
+	       stmt.setTarget(MycatDumpStatementTarget.ALL);
+	    } else if (identifierEquals("ALL_TABLES")) {
+	        acceptIdentifier("ALL_TABLES");
+	        stmt.setTarget(MycatDumpStatementTarget.ALL_TABLES);
+	    } else if (identifierEquals("SCHEMAS")) {
+	        acceptIdentifier("SCHEMAS");
+	        List<SQLExpr> schemasList = new ArrayList<SQLExpr>();
+	        this.exprParser.exprList(schemasList, stmt);
+	        stmt.addAllItems(schemasList);
+	        stmt.setTarget(MycatDumpStatementTarget.SCHEMAS);
+	    } else if (identifierEquals("TABLES")) {
+	        acceptIdentifier("TABLES");
+	        stmt.setTarget(MycatDumpStatementTarget.TABLES);
+	        List<SQLExpr> tablesList = new ArrayList<SQLExpr>();
+	        this.exprParser.exprList(tablesList, stmt);
+	        stmt.addAllItems(tablesList);
+	    } else {
+	        throw new ParserException("Unsupport Statement : dump " + lexer.stringVal());
+	    }
+	    if (lexer.token() == Token.INTO) {
+	        accept(Token.INTO);
+	        stmt.setIntoFile(new SQLCharExpr(acceptNumAndStr()));
+	        stmt.setDumpIntoFile(true);
+	    }
+	    return stmt;
 	}
 	
 }

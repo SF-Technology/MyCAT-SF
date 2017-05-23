@@ -17,6 +17,7 @@ public final class ManagerParseMycatConfig {
 	public static final int SHOW = 6;
 	public static final int ROLLBACK = 7;
 	public static final int BACKUP = 8;
+	public static final int DUMP = 9;
 	
 	public static int parse(String stmt, int offset) {
 		for(int i = offset + 1, len = stmt.length(); i < len; i++) {
@@ -37,7 +38,7 @@ public final class ManagerParseMycatConfig {
 					return createCheck(stmt, i);
 				case 'D':
 				case 'd':
-					return dropCheck(stmt, i);
+				    return dCheck(stmt, i);
 				case 'S':
 				case 's':
 					return sCheck(stmt, i);
@@ -219,5 +220,33 @@ public final class ManagerParseMycatConfig {
 		}
 		return OTHER;
 	}
+	
+	private static int dCheck(String stmt, int offset) {
+        switch (stmt.charAt(offset + 1)) {
+            case 'R':
+            case 'r':
+                return dropCheck(stmt, offset);
+            case 'U':
+            case 'u':
+                return dumpCheck(stmt, offset);
+            default:
+                return OTHER;
+        }
+    }
+	
+	private static int dumpCheck(String stmt, int offset) {
+        if (stmt.length() > offset + "UMP ".length()) {
+            char c1 = stmt.charAt(++offset); // U
+            char c2 = stmt.charAt(++offset); // M
+            char c3 = stmt.charAt(++offset); // P
+            char c4 = stmt.charAt(++offset);
+            if ((c1 == 'U' || c1 == 'u') && (c2 == 'M' || c2 == 'm')
+                    && (c3 == 'P' || c3 == 'p')
+                    && (c4 == ' ' || c4 == '\t' || c4 == '\r' || c4 == '\n')) {
+                return DUMP;
+            }
+        }
+        return OTHER;
+    }
 
 }

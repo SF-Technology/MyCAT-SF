@@ -1,8 +1,10 @@
 package org.opencloudb.manager.parser.druid.statement;
 
+import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.manager.parser.druid.MycatASTVisitor;
 
 import com.alibaba.druid.sql.ast.SQLName;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLDDLStatement;
 
 /**
@@ -26,6 +28,15 @@ public class MycatCreateSchemaStatement extends MycatStatementImpl implements SQ
 	public void accept0(MycatASTVisitor visitor) {
 		visitor.visit(this);
         visitor.endVisit(this);
+	}
+	
+	public static MycatCreateSchemaStatement from(SchemaConfig schemaConfig) {
+	    MycatCreateSchemaStatement stmt = new MycatCreateSchemaStatement();
+	    stmt.setSchema(new SQLIdentifierExpr(schemaConfig.getName()));
+	    stmt.setCheckSQLSchema(schemaConfig.isCheckSQLSchema());
+	    stmt.setSqlMaxLimit(schemaConfig.getDefaultMaxLimit());
+	    stmt.setDataNode(schemaConfig.getDataNode());
+	    return stmt;
 	}
 
 	public SQLName getSchema() {

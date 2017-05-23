@@ -1,10 +1,14 @@
 package org.opencloudb.manager.parser.druid.statement;
 
+import org.opencloudb.config.model.TableConfig;
 import org.opencloudb.manager.parser.druid.MycatASTVisitor;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLName;
+import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLDDLStatement;
+import com.google.common.base.Strings;
 
 /**
  * 封装 create table 语句解析结果
@@ -27,6 +31,26 @@ public class MycatCreateTableStatement extends MycatStatementImpl implements SQL
 	public void accept0(MycatASTVisitor visitor) {
 		visitor.visit(this);
         visitor.endVisit(this);
+	}
+	
+	public static MycatCreateTableStatement from(String schemaName, TableConfig tableConfig) {
+	    if (tableConfig.getParentTC() != null) {
+	        throw new IllegalArgumentException("table '" + tableConfig.getName().toLowerCase() + "' is a childTable");
+	    }
+	    MycatCreateTableStatement stmt = new MycatCreateTableStatement();
+	    stmt.setTable(new SQLIdentifierExpr(tableConfig.getName().toLowerCase()));
+	    stmt.setGlobal(tableConfig.isGlobalTable());
+	    stmt.setAutoIncrement(tableConfig.isAutoIncrement());
+	    stmt.setPrimaryKey(new SQLCharExpr(tableConfig.getPrimaryKey()));
+	    stmt.setDataNodes(new SQLCharExpr(tableConfig.getDataNode()));
+	    if (tableConfig.getRule() != null) {
+	        stmt.setRule(new SQLCharExpr(tableConfig.getRule().getName()));
+	    }
+	    if (!Strings.isNullOrEmpty(schemaName)) {
+	        stmt.setSchema(new SQLIdentifierExpr(schemaName));
+	    }
+	    stmt.setNeedAddLimit(tableConfig.isNeedAddLimit());
+	    return stmt;
 	}
 
 	public SQLName getTable() {

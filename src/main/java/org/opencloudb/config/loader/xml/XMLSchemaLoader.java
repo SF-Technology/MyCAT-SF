@@ -50,7 +50,6 @@ import org.w3c.dom.NodeList;
 /**
  * @author mycat
  */
-@SuppressWarnings("unchecked")
 public class XMLSchemaLoader implements SchemaLoader {
 	
 	private final static String DEFAULT_DTD = "/schema.dtd";
@@ -93,17 +92,17 @@ public class XMLSchemaLoader implements SchemaLoader {
 
 	@Override
 	public Map<String, DataHostConfig> getDataHosts() {
-		return (Map<String, DataHostConfig>) (dataHosts.isEmpty() ? Collections.emptyMap() : dataHosts);
+		return dataHosts;
 	}
 
 	@Override
 	public Map<String, DataNodeConfig> getDataNodes() {
-		return (Map<String, DataNodeConfig>) (dataNodes.isEmpty() ? Collections.emptyMap() : dataNodes);
+		return dataNodes;
 	}
 
 	@Override
 	public Map<String, SchemaConfig> getSchemas() {
-		return (Map<String, SchemaConfig>) (schemas.isEmpty() ? Collections.emptyMap() : schemas);
+		return schemas;
 	}
 
 	private void load(String databaseFile, String xmlFile) {

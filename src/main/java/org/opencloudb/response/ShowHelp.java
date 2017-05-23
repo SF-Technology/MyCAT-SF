@@ -108,6 +108,7 @@ public final class ShowHelp {
     private static final List<String> keys = new LinkedList<String>();
     static {
         // show
+        helps.put("select * from info_tables;", "查看MyCAT系统监控表,通过标准SQL语句查看监控信息,以替换旧show系列命令");
         helps.put("show @@time.current", "Report current timestamp");
         helps.put("show @@time.startup", "Report startup timestamp");
         helps.put("show @@version", "Report Mycat Server version");

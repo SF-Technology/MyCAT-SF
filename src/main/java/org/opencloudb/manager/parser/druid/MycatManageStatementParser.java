@@ -1092,14 +1092,20 @@ public class MycatManageStatementParser extends SQLStatementParser {
 	        acceptIdentifier("SCHEMAS");
 	        List<SQLExpr> schemasList = new ArrayList<SQLExpr>();
 	        this.exprParser.exprList(schemasList, stmt);
+	        if (schemasList.size() <= 0) {
+	            throw new ParserException("expect at least one schema, but meet EOF");
+	        }
 	        stmt.addAllItems(schemasList);
 	        stmt.setTarget(MycatDumpStatementTarget.SCHEMAS);
 	    } else if (identifierEquals("TABLES")) {
 	        acceptIdentifier("TABLES");
-	        stmt.setTarget(MycatDumpStatementTarget.TABLES);
 	        List<SQLExpr> tablesList = new ArrayList<SQLExpr>();
 	        this.exprParser.exprList(tablesList, stmt);
+	        if (tablesList.size() <= 0) {
+	            throw new ParserException("expect at least one table, but meet EOF");
+	        }
 	        stmt.addAllItems(tablesList);
+	        stmt.setTarget(MycatDumpStatementTarget.TABLES);
 	    } else {
 	        throw new ParserException("Unsupport Statement : dump " + lexer.stringVal());
 	    }

@@ -67,15 +67,15 @@ public class MycatConfigDumper {
         List<String> schemaNames = new ArrayList<String>(new TreeSet<String>(tables.keySet()));
         // 搜集所有需要dump出来的schema
         Map<String, SchemaConfig> schemaConfMap = getSchemas(schemaNames);
+        // 搜集所有需要dump出来的tableConfig
+        Map<String, Map<String, TableConfig>> tableConfMap = getTables(tables);
         // 搜集所有需要dump出来的user
         Map<String, UserConfig> userConfMap = getUsers(schemaNames);
         // 搜集所有需要dump出来的dataNode
-        Map<String, DataNodeConfig> dnConfMap = getDataNodes(schemaNames);
+        Map<String, DataNodeConfig> dnConfMap = getDataNodes(tableConfMap.values());
         // 搜集所有需要dump出来的dataHost
         Map<String, DataHostConfig> dhConfMap = getDataHosts(dnConfMap.keySet());
-        // 搜集所有需要dump出来的tableConfig
-        Map<String, Map<String, TableConfig>> tableConfMap = getTables(tables);
-        // TODO 搜集所有需要dump出来的rule和function, 以及mapfile
+        // 搜集所有需要dump出来的rule和function, 以及mapfile
         Map<String, RuleConfig> ruleConfMap = getRules(tableConfMap);
         Map<String, AbstractPartitionAlgorithm> functionMap = getFunctions(ruleConfMap);
         
@@ -228,18 +228,40 @@ public class MycatConfigDumper {
      * @param schemaNames
      * @return
      */
-    private static Map<String, DataNodeConfig> getDataNodes(Collection<String> schemaNames) {
+//    private static Map<String, DataNodeConfig> getDataNodes(Collection<String> schemaNames) {
+//        MycatConfig mycatConfig = MycatServer.getInstance().getConfig();
+//        Set<String> dataNodes = new TreeSet<String>();
+//        Map<String, DataNodeConfig> dnConfMap = new TreeMap<String, DataNodeConfig>();
+//        for (String schemaName : schemaNames) {
+//            SchemaConfig schemaConfig = mycatConfig.getSchemas().get(schemaName);
+//            dataNodes.addAll(schemaConfig.getAllDataNodes());
+//        }
+//        for (String dataNode : dataNodes) {
+//            PhysicalDBNode realDn = mycatConfig.getDataNodes().get(dataNode);
+//            DataNodeConfig dnConf = new DataNodeConfig(realDn.getName(), realDn.getDatabase(), realDn.getDbPool().getHostName());
+//            dnConfMap.put(dataNode, dnConf);
+//        }
+//        return dnConfMap;
+//    }
+    
+    /**
+     * 获取与table关联的所有datanode配置信息
+     * @param tableConfMaps
+     * @return
+     */
+    private static Map<String, DataNodeConfig> getDataNodes(Collection<Map<String, TableConfig>> tableConfMaps) {
         MycatConfig mycatConfig = MycatServer.getInstance().getConfig();
         Set<String> dataNodes = new TreeSet<String>();
         Map<String, DataNodeConfig> dnConfMap = new TreeMap<String, DataNodeConfig>();
-        for (String schemaName : schemaNames) {
-            SchemaConfig schemaConfig = mycatConfig.getSchemas().get(schemaName);
-            dataNodes.addAll(schemaConfig.getAllDataNodes());
+        for (Map<String, TableConfig> tableConfMap : tableConfMaps) {
+            for (TableConfig tableConf : tableConfMap.values()) {
+                dataNodes.addAll(tableConf.getDataNodes());
+            }
         }
         for (String dataNode : dataNodes) {
-            PhysicalDBNode realDn = mycatConfig.getDataNodes().get(dataNode);
-            DataNodeConfig dnConf = new DataNodeConfig(realDn.getName(), realDn.getDatabase(), realDn.getDbPool().getHostName());
-            dnConfMap.put(dataNode, dnConf);
+          PhysicalDBNode realDn = mycatConfig.getDataNodes().get(dataNode);
+          DataNodeConfig dnConf = new DataNodeConfig(realDn.getName(), realDn.getDatabase(), realDn.getDbPool().getHostName());
+          dnConfMap.put(dataNode, dnConf);
         }
         return dnConfMap;
     }

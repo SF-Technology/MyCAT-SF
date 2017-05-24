@@ -537,7 +537,7 @@ public class SQLFirewallServer {
                                        DruidShardingParseInfo ctx, String sql) {
         Map<String, String> tableAliasMap = new HashMap<String, String>();
         Set<String> colSets = new LinkedHashSet<String>();
-        Set<String> conditionColSets = new LinkedHashSet<String>();
+        boolean isExist = false;
 
         if (ctx != null) {
             tableAliasMap = ctx.getTableAliasMap();
@@ -564,8 +564,18 @@ public class SQLFirewallServer {
                 TableConfig tableConfig = map.get(tName.toUpperCase());
                 if (tableConfig != null) {
                     String partitionColumn = tableConfig.getPartitionColumn();
-                    if (partitionColumn != null && !conditionColSets.contains(partitionColumn)) {
-                        recordSQLReporter(sql.replace("'",""),"no sharding key!!!!!");
+                    if (partitionColumn != null && colSets.size() > 0) {
+
+                        for (String col: colSets) {
+                            LOGGER.error("col name :" + col + " partitionColumn = " + partitionColumn);
+                            if(col.equalsIgnoreCase(partitionColumn))
+                            {
+                                isExist = true;
+                                break;
+                            }
+                        }
+                        if (!isExist)
+                            recordSQLReporter(sql.replace("'",""),"no sharding " + partitionColumn + "  key!!!!!");
                     }
                 }
             }

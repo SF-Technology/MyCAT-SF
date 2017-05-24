@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLSyntaxErrorException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +44,6 @@ import org.w3c.dom.NodeList;
 /**
  * @author mycat
  */
-@SuppressWarnings("unchecked")
 public class XMLRuleLoader {
 	private final static String DEFAULT_DTD = "/rule.dtd";
 	private final static String DEFAULT_XML = "/rule.xml";
@@ -66,12 +64,11 @@ public class XMLRuleLoader {
 	}
 
 	public Map<String, TableRuleConfig> getTableRules() {
-		return (Map<String, TableRuleConfig>) (tableRules.isEmpty() ? Collections
-				.emptyMap() : tableRules);
+		return tableRules;
 	}
 
 	public Map<String, AbstractPartitionAlgorithm> getFunctions() {
-		return (Map<String, AbstractPartitionAlgorithm>) (functions.isEmpty() ? Collections.emptyMap() : functions);
+		return functions;
 	}
 
 	

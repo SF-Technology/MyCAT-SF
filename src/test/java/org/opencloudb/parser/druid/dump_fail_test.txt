@@ -1,0 +1,8 @@
+dump unknown;
+dump schemas;
+dump schemas db1,;
+dump tables tb1,;
+dump schemas;
+dump tables;
+
+dump all into;

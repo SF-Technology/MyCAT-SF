@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +49,6 @@ import com.alibaba.druid.wall.WallConfig;
 /**
  * @author mycat
  */
-@SuppressWarnings("unchecked")
 public class XMLServerLoader {
     private final SystemConfig system;
     private final FirewallConfig firewall;
@@ -75,7 +73,7 @@ public class XMLServerLoader {
     }
 
     public Map<String, UserConfig> getUsers() {
-        return (Map<String, UserConfig>) (users.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(users));
+        return users;
     }
 
     public QuarantineConfig getQuarantine() {

@@ -8,6 +8,9 @@ import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsisten
 import org.opencloudb.manager.parser.druid.statement.MycatCreateChildTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateMapFileStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
@@ -22,6 +25,9 @@ import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 
 public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTVisitor {
+
+    public static final String MYCAT_CONFIG_SQL_PREFIX = "MYCAT_CONFIG";
+    public static final String SQL_EMIC = ";";
 
 	public MycatOutputVisitor(Appendable appender) {
 		super(appender);
@@ -58,7 +64,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public boolean visit(MycatDropSchemaStatement stmt) {
-		print("DROP SCHEMA " + stmt.getSchema());
+		print(MYCAT_CONFIG_SQL_PREFIX + " DROP SCHEMA " + stmt.getSchema());
 		return false;
 	}
 	
@@ -69,7 +75,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public boolean visit(MycatDropTableStatement stmt) {
-		print("DROP SCHEMA " + stmt.getTable());
+		print(MYCAT_CONFIG_SQL_PREFIX + " DROP SCHEMA " + stmt.getTable());
 		return false;
 	}
 
@@ -80,7 +86,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public boolean visit(MycatDropDataNodeStatement stmt) {
-		print("DROP DATANODE " + stmt.getDataNode());
+		print(MYCAT_CONFIG_SQL_PREFIX + " DROP DATANODE " + stmt.getDataNode());
 		return false;
 	}
 
@@ -91,7 +97,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public boolean visit(MycatDropDataHostStatement stmt) {
-		print("DROP DATAHOST " + stmt.getDataHost());
+		print(MYCAT_CONFIG_SQL_PREFIX + " DROP DATAHOST " + stmt.getDataHost());
 		return false;
 	}
 
@@ -102,70 +108,70 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public boolean visit(MycatCreateSchemaStatement stmt) {
-		print("CREATE SCHEMA " + stmt.getSchema());
-		print(" dataNode = " + stmt.getDataNode());
+		print(MYCAT_CONFIG_SQL_PREFIX + " CREATE SCHEMA `" + stmt.getSchema() + "`");
+		if (stmt.getDataNode() != null) {
+		    print(" dataNode = \"" + stmt.getDataNode() + "\"");
+		}
 		print(" checkSQLschema = " + stmt.isCheckSQLSchema());
 		print(" sqlMaxLimit = " + stmt.getSqlMaxLimit());
-		println();
 		return false;
 	}
 
 	@Override
 	public void endVisit(MycatCreateSchemaStatement stmt) {
-		
+	    println(SQL_EMIC);
 	}
 
 	@Override
 	public boolean visit(MycatCreateTableStatement stmt) {
-		print("CREATE TABLE " + stmt.getTable().getSimpleName());
+		print(MYCAT_CONFIG_SQL_PREFIX + " CREATE TABLE `" + stmt.getTable().getSimpleName() + "`");
 		if(stmt.getSchema() != null) {
-			print(" IN " + stmt.getSchema().getSimpleName());
+			print(" IN `" + stmt.getSchema().getSimpleName() + "`");
 		}
-		println();
 		if(stmt.isGlobal()) {
-			println("global = " + stmt.isGlobal());
+			print(" global = " + stmt.isGlobal());
 		}
 		if(stmt.getPrimaryKey() != null) {
-			println("primaryKey = " + stmt.getPrimaryKey());
+			print(" primaryKey = " + stmt.getPrimaryKey());
 		}
-		println("autoIncrement = " + stmt.isAutoIncrement());
-		println("dataNode = " + stmt.getDataNodes());
+		print(" autoIncrement = " + stmt.isAutoIncrement());
+		print(" dataNode = " + stmt.getDataNodes());
 		if(stmt.getRule() != null) {
-			println("rule = " + stmt.getRule());
+			print(" rule = " + stmt.getRule());
 		}
+		print(" needAddLimit = " + stmt.isNeedAddLimit());
 		return false;
 	}
 
 	@Override
 	public void endVisit(MycatCreateTableStatement stmt) {
-		
+		println(SQL_EMIC);
 	}
 
 	@Override
 	public boolean visit(MycatCreateChildTableStatement stmt) {
-		print("CREATE CHILDTABLE " + stmt.getTable().getSimpleName());
+		print(MYCAT_CONFIG_SQL_PREFIX + " CREATE CHILDTABLE `" + stmt.getTable().getSimpleName() + "`");
 		if(stmt.getSchema() != null) {
-			print(" IN " + stmt.getSchema().getSimpleName());
+			print(" IN `" + stmt.getSchema().getSimpleName() + "`");
 		}
-		println();
-		println("parent = " + stmt.getParent());
-		println("parentKey = " + stmt.getParentKey());
-		println("joinKey = " + stmt.getJoinKey());
+		print(" parent = " + stmt.getParentTable());
+		print(" parentKey = " + stmt.getParentKey());
+		print(" joinKey = " + stmt.getJoinKey());
 		if(stmt.getPrimaryKey() != null) {
-			println("primaryKey = " + stmt.getPrimaryKey());
+			print(" primaryKey = " + stmt.getPrimaryKey());
 		}
-		println("autoIncrement = " + stmt.isAutoIncrement());
+		print(" autoIncrement = " + stmt.isAutoIncrement());
 		return false;
 	}
 
 	@Override
 	public void endVisit(MycatCreateChildTableStatement stmt) {
-		
+	    println(SQL_EMIC);
 	}
 
 	@Override
 	public boolean visit(MycatCreateDataNodeStatement stmt) {
-		print("CREATE DATANODE " + stmt.getDatanode().getSimpleName());
+		print(MYCAT_CONFIG_SQL_PREFIX + " CREATE DATANODE `" + stmt.getDatanode().getSimpleName() + "`");
 		print(" datahost = " + stmt.getDatahost());
 		print(" database = " + stmt.getDatabase());
 		return false;
@@ -173,19 +179,19 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public void endVisit(MycatCreateDataNodeStatement stmt) {
-		
+	    println(SQL_EMIC);
 	}
 
 	@Override
 	public boolean visit(MycatCreateDataHostStatement stmt) {
-		println("CREATE DATAHOST " + stmt.getDatahost().getSimpleName());
-		println("maxCon = " + stmt.getMaxCon());
-		println("minCon = " + stmt.getMinCon());
-		println("balance = " + stmt.getBalance());
-		println("dbType = " + stmt.getmDbType());
-		println("dbDriver = " + stmt.getDbDriver());
-		println("switchType = " + stmt.getSwitchType());
-		println("WITH writeHosts ( ");
+		println(MYCAT_CONFIG_SQL_PREFIX + " CREATE DATAHOST `" + stmt.getDatahost() + "`");
+		println("  maxCon = " + stmt.getMaxCon());
+		println("  minCon = " + stmt.getMinCon());
+		println("  balance = " + stmt.getBalance());
+		println("  dbType = " + stmt.getmDbType());
+		println("  dbDriver = " + stmt.getDbDriver());
+		println("  switchType = " + stmt.getSwitchType());
+		println("  WITH writeHosts ( ");
 		for(int i = 0, n = stmt.getWriteHosts().size(); i < n; i++) {
 			MycatCreateDataHostStatement.Host writeHost = stmt.getWriteHosts().get(i);
 			print("  {");
@@ -224,41 +230,41 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 			}
 			
 		}
-		println(" )");
+		print(" )");
 		return false;
 	}
 
 	@Override
 	public void endVisit(MycatCreateDataHostStatement stmt) {
-		
+	    println(SQL_EMIC);
 	}
 
 	@Override
 	public void visit(MycatListStatement stmt) {
-		print("LIST " + stmt.getTarget().name());
+		print(MYCAT_CONFIG_SQL_PREFIX + " LIST " + stmt.getTarget().name());
 	}
 
 	@Override
 	public void endVisit(MycatListStatement stmt) {
-		
+	    println(SQL_EMIC);
 	}
 
 	@Override
 	public void visit(MycatCreateUserStatement stmt) {
-		println("CREATE USER " + stmt.getUserName().getSimpleName());
-		println("password = " + stmt.getPassword());
-		println("schemas = " + stmt.getSchemas());
-		println("readOnly = " + stmt.isReadOnly());
+		print(MYCAT_CONFIG_SQL_PREFIX + " CREATE USER `" + stmt.getUserName().getSimpleName() + "`");
+		print(" password = " + stmt.getPassword());
+		print(" schemas = " + stmt.getSchemas());
+		print(" readOnly = " + stmt.isReadOnly());
 	}
 
 	@Override
 	public void endVisit(MycatCreateUserStatement stmt) {
-		
+	    println(SQL_EMIC);
 	}
 
 	@Override
 	public void visit(MycatDropUserStatement stmt) {
-		print("DROP USER " + stmt.getUserName());
+		print(MYCAT_CONFIG_SQL_PREFIX + " DROP USER " + stmt.getUserName());
 	}
 
 	@Override
@@ -268,7 +274,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
 	@Override
 	public void visit(MycatAlterUserStatement stmt) {
-		println("ALTER USER " + stmt.getUserName().getSimpleName());
+		println(MYCAT_CONFIG_SQL_PREFIX + " ALTER USER " + stmt.getUserName().getSimpleName());
 		if(stmt.isAlterPassword()) {
 			println("password = " + stmt.getPassword());
 		}
@@ -284,5 +290,63 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 	public void endVisit(MycatAlterUserStatement stmt) {
 		
 	}
-	
+
+    @Override
+    public void visit(MycatCreateFunctionStatement stmt) {
+        print(MYCAT_CONFIG_SQL_PREFIX + " CREATE FUNCTION `" + stmt.getFunction() + "`");
+        print(" USING CLASS \'" + stmt.getClassName() + "'");
+        println(" INCLUDE PROPERTIES (");
+        int size = stmt.getProperties().size();
+        int count = 0;
+        for (String key : stmt.getProperties().keySet()) {
+            String value = stmt.getProperties().get(key);
+            if (count == size - 1) {
+                println("{name = '" + key + "' value = '" + value + "'}");
+            } else {
+                println("{name = '" + key + "' value = '" + value + "'},");
+            }
+            count++;
+        }
+        print(")");
+    }
+    
+    @Override
+    public void endVisit(MycatCreateFunctionStatement stmt) {
+        println(SQL_EMIC);
+    }
+
+    @Override
+    public void visit(MycatCreateRuleStatement stmt) {
+        print(MYCAT_CONFIG_SQL_PREFIX + " CREATE RULE `" + stmt.getRule() + "`");
+        print(" ON COLUMN `" + stmt.getColumn() + "`");
+        print(" USING FUNCTION `" + stmt.getFunction() + "`");
+    }
+
+    @Override
+    public void endVisit(MycatCreateRuleStatement stmt) {
+        println(SQL_EMIC);
+    }
+
+    @Override
+    public void visit(MycatCreateMapFileStatement stmt) {
+        print(MYCAT_CONFIG_SQL_PREFIX + " CREATE MAPFILE \"" + stmt.getFileName() + "\"");
+        println(" INCLUDE LINES (");
+        if (stmt.getLines() != null && stmt.getLines().size() > 0) {
+            for (int i = 0, n = stmt.getLines().size(); i < n; i++) {
+                String line = stmt.getLines().get(i);
+                if (i == n - 1) {
+                    println("\"" + line + "\"");
+                } else {
+                    println("\"" + line + "\",");
+                }
+            }
+        }
+        print(")");
+    }
+
+    @Override
+    public void endVisit(MycatCreateMapFileStatement stmt) {
+        println(SQL_EMIC);
+    }
+    
 }

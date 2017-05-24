@@ -50,7 +50,6 @@ public class SQLFirewallServer {
     public static final long DEFAULT_TIMEOUT = 300 * 1000;
 
 
-
     /**
      * SQL黑名单常驻内存，有sql添加进来时，定时刷到保存放到H2DB中
      */
@@ -164,7 +163,7 @@ public class SQLFirewallServer {
                     }
                 }
             }
-        },0,firewallConf.getMaxAllowExecuteUnitTime()*2,TimeUnit.SECONDS);
+        },0,firewallConf.getMaxAllowExecuteUnitTime()*1,TimeUnit.SECONDS);
     }
 
     /**
@@ -260,10 +259,8 @@ public class SQLFirewallServer {
 
         boolean flag = false;
         SQLRecord sqlRecord = null;
-
         try {
             wLock.lock();
-
             long t = System.currentTimeMillis();
             if (sqlRecordMap.containsKey(originalSQL)){
                 sqlRecord = sqlRecordMap.get(originalSQL);

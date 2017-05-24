@@ -195,6 +195,10 @@ public final class SystemConfig {
 	private String dataNodeSortedTempDir;
 
 	/**
+	 * SQL STAT 开关
+	 */
+	public int enableSqlStat;
+	/**
 	 * 定时采集监控信息入H2DB，间隔时间
 	 */
 	public long monitorUpdatePeriod;
@@ -248,6 +252,14 @@ public final class SystemConfig {
 
 	public void setDefaultSqlParser(String defaultSqlParser) {
 		this.defaultSqlParser = defaultSqlParser;
+	}
+
+	public int getEnableSqlStat() {
+		return enableSqlStat;
+	}
+
+	public void setEnableSqlStat(int enableSqlStat) {
+		this.enableSqlStat = enableSqlStat;
 	}
 
 	public SystemConfig() {
@@ -348,7 +360,7 @@ public final class SystemConfig {
 //        this.intersectAllow = true;
 //        this.constArithmeticAllow = true ;
 //        this.limitZeroAllow = false;
-
+		this.enableSqlStat = 0;
 		this.monitorUpdatePeriod = DEFAULT_MONITOR_UPDATE_PERIOD;
 
 		this.sqlInMemDBPeriod = 4*DEFAULT_SQL_INMEMDB_PERIOD;

@@ -285,8 +285,10 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 			/**
 			 *TODO delete & update执行的结束时间
 			 */
-			endTime = System.currentTimeMillis();
-			sqlRecord(ok.affectedRows);
+			if(MycatServer.getInstance().getConfig().getSystem().getEnableSqlStat() == 1) {
+				endTime = System.currentTimeMillis();
+				sqlRecord(ok.affectedRows);
+			}
 		}
 	}
 
@@ -297,7 +299,11 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 		/**
 		 * TODO select 统计SQL执行次数
 		 */
-		sqlRecord(rows);
+
+		if(MycatServer.getInstance().getConfig().getSystem().getEnableSqlStat() == 1) {
+			sqlRecord(rows);
+		}
+
 		/**conn.recordSql(source.getHost(), source.getSchema(),node.getStatement());**/
         // 判断是调用存储过程的话不能在这里释放链接
 		if (!rrs.isCallStatement()||(rrs.isCallStatement()&&rrs.getProcedure().isResultSimpleValue()))

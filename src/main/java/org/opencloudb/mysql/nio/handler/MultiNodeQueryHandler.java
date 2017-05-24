@@ -304,8 +304,10 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 					/**
 					 * delete & update 统计SQL执行次数
 					 */
-					endTime = System.currentTimeMillis();
-					sqlRecord(affectedRows);
+					if(MycatServer.getInstance().getConfig().getSystem().getEnableSqlStat() == 1) {
+						endTime = System.currentTimeMillis();
+						sqlRecord(affectedRows);
+					}
 				} catch (Exception e) {
 					handleDataProcessException(e);
 				} finally {
@@ -376,7 +378,9 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 				/**
 				 * 处理select 没有merge情况，更新rows
 				 */
-				updateResultRows(index);
+				if (MycatServer.getInstance().getConfig().getSystem().getEnableSqlStat() == 1) {
+					updateResultRows(index);
+				}
 			}
 		}
 	}
@@ -430,7 +434,9 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			/**
 			 * select --- > 更新rows
 			 */
-			updateResultRows(index);
+			if (MycatServer.getInstance().getConfig().getSystem().getEnableSqlStat() ==1) {
+				updateResultRows(index);
+			}
 
 
 			/**
@@ -492,8 +498,10 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 			/**
 			 * select 统计SQL执行情况,影响行数，在结果集输出时候记录
 			 */
-			endTime = System.currentTimeMillis();
-			sqlRecord(0);
+			if(MycatServer.getInstance().getConfig().getSystem().getEnableSqlStat()==1) {
+				endTime = System.currentTimeMillis();
+				sqlRecord(0);
+			}
 		}
 		if (fieldsReturned) {
 			return;

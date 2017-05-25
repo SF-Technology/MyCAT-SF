@@ -126,6 +126,8 @@ public final class SystemConfig {
 	public static final int SEQUENCEHANDLER_LOCALFILE = 0;
 	public static final int SEQUENCEHANDLER_MYSQLDB = 1;
 	public static final int SEQUENCEHANDLER_LOCAL_TIME = 2;
+	
+	private static final int CONF_BACKUP_SIZE = 10; // 配置信息的默认备份数
 	/*
 	 * 注意！！！ 目前mycat支持的MySQL版本，如果后续有新的MySQL版本,请添加到此数组， 对于MySQL的其他分支，
 	 * 比如MariaDB目前版本号已经到10.1.x，但是其驱动程序仍然兼容官方的MySQL,因此这里版本号只需要MySQL官方的版本号即可。
@@ -241,6 +243,9 @@ public final class SystemConfig {
 	public int limitConcurrentQuery;
 	/**大sql查询时,配置processor使用比例*/
 	public double processorsRatio;
+	
+	/**在对配置信息进行备份时维护的备份数量*/
+	private int confBackupSize = CONF_BACKUP_SIZE;
 
 
 	public String getDefaultSqlParser() {
@@ -1002,6 +1007,14 @@ public final class SystemConfig {
 
 	public void setMycatNodeId(int mycatNodeId) {
 		this.mycatNodeId = mycatNodeId;
+	}
+	
+	public int getConfBackupSize() {
+		return confBackupSize;
+	}
+
+	public void setConfBackupSize(int confBackupSize) {
+		this.confBackupSize = confBackupSize;
 	}
 
 	@Override

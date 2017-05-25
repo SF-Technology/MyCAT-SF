@@ -78,7 +78,6 @@ public class ConfigInitializer {
 		this.schemas = configLoader.getSchemaConfigs();
 		initMapFileFolder(); // 初始化保存mapfile的文件夹
 		initConfBak(); // 初始化保存备份文件的文件夹
-		initBackups(); // 初始化备份文件
         if(loadDataHost)
         {
             this.dataHosts = initDataHosts(configLoader);
@@ -153,19 +152,6 @@ public class ConfigInitializer {
 	private void initConfBak () {
 		File confBakFolder = new File(SystemConfig.getHomePath(), SystemConfig.getConfBak());
 		confBakFolder.mkdirs();
-	}
-	
-	/**
-	 * @throws Exception
-	 */
-	private void initBackups (){
-		if (ConfigTar.getBackupFileMap().getTarFileMap().isEmpty()) {
-			try {
-				ConfigTar.tarConfig("Initialize backup");
-			} catch (Exception e) {
-				throw new RuntimeException(e.getMessage());
-			}
-		}
 	}
 	
 

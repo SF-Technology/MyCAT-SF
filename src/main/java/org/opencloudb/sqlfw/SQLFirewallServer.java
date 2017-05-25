@@ -565,9 +565,7 @@ public class SQLFirewallServer {
                 if (tableConfig != null) {
                     String partitionColumn = tableConfig.getPartitionColumn();
                     if (partitionColumn != null && colSets.size() > 0) {
-
                         for (String col: colSets) {
-                            LOGGER.error("col name :" + col + " partitionColumn = " + partitionColumn);
                             if(col.equalsIgnoreCase(partitionColumn))
                             {
                                 isExist = true;

@@ -6,14 +6,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.kamranzafar.jtar.TarEntry;
 import org.kamranzafar.jtar.TarInputStream;
 import org.kamranzafar.jtar.TarOutputStream;
+import org.opencloudb.MycatConfig;
+import org.opencloudb.MycatServer;
 import org.opencloudb.config.model.SystemConfig;
 
 /**
@@ -34,6 +37,9 @@ public class ConfigTar {
 	private static final ReentrantLock lock = new ReentrantLock();
 
 	static {
+		MycatConfig mycatConf = MycatServer.getInstance().getConfig();
+		int backupSize = mycatConf.getSystem().getConfBackupSize();
+		
 		confBak = new File(SystemConfig.getHomePath(), SystemConfig.getConfBak());
 
 		classPath = new File(SystemConfig.class.getClassLoader().getResource("").getPath());
@@ -48,8 +54,7 @@ public class ConfigTar {
 				new File(classPath, SystemConfig.getMapFileFolder()) 
 				};
 
-		backupFileMap = new BackupFileMap(BACKUP_SIZE);
-
+		backupFileMap = new BackupFileMap(backupSize);
 	}
 	
 	/**
@@ -254,8 +259,11 @@ public class ConfigTar {
 			Thread.sleep(1L);
 			timeStamp = System.currentTimeMillis();
 		}
+		
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddhhmmssSSS");
+		String timeStr = simpleDateFormat.format(new Date(timeStamp));
 
-		return info.replace(" ", "--") + '_' + timeStamp + ".tar";
+		return info.replace(" ", "_") + '_' + timeStr + ".tar";
 	}
 
 	/**
@@ -427,7 +435,8 @@ public class ConfigTar {
 			if (beginIndex < 0 || endIndex < 0 || beginIndex >= endIndex) { // 如果tar备份文件名不合法
 				throw new RuntimeException("Illegal backup file name.");
 			} else {
-				return fileName.substring(beginIndex, endIndex).replace("--", " ");
+				String operation = fileName.substring(beginIndex, endIndex).replaceFirst("_", " ").replaceFirst("_", " "); // 将最前面的两个下划线替换成空格
+				return operation;
 			}
 		}
 		

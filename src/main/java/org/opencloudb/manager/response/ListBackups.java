@@ -1,12 +1,15 @@
 package org.opencloudb.manager.response;
 
 import java.nio.ByteBuffer;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
+import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.Fields;
 import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.config.util.ConfigTar.BackupFile;
@@ -45,57 +48,65 @@ public class ListBackups {
 	}
 	
 	public static void response(ManagerConnection c) {
-		ByteBuffer buffer = c.allocate();
-
-		// write header
-		buffer = header.write(buffer, c, true);
-
-		// write fields
-		for (FieldPacket field : fields) {
-			buffer = field.write(buffer, c, true);
-		}
-
-		// write eof
-		buffer = eof.write(buffer, c, true);
-
-		byte packetId = eof.packetId;
 		
-		// write rows
-		TreeMap<Long, BackupFile> tarFileMap = ConfigTar.getBackupFileMap().getTarFileMap();
-		ArrayList<Long> idList = new ArrayList<Long>(tarFileMap.descendingKeySet());
-		int j = 0;
-		for (Long timestamp : idList) {
-			RowDataPacket row = new RowDataPacket(FIELD_COUNT);
+		try {
+			ByteBuffer buffer = c.allocate();
 
-			row.add(StringUtil.encode(Integer.toString(j ++), c.getCharset()));
-			row.add(StringUtil.encode(tarFileMap.get(timestamp).getOperation(), c.getCharset()));
-			row.add(StringUtil.encode(toTime(timestamp), c.getCharset()));
+			// write header
+			buffer = header.write(buffer, c, true);
 
-			row.packetId = ++packetId;
+			// write fields
+			for (FieldPacket field : fields) {
+				buffer = field.write(buffer, c, true);
+			}
 
-			buffer = row.write(buffer, c, true);
+			// write eof
+			buffer = eof.write(buffer, c, true);
+
+			byte packetId = eof.packetId;
+			
+			// write rows
+			TreeMap<Long, BackupFile> tarFileMap = ConfigTar.getBackupFileMap().getTarFileMap();
+			ArrayList<Long> idList = new ArrayList<Long>(tarFileMap.descendingKeySet());
+			int j = 0;
+			for (Long timestamp : idList) {
+				RowDataPacket row = new RowDataPacket(FIELD_COUNT);
+
+				row.add(StringUtil.encode(Integer.toString(j ++), c.getCharset()));
+				row.add(StringUtil.encode(tarFileMap.get(timestamp).getOperation(), c.getCharset()));
+				row.add(StringUtil.encode(toTime(timestamp), c.getCharset()));
+
+				row.packetId = ++packetId;
+
+				buffer = row.write(buffer, c, true);
+			}
+
+			// write last eof
+			EOFPacket lastEof = new EOFPacket();
+			lastEof.packetId = ++packetId;
+			buffer = lastEof.write(buffer, c, true);
+
+			// post write
+			c.write(buffer);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+			c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, e.getMessage());
 		}
-
-		// write last eof
-		EOFPacket lastEof = new EOFPacket();
-		lastEof.packetId = ++packetId;
-		buffer = lastEof.write(buffer, c, true);
-
-		// post write
-		c.write(buffer);
 	}
 	
 	/**
 	 * 将时间戳转化为日期
 	 * @param timestamp
 	 * @return
+	 * @throws ParseException 
 	 */
-	private static String toTime(long timestamp) {
-		Calendar cal = Calendar.getInstance();
-		cal.setTimeInMillis(timestamp);
+	private static String toTime(long timestamp) throws ParseException {
+		String timeStampStr = String.valueOf(timestamp);
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMddhhmmssSSS");
+		Date date = format.parse(timeStampStr);
 		
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		
-		return format.format(cal.getTime());
+		return format.format(date);
 	}
 }

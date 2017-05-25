@@ -46,6 +46,7 @@ import org.opencloudb.cache.CacheService;
 import org.opencloudb.classloader.DynaClassLoader;
 import org.opencloudb.config.ZkConfig;
 import org.opencloudb.config.model.SystemConfig;
+import org.opencloudb.config.util.ConfigTar;
 import org.opencloudb.interceptor.SQLInterceptor;
 import org.opencloudb.lock.TableLockManager;
 import org.opencloudb.manager.ManagerConnectionFactory;
@@ -368,6 +369,15 @@ public class MycatServer {
 		 * 定期获取MySQL information_schema 中表Statistics的索引信息
 		 */
 		//timer.schedule(dataGetInfoSchemaStatistics(),0L,system.getInfoSchemaStatisticsGetPeriod());
+		
+		// 如果mycat的配置信息还没有备份，创建一个初始化的备份文件
+		if (ConfigTar.getBackupFileMap().getTarFileMap().isEmpty()) {
+			try {
+				ConfigTar.tarConfig("initialize backup");
+			} catch (Exception e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}
 
 	}
 

@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.alibaba.druid.support.logging.Log;
 import org.opencloudb.MycatServer;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.config.ErrorCode;
@@ -791,6 +790,10 @@ public class CheckTableStructureConsistencyHandler {
 				tableSet.add("'" + tableName + "'");
 			}
 		}
+		// 如果选择的schema没有分片表或者全局表, 返回
+		if (tableSet.size() <= 0) {
+            return ;
+        }
 
 		Set<String> realSchemaSet = getRealSchemaSet(tableCfgList);
 		sql1 = "select " + Joiner.on(",").join(MYSQL_INFO_SCHEMA_TCOLUMNS)
@@ -835,6 +838,11 @@ public class CheckTableStructureConsistencyHandler {
 				tableCfgList.add(tableCfg);
 				tableSet.add("'" + tableName + "'");
 			}
+		}
+		// 如果选择的schema没有分片表或者全局表, 返回提示信息给客户端
+		if (tableSet.size() <= 0) {
+		    c.writeErrMessage(ErrorCode.ER_YES, "can not find any shard table or global table in schema '" + this.schemaName + "'");
+		    return ;
 		}
 		
 		Set<String> realSchemaSet = getRealSchemaSet(tableCfgList);

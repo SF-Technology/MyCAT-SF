@@ -50,7 +50,6 @@ public class SQLFirewallServer {
     public static final long DEFAULT_TIMEOUT = 300 * 1000;
 
 
-
     /**
      * SQL黑名单常驻内存，有sql添加进来时，定时刷到保存放到H2DB中
      */
@@ -164,7 +163,7 @@ public class SQLFirewallServer {
                     }
                 }
             }
-        },0,firewallConf.getMaxAllowExecuteUnitTime()*2,TimeUnit.SECONDS);
+        },0,firewallConf.getMaxAllowExecuteUnitTime()*1,TimeUnit.SECONDS);
     }
 
     /**
@@ -260,10 +259,8 @@ public class SQLFirewallServer {
 
         boolean flag = false;
         SQLRecord sqlRecord = null;
-
         try {
             wLock.lock();
-
             long t = System.currentTimeMillis();
             if (sqlRecordMap.containsKey(originalSQL)){
                 sqlRecord = sqlRecordMap.get(originalSQL);
@@ -540,7 +537,7 @@ public class SQLFirewallServer {
                                        DruidShardingParseInfo ctx, String sql) {
         Map<String, String> tableAliasMap = new HashMap<String, String>();
         Set<String> colSets = new LinkedHashSet<String>();
-        Set<String> conditionColSets = new LinkedHashSet<String>();
+        boolean isExist = false;
 
         if (ctx != null) {
             tableAliasMap = ctx.getTableAliasMap();
@@ -567,8 +564,16 @@ public class SQLFirewallServer {
                 TableConfig tableConfig = map.get(tName.toUpperCase());
                 if (tableConfig != null) {
                     String partitionColumn = tableConfig.getPartitionColumn();
-                    if (partitionColumn != null && !conditionColSets.contains(partitionColumn)) {
-                        recordSQLReporter(sql.replace("'",""),"no sharding key!!!!!");
+                    if (partitionColumn != null && colSets.size() > 0) {
+                        for (String col: colSets) {
+                            if(col.equalsIgnoreCase(partitionColumn))
+                            {
+                                isExist = true;
+                                break;
+                            }
+                        }
+                        if (!isExist)
+                            recordSQLReporter(sql.replace("'",""),"no sharding " + partitionColumn + "  key!!!!!");
                     }
                 }
             }

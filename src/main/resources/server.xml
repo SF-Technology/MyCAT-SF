@@ -29,7 +29,7 @@
 		<property name="frontWriteQueueSize">40960</property>
 	
 
-       	 	<!--是否开启结果集流式输出,0不开启，1开启-->
+		<!--是否开启结果集流式输出,0不开启，1开启-->
 		<property name="useStreamOutput">0</property>
 
 		<!--off heap for merge/order/group/limit -->
@@ -43,6 +43,7 @@
 
 		<!--SQL STAT相关参数配置 -->
 		<!--后台线程定时采集信息入H2DB库 单位ms-->
+		<property name="enableSqlStat">0</property>
 		<property name="monitorUpdatePeriod">5000</property>
 		<!--sql stat 在内存驻留的时间 单位ms-->
 		<property name="sqlInMemDBPeriod">60000</property>

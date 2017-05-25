@@ -192,6 +192,7 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         boolean isAdd = true;
         final Connection h2DBConn =
                 H2DBMonitorManager.getH2DBMonitorManager().getH2DBMonitorConn();
+
         Statement stmt = null;
         ResultSet rset = null;
         long exe_times = 0;
@@ -263,8 +264,8 @@ public class SQLRecord implements H2DBInterface<SQLRecord> {
         } catch (SQLException e) {
             LOGGER.error(e.getMessage());
         }finally {
-
             try {
+
                 if(stmt !=null){
                     stmt.close();
                 }

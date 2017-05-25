@@ -58,17 +58,20 @@ public class ServerQueryHandler implements FrontendQueryHandler {
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(new StringBuilder().append(c).append(sql).toString());
 		}
-		SQLFirewallServer sqlFirewallServer = MycatServer.getInstance().getSqlFirewallServer();
+		MycatServer mycatServer = MycatServer.getInstance();
+		SQLFirewallServer sqlFirewallServer =mycatServer.getSqlFirewallServer();
 
 		/**
 		 * TODO 记录SQL执行情况
 		 */
-		sqlFirewallServer.AddSQLRecord(sql,null);
+		if(mycatServer.getConfig().getSystem().getEnableSqlStat() == 1) {
+			sqlFirewallServer.AddSQLRecord(sql, null);
+		}
 
 		/**
 		 * TODO 使用druid sql wall 模块 做 SQL check，不允许sql执行
 		 */
-		FirewallConfig firewallConf = MycatServer.getInstance().getConfig().getFirewall();
+		FirewallConfig firewallConf = mycatServer.getConfig().getFirewall();
 		int enableSQLFirewall = firewallConf.getEnableSQLFirewall();
 
 		/**enableSQLFirewall =-1 表示关闭防火墙，关闭拦截*/

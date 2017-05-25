@@ -114,3 +114,4 @@ hs_err_pid*
 /test-output/
 /datanode/
 /h2db/
+/confbakups/

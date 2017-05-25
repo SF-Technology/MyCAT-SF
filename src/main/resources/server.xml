@@ -44,7 +44,7 @@
 		<!--SQL STAT相关参数配置 -->
 		<!--后台线程定时采集信息入H2DB库 单位ms-->
 		<property name="enableSqlStat">0</property>
-		<property name="monitorUpdatePeriod">5000</property>
+		<property name="monitorUpdatePeriod">60000</property>
 		<!--sql stat 在内存驻留的时间 单位ms-->
 		<property name="sqlInMemDBPeriod">60000</property>
 		<!--到当前时间 SQL 执行结果集 TOP N ，sqlInMemDBPeriod/8周期汇聚一次-->

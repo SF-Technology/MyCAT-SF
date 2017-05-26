@@ -75,8 +75,8 @@ public class TableCreateSQL {
      */
 
     public final static String T_SQLSTAT= "CREATE TABLE t_sqlstat(" +
-            "original_sql VARCHAR(255) PRIMARY KEY, " +
-            "modified_sql VARCHAR(255)," +
+            "original_sql VARCHAR(2048) PRIMARY KEY, " +
+            "modified_sql VARCHAR(2048)," +
             "user VARCHAR(32)," +
             "host VARCHAR(64)," +
             "schema VARCHAR(32)," +
@@ -94,8 +94,8 @@ public class TableCreateSQL {
      * t_sqlrecord
      */
     public final static String T_SQLRECORD= "CREATE TABLE t_sqlrecord(" +
-            "original_sql VARCHAR(255) PRIMARY KEY," +
-            "modified_sql VARCHAR(255)," +
+            "original_sql VARCHAR(2048) PRIMARY KEY," +
+            "modified_sql VARCHAR(2048)," +
             "user VARCHAR(32)," +
             "host VARCHAR(64)," +
             "schema VARCHAR(32)," +
@@ -228,14 +228,14 @@ public class TableCreateSQL {
      */
     public final static String T_SQLBLACKLIST = "CREATE TABLE sql_blacklist(" +
             "sql_id INT auto_increment PRIMARY KEY, " +
-            "sql VARCHAR(255) UNIQUE)";
+            "sql VARCHAR(2048))";
 
     /**
      * sql_reporter
      */
     public final static String  T_SQLREPORTER = "CREATE TABLE sql_reporter(" +
-            "sql VARCHAR(255) PRIMARY KEY, " +
-            "sql_msg VARCHAR(255)," +
+            "sql VARCHAR(2048) PRIMARY KEY, " +
+            "sql_msg VARCHAR(512)," +
             "count INT);";
 
 
@@ -257,7 +257,7 @@ public class TableCreateSQL {
      * t_topnrows
      */
     public final static String  T_TOPNROWS= "CREATE TABLE t_topnrows(" +
-            "sql VARCHAR(255) PRIMARY KEY, " +
+            "sql VARCHAR(2048) PRIMARY KEY, " +
             "user VARCHAR(32)," +
             "host VARCHAR(32)," +
             "schema VARCHAR(32)," +
@@ -268,7 +268,7 @@ public class TableCreateSQL {
      * t_topntime
      */
     public final static String  T_TOPNTIME= "CREATE TABLE t_topntime(" +
-            "sql VARCHAR(255) PRIMARY KEY, " +
+            "sql VARCHAR(2048) PRIMARY KEY, " +
             "user VARCHAR(32)," +
             "host VARCHAR(32)," +
             "schema VARCHAR(32)," +
@@ -279,7 +279,7 @@ public class TableCreateSQL {
      * t_topncount
      */
     public final static String  T_TOPNCOUNT= "CREATE TABLE t_topncount(" +
-            "sql VARCHAR(255) PRIMARY KEY, " +
+            "sql VARCHAR(2048) PRIMARY KEY, " +
             "user VARCHAR(32)," +
             "host VARCHAR(32)," +
             "schema VARCHAR(32)," +

@@ -39,7 +39,7 @@ public class SystemParameter {
             {"useSqlStat", "是否启用sql stat功能 1启用，0不启用"},
             {"systemReserveMemorySize", "系统预留内存，在off-heap方式下，该参数无用"},
             {"dataNodeSortedTempDir", "off-heap内存模式下，内存不足时，数据写入磁盘的目录"},
-
+            {"enableSqlStat", "1.启用采集全部sql信息入H2DB库. 0.不启用"},
             {"monitorUpdatePeriod", " 后台线程定时采集信息入H2DB库 单位ms"},
             {"sqlInMemDBPeriod", "SQL执行的情况在内存数据库中停留时间.. 单位ms"},
             {"bySqlTypeSummaryPeriod", "间隔根据SQL类型汇总，SQL执行次数.. 单位ms"},

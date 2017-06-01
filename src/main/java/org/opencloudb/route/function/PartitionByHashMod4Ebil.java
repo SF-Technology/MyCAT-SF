@@ -32,7 +32,16 @@ public class PartitionByHashMod4Ebil extends AbstractPartitionAlgorithm implemen
 
 	public void setExcludedColumnValue(String excludedColumnValue) {
 		this.excludedColumnValue = excludedColumnValue;
-		this.excludedColumnSet = new HashSet<String>(Arrays.asList(excludedColumnValue.split(DELIMITER)));
+		this.excludedColumnSet = new HashSet<String>(
+				Arrays.asList(excludedColumnValue.trim().split("\\s*" + DELIMITER + "\\s*")));
+	}
+
+	public String getExcludedColumnValue() {
+		return excludedColumnValue;
+	}
+
+	public int getCount() {
+		return count;
 	}
 
 	/**
@@ -80,9 +89,8 @@ public class PartitionByHashMod4Ebil extends AbstractPartitionAlgorithm implemen
 	}
 
 	@Override
-	public int getPartitionNum() {
-		int count = this.count;
-		return count;
+	public int requiredNodeNum() {
+		return this.count;
 	}
 
 }

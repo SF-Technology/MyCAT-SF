@@ -611,7 +611,7 @@ public class UnsafeRowGrouper {
 
 		if(aggregationMap.find(key)){
 			UnsafeRow rs = aggregationMap.getAggregationBuffer(key);
-			aggregateRow(rs,value);
+			aggregateRow(key,rs,value);
 		}else {
 			aggregationMap.put(key,value);
 		}
@@ -634,7 +634,7 @@ public class UnsafeRowGrouper {
 		return false;
 	}
 
-	private void aggregateRow(UnsafeRow toRow, UnsafeRow newRow) throws UnsupportedEncodingException {
+	private void aggregateRow(UnsafeRow key,UnsafeRow toRow, UnsafeRow newRow) throws UnsupportedEncodingException {
 		if (mergCols == null) {
 			return;
 		}
@@ -678,6 +678,22 @@ public class UnsafeRowGrouper {
 						 left = decimalLeft == null ? null : decimalLeft.toString().getBytes();
 						 right = decimalRight == null ? null : decimalRight.toString().getBytes();
 						 break;
+
+					 case ColMeta.COL_TYPE_DATE:
+					 case ColMeta.COL_TYPE_TIMSTAMP:
+					 case ColMeta.COL_TYPE_TIME:
+					 case ColMeta.COL_TYPE_YEAR:
+					 case ColMeta.COL_TYPE_DATETIME:
+					 case ColMeta.COL_TYPE_NEWDATE:
+					 case ColMeta.COL_TYPE_BIT:
+					 case ColMeta.COL_TYPE_VAR_STRING:
+					 case ColMeta.COL_TYPE_STRING:
+					 case ColMeta.COL_TYPE_ENUM:
+					 case ColMeta.COL_TYPE_SET:
+						 left = toRow.getBinary(index);
+						 right = newRow.getBinary(index);
+						 break;
+
 					 default:
 						 break;
 				 }
@@ -708,6 +724,53 @@ public class UnsafeRowGrouper {
 						 case ColMeta.COL_TYPE_NEWDECIMAL:
 //                             toRow.setDouble(index,BytesTools.getDouble(result));
 							 toRow.updateDecimal(index, new BigDecimal(new String(result)));
+							 break;
+						 /**
+						  *TODO UnsafeFixedWidthAggregationMap 中存放
+						  * UnsafeRow时，非数值类型的列不可更改其值，
+						  * 为了统一处理聚合函数这块
+						  * 做max或者min聚合时候，目前解决方法
+						  * 先free原来 UnsafeFixedWidthAggregationMap对象。
+						  * 然后重新创建一个UnsafeFixedWidthAggregationMap对象
+						  * 然后存放最新的max或者min值作为下次比较。
+						  **/
+						 case ColMeta.COL_TYPE_DATE:
+						 case ColMeta.COL_TYPE_TIMSTAMP:
+						 case ColMeta.COL_TYPE_TIME:
+						 case ColMeta.COL_TYPE_YEAR:
+						 case ColMeta.COL_TYPE_DATETIME:
+						 case ColMeta.COL_TYPE_NEWDATE:
+						 case ColMeta.COL_TYPE_VAR_STRING:
+						 case ColMeta.COL_TYPE_STRING:
+						 case ColMeta.COL_TYPE_ENUM:
+						 case ColMeta.COL_TYPE_SET:
+							 aggregationMap.free();
+							 DataNodeMemoryManager dataNodeMemoryManager =
+									 new DataNodeMemoryManager(memoryManager,Thread.currentThread().getId());
+							 aggregationMap = new UnsafeFixedWidthAggregationMap(
+									 emptyAggregationBuffer,
+									 aggBufferSchema,
+									 groupKeySchema,
+									 dataNodeMemoryManager,
+									 1024,
+									 conf.getSizeAsBytes("mycat.buffer.pageSize", "32k"),
+									 false);
+
+							 UnsafeRow unsafeRow = new UnsafeRow(toRow.numFields());
+							 bufferHolder = new BufferHolder(unsafeRow, 0);
+							 unsafeRowWriter = new UnsafeRowWriter(bufferHolder, toRow.numFields());
+							 bufferHolder.reset();
+							 for (int i = 0; i < toRow.numFields(); i++) {
+								 if (!toRow.isNullAt(i) && i != index)
+									 unsafeRowWriter.write(i, toRow.getBinary(i));
+								 else if (!toRow.isNullAt(i) && i == index) {
+									 /**更新最大或者最小值*/
+									 unsafeRowWriter.write(i,result);
+								 } else
+									 unsafeRow.setNullAt(i);
+							 }
+							 unsafeRow.setTotalSize(bufferHolder.totalSize());
+							 aggregationMap.put(key, unsafeRow);
 							 break;
 						 default:
 							 break;

@@ -23,21 +23,21 @@ public class RowPrefixComputer extends UnsafeExternalRowSorter.PrefixComputer {
     public RowPrefixComputer(StructType schema){
         this.schema = schema;
         /**
-         * 通过计算得到排序关键词的第一个在行的索引下标
+         * 按order by col1，col2 .... 中列做比较顺序
          */
-        int orderIndex = 0;
+       // int orderIndex = 0;
         OrderCol[] orderCols = schema.getOrderCols();
 
         if (orderCols != null){
-            for (int i = 0; i < orderCols.length; i++) {
-                ColMeta colMeta = orderCols[i].colMeta;
-                if(colMeta.colIndex == 0){
-                    orderIndex = i;
-                    break;
-                }
-            }
+//            for (int i = 0; i < orderCols.length; i++) {
+//                ColMeta colMeta = orderCols[i].colMeta;
+//                if(colMeta.colIndex == 0){
+//                    orderIndex = i;
+//                    break;
+//                }
+//            }
 
-            this.colMeta = orderCols[orderIndex].colMeta;
+            this.colMeta = orderCols[0].colMeta;
         }else {
             this.colMeta = null;
         }

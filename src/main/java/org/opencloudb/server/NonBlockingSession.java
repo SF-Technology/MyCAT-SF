@@ -46,6 +46,7 @@ import org.opencloudb.mysql.nio.handler.MultiNodeCoordinator;
 import org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler;
 import org.opencloudb.mysql.nio.handler.RollbackNodeHandler;
 import org.opencloudb.mysql.nio.handler.RollbackReleaseHandler;
+import org.opencloudb.mysql.nio.handler.SingleNodeCallHandler;
 import org.opencloudb.mysql.nio.handler.SingleNodeHandler;
 import org.opencloudb.mysql.nio.handler.UnLockTablesHandler;
 import org.opencloudb.mysql.nio.handler.LockTablesHandler;
@@ -69,6 +70,7 @@ public class NonBlockingSession implements Session {
 	private final ConcurrentHashMap<RouteResultsetNode, BackendConnection> target;
 	// life-cycle: each sql execution
 	private volatile SingleNodeHandler singleNodeHandler;
+	private volatile SingleNodeCallHandler singleNodeCallHandler;
 	private volatile MultiNodeQueryHandler multiNodeHandler;
 	private volatile MultiNodeCallHandler multiNodeCallHandler;
 	private volatile RollbackNodeHandler rollbackHandler;
@@ -130,41 +132,42 @@ public class NonBlockingSession implements Session {
 		boolean autocommit = source.isAutocommit();
 		final int initCount = target.size();
 		if (nodes.length == 1) {
-			singleNodeHandler = new SingleNodeHandler(rrs, this);
 			try {
-				if (initCount > 1) {
-					checkDistriTransaxAndExecute(rrs, 1, autocommit);
-				} else {
-					singleNodeHandler.execute();
-				}
+			    if (type == ServerParse.CALL) {
+			        singleNodeCallHandler = new SingleNodeCallHandler(rrs, this);
+			        singleNodeCallHandler.execute();
+			    } else {
+    			    singleNodeHandler = new SingleNodeHandler(rrs, this);
+    				if (initCount > 1) {
+    					checkDistriTransaxAndExecute(rrs, 1, autocommit);
+    				} else {
+    					singleNodeHandler.execute();
+    				}
+			    }
 			} catch (Exception e) {
 				LOGGER.warn(new StringBuilder().append(source).append(rrs), e);
 				source.writeErrMessage(ErrorCode.ERR_HANDLE_DATA, e.toString());
 			}
 		} else {
-
 			try {
-			    
 			    if (type == ServerParse.CALL) {
 	                multiNodeCallHandler = new MultiNodeCallHandler(rrs, this);
 	                multiNodeCallHandler.execute();
-	                return ;
+	            } else {
+	                // 如果是路由到多个个分片的全局表查询，则使用MultiGlobalNodeQueryHandler作为 multiNodeHandler
+	                // 如果是路由到多个分片的非全局表查询，则使用MultiNodeQueryHandler作为 multiNodeHandler
+	                if (rrs.isGlobalTable() && type == ServerParse.SELECT){
+	                    multiNodeHandler = new GlobalTableMultiNodeQueryHandler(type, rrs, autocommit, this);
+	                } else {
+	                    multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit, this);
+	                }
+	                
+	                if (((type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) || initCount > 1) {
+	                    checkDistriTransaxAndExecute(rrs, 2, autocommit);
+	                } else {
+	                    multiNodeHandler.execute();
+	                }
 	            }
-			    
-			    // 如果是路由到多个个分片的全局表查询，则使用MultiGlobalNodeQueryHandler作为 multiNodeHandler
-	            // 如果是路由到多个分片的非全局表查询，则使用MultiNodeQueryHandler作为 multiNodeHandler
-	            if (rrs.isGlobalTable() && type == ServerParse.SELECT){
-	                multiNodeHandler = new GlobalTableMultiNodeQueryHandler(type, rrs, autocommit, this);
-	            } else if (type != ServerParse.CALL) {
-	                multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit, this);
-	            }
-			    
-				if (((type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) || initCount > 1) {
-					checkDistriTransaxAndExecute(rrs, 2, autocommit);
-				} else {
-					multiNodeHandler.execute();
-				}
-
 
 			} catch (Exception e) {
 				LOGGER.warn(new StringBuilder().append(source).append(rrs), e);
@@ -434,6 +437,11 @@ public class NonBlockingSession implements Session {
 		if (singleHander != null) {
 			singleHander.clearResources();
 			singleNodeHandler = null;
+		}
+		SingleNodeCallHandler singleCallHandler = singleNodeCallHandler;
+		if (singleCallHandler != null) {
+		    singleCallHandler.clearResources();
+		    singleNodeCallHandler = null;
 		}
 		MultiNodeQueryHandler multiHandler = multiNodeHandler;
 		if (multiHandler != null) {

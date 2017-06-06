@@ -1,9 +1,12 @@
 package org.opencloudb.manager.parser.druid.statement;
 
+import org.opencloudb.config.model.ProcedureConfig;
 import org.opencloudb.manager.parser.druid.MycatASTVisitor;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLName;
+import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLDDLStatement;
 
 /**
@@ -22,6 +25,14 @@ public class MycatCreateProcedureStatement extends MycatStatementImpl implements
     public void accept0(MycatASTVisitor visitor) {
         visitor.visit(this);
         visitor.endVisit(this);
+    }
+    
+    public static MycatCreateProcedureStatement from(ProcedureConfig conf, String schema) {
+        MycatCreateProcedureStatement stmt = new MycatCreateProcedureStatement();
+        stmt.setProcedure(new SQLIdentifierExpr(conf.getName().toLowerCase()));
+        stmt.setSchema(new SQLIdentifierExpr(schema));
+        stmt.setDataNodes(new SQLCharExpr(conf.getDataNode()));
+        return stmt;
     }
 
     public SQLName getProcedure() {

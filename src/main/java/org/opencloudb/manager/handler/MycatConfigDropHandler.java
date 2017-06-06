@@ -8,6 +8,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropFunctionStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropMapFileStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropProcedureStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
@@ -47,6 +48,8 @@ public class MycatConfigDropHandler {
 				DropFunctionHandler.handle(c, (MycatDropFunctionStatement)stmt, sql);
 			} else if(stmt instanceof MycatDropMapFileStatement){
 				DropMapFileHandler.handle(c, (MycatDropMapFileStatement)stmt, sql);
+			} else if (stmt instanceof MycatDropProcedureStatement) {
+			    DropProcedureHandler.handle(c, (MycatDropProcedureStatement) stmt, sql);
 			} else { // TODO more... 
 				c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statement : " + sql);
 			}

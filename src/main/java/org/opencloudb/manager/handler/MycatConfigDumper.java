@@ -20,6 +20,7 @@ import org.opencloudb.MycatServer;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.config.model.DataHostConfig;
 import org.opencloudb.config.model.DataNodeConfig;
+import org.opencloudb.config.model.ProcedureConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.config.model.TableConfig;
@@ -32,6 +33,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatemen
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateMapFileStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateProcedureStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
@@ -60,6 +62,7 @@ public class MycatConfigDumper {
         Map<String, RuleConfig> ruleConfMap = getAllRules();
         Map<String, AbstractPartitionAlgorithm> functionMap = mycatConfig.getFunctions();
         apply(out, schemaConfMap, tableConfMap, ruleConfMap, functionMap, dnConfMap, dhConfMap, userConfMap, true);
+        applyProc(out, getAllProcedures());
     }
     
     public static void dump(Appendable out, Map<String, List<String>> tables, boolean dumpSchema) throws IOException {
@@ -80,6 +83,10 @@ public class MycatConfigDumper {
         Map<String, AbstractPartitionAlgorithm> functionMap = getFunctions(ruleConfMap);
         
         apply(out, schemaConfMap, tableConfMap, ruleConfMap, functionMap, dnConfMap, dhConfMap, userConfMap, dumpSchema);
+        // 如果是dump schema, 需要dump procedure
+        if (dumpSchema) {
+            applyProc(out, getProcedures(schemaNames));
+        }
     }
     
     private static void apply(Appendable out, Map<String, SchemaConfig> schemaConfMap, 
@@ -179,6 +186,19 @@ public class MycatConfigDumper {
             }
         }
         
+    }
+    
+    private static void applyProc(Appendable out, Map<String, Map<String, ProcedureConfig>> procMap) throws IOException {
+        MycatOutputVisitor outVisitor = new MycatOutputVisitor(out);
+        // dump procedure
+        out.append(LINE_SEP);
+        out.append("/* dump procedure */" + LINE_SEP);
+        for (String schemaName : procMap.keySet()) {
+            for (ProcedureConfig procConf : procMap.get(schemaName).values()) {
+                MycatCreateProcedureStatement stmt = MycatCreateProcedureStatement.from(procConf, schemaName);
+                stmt.accept(outVisitor);
+            }
+        }
     }
     
     private static Map<String, SchemaConfig> getSchemas(Collection<String> schemaNames) {
@@ -412,6 +432,33 @@ public class MycatConfigDumper {
             }
         }
         return null;
+    }
+    
+    /**
+     * 获取所有与schema关联的procedure
+     * @param schemas
+     * @return
+     */
+    private static Map<String, Map<String, ProcedureConfig>> getProcedures(Collection<String> schemas) {
+        Map<String, Map<String, ProcedureConfig>> map = new TreeMap<String, Map<String, ProcedureConfig>>();
+        MycatConfig mycatConf = MycatServer.getInstance().getConfig();
+        for (String schema : schemas) {
+            SchemaConfig schemaConf = mycatConf.getSchemas().get(schema);
+            if (schemaConf.getProcedures().size() > 0) {
+                map.put(schema, new TreeMap<String, ProcedureConfig>(schemaConf.getProcedures()));
+            }
+        }
+        return map;
+    }
+    
+    private static Map<String, Map<String, ProcedureConfig>> getAllProcedures() {
+        Map<String, Map<String, ProcedureConfig>> map = new TreeMap<String, Map<String, ProcedureConfig>>();
+        MycatConfig mycatConf = MycatServer.getInstance().getConfig();
+        for (SchemaConfig schemaConf : mycatConf.getSchemas().values()) {
+            Map<String, ProcedureConfig> procMap = new TreeMap<String, ProcedureConfig>(schemaConf.getProcedures());
+            map.put(schemaConf.getName(), procMap);
+        }
+        return map;
     }
     
 }

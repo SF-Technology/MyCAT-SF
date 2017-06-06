@@ -357,7 +357,7 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
         if (stmt.getSchema() != null) {
             print(" IN `" + stmt.getSchema().getSimpleName() + "`");
         }
-        print(" dataNode = \"" + stmt.getDataNodes() + "\"");
+        print(" dataNode = " + stmt.getDataNodes());
     }
 
     @Override

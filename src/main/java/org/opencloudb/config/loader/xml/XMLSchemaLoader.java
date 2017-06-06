@@ -706,12 +706,13 @@ public class XMLSchemaLoader implements SchemaLoader {
 	    for (int i = 0, n = nodeList.getLength(); i < n; i++) {
 	        Element node = (Element) nodeList.item(i);
 	        String procedureName = node.getAttribute("name");
+	        String upperProcName = procedureName.toUpperCase();
 	        String dataNode = node.getAttribute("dataNode");
-	        if (procedureMap.containsKey(procedureName)) {
+	        if (procedureMap.containsKey(upperProcName)) {
 	            throw new ConfigException("procedure " + procedureName + " deplicate");
 	        }
-	        ProcedureConfig procedure = new ProcedureConfig(procedureName, dataNode);
-	        procedureMap.put(procedureName, procedure);
+	        ProcedureConfig procedure = new ProcedureConfig(upperProcName, dataNode);
+	        procedureMap.put(upperProcName, procedure);
 	    }
 	    return procedureMap;
 	}

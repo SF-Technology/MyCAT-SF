@@ -108,7 +108,7 @@ public class SchemaJAXB {
 		    
 		    public static Procedure transferFrom(ProcedureConfig procConf) {
 		        Procedure proc = new Procedure();
-		        proc.setName(procConf.getName());
+		        proc.setName(procConf.getName().toLowerCase());
 		        proc.setDataNode(procConf.getDataNode());
 		        return proc;
 		    }

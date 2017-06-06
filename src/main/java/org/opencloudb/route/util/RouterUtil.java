@@ -126,7 +126,7 @@ public class RouterUtil {
 	 */
 	public static RouteResultset routeToProcedureNode(RouteResultset rrs, String procedureName, String stmt, SchemaConfig schema) throws SQLNonTransientException {
 		Map<String, ProcedureConfig> procedures = schema.getProcedures();
-		ProcedureConfig procedure = procedures.get(procedureName.toLowerCase());
+		ProcedureConfig procedure = procedures.get(procedureName.toUpperCase());
 		if (procedure == null) {
 			throw new SQLNonTransientException("procedure named : " + procedureName + " is not defined in schema : " + schema.getName());
 		}

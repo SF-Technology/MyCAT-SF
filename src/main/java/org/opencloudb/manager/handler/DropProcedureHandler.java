@@ -36,6 +36,10 @@ public class DropProcedureHandler {
             c.setLastOperation("drop procedure " + stmt.getProcedure().getSimpleName()); // 记录操作
             // 获取当前schema
             String schemaName = c.getSchema();
+            if (schemaName == null) {
+                c.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "No database selected");
+                return ;
+            }
             // (可选)检查schema是否存在
             if (!mycatConf.getSchemas().containsKey(schemaName)) {
                 c.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, "schema '" + schemaName + "' dosen't exist");

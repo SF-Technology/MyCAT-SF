@@ -8,12 +8,14 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatemen
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateMapFileStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateProcedureStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropProcedureStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
@@ -76,4 +78,10 @@ public interface MycatASTVisitor extends SQLASTVisitor {
     
     void visit(MycatCreateMapFileStatement stmt);
     void endVisit(MycatCreateMapFileStatement stmt);
+    
+    void visit(MycatCreateProcedureStatement stmt);
+    void endVisit(MycatCreateProcedureStatement stmt);
+    
+    void visit(MycatDropProcedureStatement stmt);
+    void endVisit(MycatDropProcedureStatement stmt);
 }

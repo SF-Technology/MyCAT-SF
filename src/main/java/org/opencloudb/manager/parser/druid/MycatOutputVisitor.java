@@ -10,12 +10,14 @@ import org.opencloudb.manager.parser.druid.statement.MycatCreateDataHostStatemen
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateMapFileStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateProcedureStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropProcedureStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropUserStatement;
@@ -346,6 +348,30 @@ public class MycatOutputVisitor extends SQLASTOutputVisitor implements MycatASTV
 
     @Override
     public void endVisit(MycatCreateMapFileStatement stmt) {
+        println(SQL_EMIC);
+    }
+
+    @Override
+    public void visit(MycatCreateProcedureStatement stmt) {
+        print(MYCAT_CONFIG_SQL_PREFIX + " CREATE PROCEDURE `" + stmt.getProcedure() + "`");
+        if (stmt.getSchema() != null) {
+            print(" IN `" + stmt.getSchema().getSimpleName() + "`");
+        }
+        print(" dataNode = \"" + stmt.getDataNodes() + "\"");
+    }
+
+    @Override
+    public void endVisit(MycatCreateProcedureStatement stmt) {
+        println(SQL_EMIC);        
+    }
+
+    @Override
+    public void visit(MycatDropProcedureStatement stmt) {
+        print(MYCAT_CONFIG_SQL_PREFIX + " DROP PROCEDURE `" + stmt.getProcedure() + "`");
+    }
+
+    @Override
+    public void endVisit(MycatDropProcedureStatement stmt) {
         println(SQL_EMIC);
     }
     

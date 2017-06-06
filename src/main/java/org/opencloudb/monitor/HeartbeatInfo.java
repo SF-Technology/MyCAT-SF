@@ -150,7 +150,7 @@ public class HeartbeatInfo {
 
         try {
 
-            String sql = "select name  from t_heartbeat where name = '" + getName() + "'";
+            String sql = "select host  from t_heartbeat where host = '" + getHost() + "'";
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("sql === >  " + sql);
@@ -184,9 +184,9 @@ public class HeartbeatInfo {
 
         if(isAdd){
             sql = "INSERT INTO t_heartbeat VALUES('"
-                    + getName() + "','"
+                    + getHost() + "','"
                     + getType() + "','"
-                    + getHost() + "',"
+                    + getName() + "',"
                     + getPort() + ","
                     + getRsCode() + ","
                     + getRetry() + ",'"
@@ -197,7 +197,7 @@ public class HeartbeatInfo {
                     + getStop() +"')";
         }else {
             sql = "UPDATE t_heartbeat SET type ='" + getType() +"'," +
-                    "host ='" + getHost() + "',"  +
+                    "name ='" + getName() + "',"  +
                     "port = " + getPort() + ","  +
                     "rs_code = " + getRsCode() + ","  +
                     "retry = " + getRetry()+ "," +
@@ -206,7 +206,7 @@ public class HeartbeatInfo {
                     "execute_time ='" + getExecuteTime() + "'," +
                     "last_active_time ='" + getLastActiveTime() + "',"+
                     "stop = '" + getStop() + "'" +
-                    " WHERE name = '" + getName() + "'";
+                    " WHERE host = '" + getHost() + "'";
         }
 
         if (LOGGER.isDebugEnabled()) {

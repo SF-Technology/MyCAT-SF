@@ -547,7 +547,7 @@ public class MonitorServer {
                 heartbeatInfo.setType(ds.getConfig().getDbType());
                 if (hb != null) {
                 //    row.add(ds.getConfig().getIp().getBytes());
-                    heartbeatInfo.setHost(ds.getConfig().getIp());
+                    heartbeatInfo.setHost(ds.getConfig().getIp() + ":" + ds.getConfig().getPort());
                 //    row.add(IntegerUtil.toBytes(ds.getConfig().getPort()));
                     heartbeatInfo.setPort(ds.getConfig().getPort());
                 //    row.add(IntegerUtil.toBytes(hb.getStatus()));

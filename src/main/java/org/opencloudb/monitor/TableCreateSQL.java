@@ -139,9 +139,9 @@ public class TableCreateSQL {
      * t_heartbeat
      */
     public final static String T_HEARTBEAT = "CREATE TABLE t_heartbeat( " +
-            "name VARCHAR(32) PRIMARY KEY," +
+            "host VARCHAR(255) PRIMARY KEY," +
             "type VARCHAR(16)," +
-            "host VARCHAR(32)," +
+            "name VARCHAR(128)," +
             "port INT,"+
             "rs_code INT," +
             "retry INT," +
@@ -150,7 +150,6 @@ public class TableCreateSQL {
             "execute_time VARCHAR(128)," +
             "last_active_time VARCHAR(128)," +
             "stop VARCHAR(16),"+ ")";
-
 
     /**
      * t_datanode

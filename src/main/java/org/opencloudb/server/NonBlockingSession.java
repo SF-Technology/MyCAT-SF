@@ -169,7 +169,7 @@ public class NonBlockingSession implements Session {
 //						gTableConf.waitForChecksum();
 //					}
 					GlobalTableLockHolder gTableLockHolder = MycatServer.getInstance().getTableLockManager().getGlobalTableLockHolder(schemaName, tableName);
-					if(gTableLockHolder.isChecksuming()) {
+					if (gTableLockHolder != null && gTableLockHolder.isChecksuming()) {
 						// 正在执行checksum命令, 需要阻塞并等待checksum结束
 						gTableLockHolder.waitForChecksum();
 					}

@@ -639,7 +639,12 @@ public class CheckTableStructureConsistencyHandler {
 					count++;
 				}
 				tableCommIdxSetMap.put(tableName, commIdxNameSet);
-				resultMap.get(tableName).commIdxNameSet.addAll(commIdxNameSet);
+				TableCheckResult tcr = resultMap.get(tableName);
+				if (tcr != null) {
+				    tcr.commIdxNameSet.addAll(commIdxNameSet);
+				} else {
+				    LOGGER.error("Got NULL TableCheckResult from resultMap, tableName : {}, resultMap: {}", tableName, resultMap);
+				}
 			}
 			
 			// 比较新增和缺失
@@ -683,7 +688,12 @@ public class CheckTableStructureConsistencyHandler {
 						for(String addIdxName : addIdxNameSet) {
 							Index index = tableIndexes.indexes.get(addIdxName);
 							String indexDefine = index.getIndexDefine();
-							resultMap.get(tableName).addIdxItems.add(new AddItem(dn, db, addIdxName, indexDefine));
+							TableCheckResult tcr = resultMap.get(tableName);
+							if (tcr != null) {
+							    tcr.addIdxItems.add(new AddItem(dn, db, addIdxName, indexDefine));
+							} else {
+							    LOGGER.error("Got NULL TableCheckResult from resultMap, tableName : {}, resultMap: {}", tableName, resultMap);
+							}
 						}
 						
 					} else if(tableIndexes.indexes.keySet().size() < commIdxNameSet.size()) { // 缺失了索引
@@ -696,7 +706,12 @@ public class CheckTableStructureConsistencyHandler {
 						for(String delIdxName : delIdxNameSet) {
 							Index index = tableIndexes.indexes.get(delIdxName);
 							String indexDefine = index.getIndexDefine();
-							resultMap.get(tableName).delIdxItems.add(new DeleteItem(dn, db, delIdxName, indexDefine));
+							TableCheckResult tcr = resultMap.get(tableName);
+							if (tcr != null) {
+							    tcr.delIdxItems.add(new DeleteItem(dn, db, delIdxName, indexDefine));
+							} else {
+							    LOGGER.error("Got NULL TableCheckResult from resultMap, tableName : {}, resultMap: {}", tableName, resultMap);
+							}
 						}
 					}
 				}
@@ -736,7 +751,12 @@ public class CheckTableStructureConsistencyHandler {
 					if(valueGroupOfItem.size() > 1) { // 索引定义不一致的情况
 						String[] tbAndIdx = unCombineKey(SPLIT_STR, combineKey);
 						String indexName = tbAndIdx[1];
-						resultMap.get(tableName).diffIdxItems.add(new DiffItem(indexName, valueGroupOfItem));
+						TableCheckResult tcr = resultMap.get(tableName);
+						if (tcr != null) {
+						    tcr.diffIdxItems.add(new DiffItem(indexName, valueGroupOfItem));
+						} else {
+						    LOGGER.error("Got NULL TableCheckResult from resultMap, tableName : {}, resultMap: {}", tableName, resultMap);
+						}
 					}
 				}
 				

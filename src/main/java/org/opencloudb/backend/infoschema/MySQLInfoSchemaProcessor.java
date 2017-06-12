@@ -109,9 +109,9 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
             throw new Exception("can not find " + schema + " in schema.xml");
         }
 
-    	/*
+        /*
          * 找最小化dn集合,一个dh可能被多个dn所使用,这个时候只要获取一次dn的连接发sql语句就OK
-    	 */
+         */
         Set<String> dnSet = schemaConf.getAllDataNodes();
         Set<String> minDnSet = new HashSet<String>();
         Map<String, List<String>> dhToDnSetMap = new HashMap<String, List<String>>();
@@ -157,16 +157,19 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
     }
 
     public void endJobInput(String dataNode, boolean failed) {
+
         synchronized (this) {
             if (integer.incrementAndGet() >= maxjobs) {
                 integer.getAndSet(0);
                 ctx.endJobInput();
+                END_FLAG_PACK.setFailed(failed);
                 addPack(END_FLAG_PACK);
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("All Jobs Finished " + integer.get());
                 }
             }
         }
+
     }
 
     protected final boolean addPack(final PackWraper pack) {
@@ -200,9 +203,10 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
                     }
 
                     if (END_FLAG_PACK == pack) {
-                        if (sqlQueryResultListener != null)
+                        if (sqlQueryResultListener != null && !END_FLAG_PACK.isFailed()) {
                             sqlQueryResultListener.onResult(mapHostData);
-                            isExit = true;
+                        }
+                        isExit = true;
                     }
 
                     LinkedList<byte[]> linkedlist = mapHostData.get(pack.dataNode);

@@ -44,7 +44,7 @@ public abstract class SQLQueryResultHandlerChain<T> implements SQLQueryResultLis
 	public void handleError(Throwable t) {
 		if (this.frontend != null) {
 			frontend.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION, t.getMessage());
-		}else {
+		} else {
 			LOGGER.error(t.getMessage());
 		}
 	}
@@ -53,15 +53,15 @@ public abstract class SQLQueryResultHandlerChain<T> implements SQLQueryResultLis
 	
 	@Override
 	public void onResult(T result) {
-		processResult(result);
-		SQLQueryResultHandlerChain<T> next = next();
-		if(next != null) {
-			try {
-				next.handle();
-			} catch(Exception e) {
-				handleError(e);
-			}
-		}
+	    try {
+	        processResult(result);
+	        SQLQueryResultHandlerChain<T> next = next();
+	        if (next != null) {
+	            next.handle();
+	        }
+	    } catch (Throwable e) {
+	        handleError(e);
+	    }
 	}
 	
 }

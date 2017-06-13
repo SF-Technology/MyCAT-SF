@@ -11,6 +11,7 @@ import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
+import org.opencloudb.config.model.UserConfig;
 import org.opencloudb.config.model.rule.RuleConfig;
 import org.opencloudb.config.model.rule.TableRuleConfig;
 import org.opencloudb.config.util.ConfigTar;
@@ -48,7 +49,13 @@ public class CreateTableHandler {
 			
 			String schemaName = (stmt.getSchema() == null ? c.getSchema() : StringUtil.removeBackquote(stmt.getSchema().getSimpleName()));
 			
-			if(!mycatConf.getUsers().get(c.getUser()).getSchemas().contains(schemaName)) {
+			UserConfig userConf = mycatConf.getUsers().get(c.getUser());
+			if (userConf == null) {
+			    c.writeErrMessage(ErrorCode.ER_NO_SUCH_USER, "Unknown user '" + c.getUser() + "'");
+			    return ;
+			}
+			
+			if(!userConf.getSchemas().contains(schemaName)) {
 				c.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Unknown database '" + schemaName + "'");
 				return ;
 			}

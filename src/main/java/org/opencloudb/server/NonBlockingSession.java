@@ -39,8 +39,6 @@ import org.opencloudb.backend.BackendConnection;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SystemConfig;
-import org.opencloudb.lock.GlobalTableLockHolder;
-import org.opencloudb.lock.TableLockHolder;
 import org.opencloudb.mysql.nio.handler.CommitNodeHandler;
 import org.opencloudb.mysql.nio.handler.GlobalTableMultiNodeQueryHandler;
 import org.opencloudb.mysql.nio.handler.KillConnectionHandler;
@@ -161,18 +159,18 @@ public class NonBlockingSession implements Session {
 					checkDistriTransaxAndExecute(rrs, 2, autocommit);
 				} else if(rrs.isGlobalTable() 
 						&& (type == ServerParse.INSERT || type == ServerParse.UPDATE || type == ServerParse.DELETE)) {
-					String tableName = rrs.getTables().get(0);
-					String schemaName = source.getSchema();
+//					String tableName = rrs.getTables().get(0);
+//					String schemaName = source.getSchema();
 //					TableConfig gTableConf = MycatServer.getInstance().getConfig().getSchemas().get(schemaName).getTables().get(tableName);
 //					if(gTableConf.isChecksuming()) {
 //						// 正在执行checksum命令, 需要阻塞并等待checksum结束
 //						gTableConf.waitForChecksum();
 //					}
-					GlobalTableLockHolder gTableLockHolder = MycatServer.getInstance().getTableLockManager().getGlobalTableLockHolder(schemaName, tableName);
-					if (gTableLockHolder != null && gTableLockHolder.isChecksuming()) {
-						// 正在执行checksum命令, 需要阻塞并等待checksum结束
-						gTableLockHolder.waitForChecksum();
-					}
+//					GlobalTableLockHolder gTableLockHolder = MycatServer.getInstance().getTableLockManager().getGlobalTableLockHolder(schemaName, tableName);
+//					if (gTableLockHolder != null && gTableLockHolder.isChecksuming()) {
+//						// 正在执行checksum命令, 需要阻塞并等待checksum结束
+//						gTableLockHolder.waitForChecksum();
+//					}
 					multiNodeHandler.execute();
 				} else {
 					multiNodeHandler.execute();

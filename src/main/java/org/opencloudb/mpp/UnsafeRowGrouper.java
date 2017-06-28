@@ -298,23 +298,21 @@ public class UnsafeRowGrouper {
 	 * 处理AVG列精度
 	 */
 	private void processAvgFieldPrecision() {
-		for(String key : columToIndx.keySet()) {
-			if(isAvgField(key)) { // AVG列的小数点精度默认取SUM小数点精度, 计算和返回的小数点精度应该扩展4
-				ColMeta colMeta = columToIndx.get(key);
-				colMeta.decimals += 4;
-			}
-		}
-	}
-	
-	/**
-	 * 判断列是否为AVG列
-	 * @param columnName
-	 * @return
-	 */
-	private boolean isAvgField(String columnName) {
-		Pattern pattern = Pattern.compile("AVG([1-9]\\d*|0)SUM");
-		Matcher matcher = pattern.matcher(columnName);
-		return matcher.find();
+	    
+	    for (MergeCol mergCol : mergCols) {
+	        if (mergCol.mergeType != MergeCol.MERGE_AVG) {
+	            continue ;
+	        }
+	        for (String key : columToIndx.keySet()) {
+                ColMeta colMeta = columToIndx.get(key);
+                // AVG列的小数点精度默认取SUM小数点精度, 计算和返回的小数点精度应该扩展4
+                if (colMeta.colIndex == mergCol.colMeta.avgSumIndex) {
+                    colMeta.decimals += 4;
+                    break ;
+                }
+            }
+	    }
+	    
 	}
 	
     public UnsafeRow getAllBinaryRow(UnsafeRow row) throws UnsupportedEncodingException {

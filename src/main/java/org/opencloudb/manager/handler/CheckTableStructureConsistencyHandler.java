@@ -453,7 +453,12 @@ public class CheckTableStructureConsistencyHandler {
 					count++;
 				}
 				tableCommColSetMap.put(tableName, commColNameSet);
-				resultMap.get(tableName).commColNameSet.addAll(commColNameSet);
+				TableCheckResult tcr = resultMap.get(tableName);
+				if (tcr != null) {
+				    tcr.commColNameSet.addAll(commColNameSet);
+				} else {
+				    LOGGER.error("Got NULL TableCheckResult from resultMap, tableName : {}, resultMap: {}", tableName, resultMap);
+				}
 			}
 			
 			checkAddOrDelete(tableColumnsMap, tableCommColSetMap);
@@ -484,7 +489,12 @@ public class CheckTableStructureConsistencyHandler {
 						for(String addColName : addColNameSet) {
 							Column column = tableColumns.columns.get(addColName);
 							String columnDefine = column.getColumnDefine();
-							resultMap.get(tableName).addColItems.add(new AddItem(dn, db, addColName, columnDefine));
+							TableCheckResult tcr = resultMap.get(tableName);
+							if (tcr != null) {
+							    tcr.addColItems.add(new AddItem(dn, db, addColName, columnDefine));
+							} else {
+							    LOGGER.error("Got NULL TableCheckResult from resultMap, tableName : {}, resultMap: {}", tableName, resultMap);
+							}
 						}
 						
 					} else if(tableColumns.columns.keySet().size() < commColNameSet.size()) { // 缺失了列
@@ -497,7 +507,12 @@ public class CheckTableStructureConsistencyHandler {
 						for(String delColName : delColNameSet) {
 							Column column = tableColumns.columns.get(delColName);
 							String columnDefine = column.getColumnDefine();
-							resultMap.get(tableName).delColItems.add(new DeleteItem(dn, db, delColName, columnDefine));
+							TableCheckResult tcr = resultMap.get(tableName);
+							if (tcr != null) {
+							    tcr.delColItems.add(new DeleteItem(dn, db, delColName, columnDefine));
+							} else {
+							    LOGGER.error("Got NULL TableCheckResult from resultMap, tableName : {}, resultMap: {}", tableName, resultMap);
+							}
 						}
 					}
 				}
@@ -536,7 +551,12 @@ public class CheckTableStructureConsistencyHandler {
 					if(valueGroupOfItem.size() > 1) { // 列定义不一致的情况
 						String[] tbAndCol = unCombineKey(SPLIT_STR, combineKey);
 						String columnName = tbAndCol[1];
-						resultMap.get(tableName).diffColItems.add(new DiffItem(columnName, valueGroupOfItem));
+						TableCheckResult tcr = resultMap.get(tableName);
+						if (tcr != null) {
+						    tcr.diffColItems.add(new DiffItem(columnName, valueGroupOfItem));
+						} else {
+						    LOGGER.error("Got NULL TableCheckResult from resultMap, tableName : {}, resultMap: {}", tableName, resultMap);
+						}
 					}
 				}
 				

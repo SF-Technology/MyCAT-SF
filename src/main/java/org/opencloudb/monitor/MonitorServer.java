@@ -15,6 +15,7 @@ import org.opencloudb.cache.CachePool;
 import org.opencloudb.cache.CacheService;
 import org.opencloudb.cache.CacheStatic;
 import org.opencloudb.cache.LayerCachePool;
+import org.opencloudb.config.loader.zookeeper.entitiy.Server;
 import org.opencloudb.config.model.FirewallConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.SystemConfig;
@@ -63,6 +64,8 @@ public class MonitorServer {
     private final Timer timer;
     private final long mainThreadId;
     long statTime = 0L;
+    //表结构一致性检测开计时
+    private long startTscTime = 0;
 
     /**
      * 定时线程1 定期移除内存DB中sql统计信息
@@ -119,122 +122,128 @@ public class MonitorServer {
         /**TODO 改成定时更新*/
         updataDBInfo();
         updateSystemParam();
+
         /**
          * 定期清理过期的sql record.
          */
         statTime = System.currentTimeMillis();
-        delSqlRecordExecutor.scheduleAtFixedRate(new Runnable(){
-            @Override
-            public void run() {
-                long expiredTime = System.currentTimeMillis()-systemConfig.getSqlInMemDBPeriod();
-                dumpToDiskDb(expiredTime);
-                deleteExpiredSqlStat(expiredTime,"t_sqlstat");
-                if(System.currentTimeMillis()-statTime >= 2*3600000/**60*60*1000*/){
-                    statTime = System.currentTimeMillis();
-                    /**
-                     * 每隔getSqlRecordInDiskPeriod天从磁盘删除过期的sql
-                     */
-                    long expiredDelHistoryTime = System.currentTimeMillis() -
-                            systemConfig.getSqlRecordInDiskPeriod()*SystemConfig.DEFAULT_DAY_MILLISECONDS;
-                    deleteExpiredSqlStat(expiredDelHistoryTime,H2DBManager.getSqlRecordTableName());
-                }
 
-            }
-        },0,systemConfig.getSqlInMemDBPeriod()/2,TimeUnit.MILLISECONDS);
-
-        /**
-         * 根据sql类型，做统计分析
-         */
-        sqlTypeSummaryExecutor.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                String sql = "select original_sql,user,host," +
-                             "schema,tables,sqltype" +
-                             ",result_rows,exe_times,sqlexec_time from t_sqlstat";
-                ArrayList<SQLRecordSub> arrayList = bySqlTypeSummaryPeriod(sql);
-                for (int i = 0; i < arrayList.size() ; i++) {
-                    SQLRecordSub sqlRecordSub = arrayList.get(i);
-                    SQLTypeSummary sqlTypeSummary = new SQLTypeSummary();
-                    int type = sqlRecordSub.getSqlType();
-                    String user = sqlRecordSub.getUser();
-                    String host = sqlRecordSub.getHost();
-                    String schema = sqlRecordSub.getSchema();
-                    String tables = sqlRecordSub.getTables();
-                    String sqlType = null;
-                    switch (type){
-                        case ServerParse.DELETE:
-                            sqlType = "delete";
-                            break;
-                        case ServerParse.INSERT:
-                            sqlType = "insert";
-                            break;
-                        case ServerParse.SELECT:
-                            sqlType = "select";
-                            break;
-                        case ServerParse.UPDATE:
-                            sqlType = "update";
-                            break;
-                        default:
-                            sqlType = "";
-                            break;
+        if (systemConfig.getEnableSqlStat() == 1) {
+            delSqlRecordExecutor.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    long expiredTime = System.currentTimeMillis() - systemConfig.getSqlInMemDBPeriod();
+                    dumpToDiskDb(expiredTime);
+                    deleteExpiredSqlStat(expiredTime, "t_sqlstat");
+                    if (System.currentTimeMillis() - statTime >= 2 * 3600000/**60*60*1000*/) {
+                        statTime = System.currentTimeMillis();
+                        /**
+                         * 每隔getSqlRecordInDiskPeriod天从磁盘删除过期的sql
+                         */
+                        long expiredDelHistoryTime = System.currentTimeMillis() -
+                                systemConfig.getSqlRecordInDiskPeriod() * SystemConfig.DEFAULT_DAY_MILLISECONDS;
+                        deleteExpiredSqlStat(expiredDelHistoryTime, H2DBManager.getSqlRecordTableName());
                     }
-                    String pkey = sqlType + "-" + user + "-" + host
-                            + "-" + schema +"-" + tables;
-                    sqlTypeSummary.setPkey(pkey);
-                    sqlTypeSummary.setSqlType(sqlType);
-                    sqlTypeSummary.setUser(user);
-                    sqlTypeSummary.setHost(host);
-                    sqlTypeSummary.setSchema(schema);
-                    sqlTypeSummary.setTables(tables);
-                    sqlTypeSummary.setExecSqlCount(sqlRecordSub.getExeTimes());
-                    sqlTypeSummary.setExecSqlTime(sqlRecordSub.getSqlexecTime());
-                    sqlTypeSummary.setExecSqlRows(sqlRecordSub.getResultRows());
-                    sqlTypeSummary.update();
+
                 }
-            }
-        },0,systemConfig.getSqlInMemDBPeriod()/4,TimeUnit.MILLISECONDS);
+            }, 0, systemConfig.getSqlInMemDBPeriod() / 2, TimeUnit.MILLISECONDS);
+
+            /**
+             * 根据sql类型，做统计分析
+             */
+            sqlTypeSummaryExecutor.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    String sql = "select original_sql,user,host," +
+                            "schema,tables,sqltype" +
+                            ",result_rows,exe_times,sqlexec_time from t_sqlstat";
+                    ArrayList<SQLRecordSub> arrayList = bySqlTypeSummaryPeriod(sql);
+                    for (int i = 0; i < arrayList.size(); i++) {
+                        SQLRecordSub sqlRecordSub = arrayList.get(i);
+                        SQLTypeSummary sqlTypeSummary = new SQLTypeSummary();
+                        int type = sqlRecordSub.getSqlType();
+                        String user = sqlRecordSub.getUser();
+                        String host = sqlRecordSub.getHost();
+                        String schema = sqlRecordSub.getSchema();
+                        String tables = sqlRecordSub.getTables();
+                        String sqlType = null;
+                        switch (type) {
+                            case ServerParse.DELETE:
+                                sqlType = "delete";
+                                break;
+                            case ServerParse.INSERT:
+                                sqlType = "insert";
+                                break;
+                            case ServerParse.SELECT:
+                                sqlType = "select";
+                                break;
+                            case ServerParse.UPDATE:
+                                sqlType = "update";
+                                break;
+                            default:
+                                sqlType = "";
+                                break;
+                        }
+                        String pkey = sqlType + "-" + user + "-" + host
+                                + "-" + schema + "-" + tables;
+                        sqlTypeSummary.setPkey(pkey);
+                        sqlTypeSummary.setSqlType(sqlType);
+                        sqlTypeSummary.setUser(user);
+                        sqlTypeSummary.setHost(host);
+                        sqlTypeSummary.setSchema(schema);
+                        sqlTypeSummary.setTables(tables);
+                        sqlTypeSummary.setExecSqlCount(sqlRecordSub.getExeTimes());
+                        sqlTypeSummary.setExecSqlTime(sqlRecordSub.getSqlexecTime());
+                        sqlTypeSummary.setExecSqlRows(sqlRecordSub.getResultRows());
+                        sqlTypeSummary.update();
+                    }
+                }
+            }, 0, systemConfig.getSqlInMemDBPeriod() / 4, TimeUnit.MILLISECONDS);
 
 
-        topNSummaryPeriodExecutor.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
+            topNSummaryPeriodExecutor.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
 
-                /**
-                 * 从t_sqlstat中获取topN rows
-                 */
-                long topNRows = systemConfig.getTopExecuteResultN();
-                String newSql = "select original_sql,user,host,schema," +
-                        "tables,result_rows" +
-                        " from t_sqlstat order by result_rows limit " + topNRows ;
-                String oldSql = "select sql,user,host,schema,tables,exec_rows from t_topnrows";
-                takeTopN(newSql,oldSql,"t_topnrows","exec_rows",topNRows);
-
-
-                /**
-                 * 从t_sqlstat中获取topN time
-                 */
-                long topNTime = systemConfig.getTopSqlExecuteTimeN();
-                newSql = "select original_sql,user,host," +
-                        "schema,tables,exe_times," +
-                        "sqlexec_time from t_sqlstat order by sqlexec_time limit " + topNTime;
-                oldSql = "select sql,user,host,schema,tables,exec_time from t_topntime";
-                takeTopN(newSql,oldSql,"t_topntime","exec_time",topNRows);
+                    /**
+                     * 从t_sqlstat中获取topN rows
+                     */
+                    long topNRows = systemConfig.getTopExecuteResultN();
+                    String newSql = "select original_sql,user,host,schema," +
+                            "tables,result_rows" +
+                            " from t_sqlstat order by result_rows limit " + topNRows;
+                    String oldSql = "select sql,user,host,schema,tables,exec_rows from t_topnrows";
+                    takeTopN(newSql, oldSql, "t_topnrows", "exec_rows", topNRows);
 
 
-                /**
-                 *  从t_sqlstat中获取topN count
-                 */
-                long topNCount= systemConfig.getTopSqlExecuteCountN();
-                 newSql = "select original_sql,user,host," +
-                        "schema,tables,exe_times " +
-                        "from t_sqlstat order by exe_times limit " + topNCount;
-                  oldSql = "select sql,user,host,schema,tables,exec_count from t_topncount";
-                takeTopN(newSql,oldSql,"t_topncount","exec_count",topNRows);
-            }
-        },0,systemConfig.getSqlInMemDBPeriod()/8,TimeUnit.MILLISECONDS);
+                    /**
+                     * 从t_sqlstat中获取topN time
+                     */
+                    long topNTime = systemConfig.getTopSqlExecuteTimeN();
+                    newSql = "select original_sql,user,host," +
+                            "schema,tables,exe_times," +
+                            "sqlexec_time from t_sqlstat order by sqlexec_time limit " + topNTime;
+                    oldSql = "select sql,user,host,schema,tables,exec_time from t_topntime";
+                    takeTopN(newSql, oldSql, "t_topntime", "exec_time", topNRows);
+
+
+                    /**
+                     *  从t_sqlstat中获取topN count
+                     */
+                    long topNCount = systemConfig.getTopSqlExecuteCountN();
+                    newSql = "select original_sql,user,host," +
+                            "schema,tables,exe_times " +
+                            "from t_sqlstat order by exe_times limit " + topNCount;
+                    oldSql = "select sql,user,host,schema,tables,exec_count from t_topncount";
+                    takeTopN(newSql, oldSql, "t_topncount", "exec_count", topNRows);
+                }
+            }, 0, systemConfig.getSqlInMemDBPeriod() / 8, TimeUnit.MILLISECONDS);
+        }
+
     }
 
     private TimerTask doUpateMonitorInfo() {
+        startTscTime = System.currentTimeMillis();
         return new TimerTask() {
             @Override
             public void run() {
@@ -248,7 +257,10 @@ public class MonitorServer {
                         updateDataSource();
                         updateCacheInfo();
                         updateProcessor();
-                        CheckTableStructureConsistency();
+                        if(System.currentTimeMillis() - startTscTime >= systemConfig.getCheckTSCPeriod()*60*1000) {
+                            startTscTime = System.currentTimeMillis();
+                            CheckTableStructureConsistency();
+                        }
                     }
                 });
             }

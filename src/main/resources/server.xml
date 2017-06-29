@@ -43,9 +43,11 @@
 		<!--Mycat 系统预留内存,单位为m -->
 		<property name="systemReserveMemorySize">384m</property>
 
-		<!--SQL STAT相关参数配置 -->
-		<!--后台线程定时采集信息入H2DB库 单位ms-->
+		<!-- SQL STAT相关参数配置 -->
+		<!-- 后台线程定时采集信息入H2DB库 单位ms-->
 		<property name="enableSqlStat">0</property>
+		<!-- TSC（Table Structure Consistency）周期检测时间，单位为分钟，默认1天-->
+		<property name="checkTSCPeriod">1440</property>
 		<property name="monitorUpdatePeriod">60000</property>
 		<!--sql stat 在内存驻留的时间 单位ms-->
 		<property name="sqlInMemDBPeriod">60000</property>

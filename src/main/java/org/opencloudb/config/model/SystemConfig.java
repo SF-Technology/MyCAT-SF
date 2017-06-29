@@ -252,6 +252,10 @@ public final class SystemConfig {
 	private int confBackupSize = CONF_BACKUP_SIZE;
 
 
+	/**TSC（Table Structure Consistency）周期检测时间，单位为分钟，默认1天*/
+	private int checkTSCPeriod;
+
+
 	public String getDefaultSqlParser() {
 		return defaultSqlParser;
 	}
@@ -266,6 +270,14 @@ public final class SystemConfig {
 
 	public void setEnableSqlStat(int enableSqlStat) {
 		this.enableSqlStat = enableSqlStat;
+	}
+
+	public int getCheckTSCPeriod() {
+		return checkTSCPeriod;
+	}
+
+	public void setCheckTSCPeriod(int checkTSCPeriod) {
+		this.checkTSCPeriod = checkTSCPeriod;
 	}
 
 	public SystemConfig() {
@@ -367,8 +379,8 @@ public final class SystemConfig {
 //        this.constArithmeticAllow = true ;
 //        this.limitZeroAllow = false;
 		this.enableSqlStat = 0;
+		this.checkTSCPeriod = 1440;
 		this.monitorUpdatePeriod = DEFAULT_MONITOR_UPDATE_PERIOD;
-
 		this.sqlInMemDBPeriod = 4*DEFAULT_SQL_INMEMDB_PERIOD;
 		this.bySqlTypeSummaryPeriod = 2*DEFAULT_SQL_INMEMDB_PERIOD;
 		this.topNSummaryPeriod = DEFAULT_SQL_INMEMDB_PERIOD;

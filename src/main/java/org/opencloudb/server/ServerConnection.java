@@ -57,6 +57,11 @@ public class ServerConnection extends FrontendConnection {
 	private volatile String txInterrputMsg = "";
 	private long lastInsertId;
 	private NonBlockingSession session;
+
+	/**
+	 * 同一个事务内执行show,desc命令将随机下发，改为跟上次sql执行的路由节点。
+	 */
+	private String inTransactionSingleRouteDataNode = null;
 	
 	/**
 	 * 标志是否执行了lock tables语句，并处于lock状态
@@ -246,6 +251,14 @@ public class ServerConnection extends FrontendConnection {
 	}
 
 
+	public String getInTransactionSingleRouteDataNode() {
+		return inTransactionSingleRouteDataNode;
+	}
+
+	public void setInTransactionSingleRouteDataNode(String inTransactionSingleRouteDataNode) {
+		this.inTransactionSingleRouteDataNode = inTransactionSingleRouteDataNode;
+	}
+
 
 
 	public void routeEndExecuteSQL(String sql, int type, SchemaConfig schema) {
@@ -294,6 +307,12 @@ public class ServerConnection extends FrontendConnection {
 
 		if (rrs != null) {
 			// session执行
+			if (/**(type == ServerParse.SELECT ||
+				type == ServerParse.UPDATE ||
+				type == ServerParse.INSERT ||
+				type == ServerParse.DELETE) && */!isAutocommit()) {
+				setInTransactionSingleRouteDataNode(rrs.getNodes()[0].getName());
+			}
 			session.execute(rrs, type);
 		}
 	}

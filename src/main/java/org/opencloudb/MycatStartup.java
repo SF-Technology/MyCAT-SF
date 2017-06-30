@@ -47,7 +47,6 @@ public final class MycatStartup {
             // init
             MycatServer server = MycatServer.getInstance();
             server.beforeStart();
-
             // startup
             server.startup();
             System.out.println("MyCAT Server startup successfully. see logs in logs/mycat.log");

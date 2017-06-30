@@ -13,7 +13,7 @@
 	
 		<property name="defaultSqlParser">druidparser</property>
 		<!-- 1 关闭分布式事务，2 开启分布式事务 -->
-		<property name="handleDistributedTransactions">2</property>
+		<property name="handleDistributedTransactions">1</property>
 		<!-- 0表示不开启sqlstat功能,该功能很影响tps,需要优化,默认先关闭,1表示开启 -->
 		<property name="useSqlStat">0</property>
 

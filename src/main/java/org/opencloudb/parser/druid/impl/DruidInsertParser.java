@@ -43,7 +43,7 @@ public class DruidInsertParser extends DefaultDruidParser {
 
 		ctx.addTable(tableName);
 		if(RouterUtil.isNoSharding(schema,tableName)) {//整个schema都不分库或者该表不拆分
-			RouterUtil.routeForTableMeta(rrs, schema, tableName, rrs.getStatement());
+			RouterUtil.routeForTableMeta(rrs, schema, tableName, rrs.getStatement(),null);
 			rrs.setFinishedRoute(true);
 			return;
 		}

@@ -76,8 +76,7 @@ public class NonBlockingSession implements Session {
 
 	public NonBlockingSession(ServerConnection source) {
 		this.source = source;
-		this.target = new ConcurrentHashMap<RouteResultsetNode, BackendConnection>(
-				2, 0.75f);
+		this.target = new ConcurrentHashMap<RouteResultsetNode,BackendConnection>(2, 0.75f);
 		multiNodeCoordinator = new MultiNodeCoordinator(this);
 		commitHandler = new CommitNodeHandler(this);
 	}
@@ -226,7 +225,6 @@ public class NonBlockingSession implements Session {
 		} else if (initCount == 1) {
 			BackendConnection con = target.elements().nextElement();
 			commitHandler.commit(con);
-
 		} else {
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("multi node commit to send ,total " + initCount);
@@ -236,7 +234,7 @@ public class NonBlockingSession implements Session {
 				LOGGER.debug("multi node commit to send ,total " + initCount);
 			}
 		}
-
+		target.clear();
 	}
 
 	private boolean isALLGlobal(){
@@ -264,6 +262,7 @@ public class NonBlockingSession implements Session {
 		}
 		rollbackHandler = new RollbackNodeHandler(this);
 		rollbackHandler.rollback();
+		target.clear();
 	}
 
 	@Override
@@ -357,10 +356,7 @@ public class NonBlockingSession implements Session {
 	/**
 	 * @return previous bound connection
 	 */
-	public BackendConnection bindConnection(RouteResultsetNode key,
-			BackendConnection conn) {
-		// System.out.println("bind connection "+conn+
-		// " to key "+key.getName()+" on sesion "+this);
+	public BackendConnection bindConnection(RouteResultsetNode key,BackendConnection conn) {
 		return target.put(key, conn);
 	}
 	
@@ -501,7 +497,7 @@ public class NonBlockingSession implements Session {
 	 * 执行unlock tables语句方法
 	 * @author songdabin
 	 * @date 2016-7-9
-	 * @param rrs
+	 * @param sql
 	 */
 	public void unLockTable(String sql) {
 		UnLockTablesHandler handler = new UnLockTablesHandler(this, this.source.isAutocommit(), sql);

@@ -207,15 +207,18 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 
 	@Override
 	public int compareTo(RouteResultsetNode obj) {
+
 		if(obj == null) {
 			return 1;
 		}
+
 		if(this.name == null) {
 			return -1;
 		}
 		if(obj.name == null) {
 			return 1;
 		}
+
 		return this.name.compareTo(obj.name);
 	}
 

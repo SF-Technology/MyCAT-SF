@@ -629,12 +629,12 @@ public class RouterUtil {
 	}
 
 	public static void routeForTableMeta(RouteResultset rrs,
-			SchemaConfig schema, String tableName, String sql) {
+			SchemaConfig schema, String tableName, String sql,ServerConnection serverConnection) {
 		String dataNode = null;
 		if (isNoSharding(schema,tableName)) {//不分库的直接从schema中获取dataNode
 			dataNode = schema.getDataNode();
 		} else {
-			dataNode = getMetaReadDataNode(schema, tableName);
+			dataNode = getMetaReadDataNode(schema, tableName,serverConnection);
 		}
 
 		RouteResultsetNode[] nodes = new RouteResultsetNode[1];
@@ -655,14 +655,21 @@ public class RouterUtil {
 	 * @author mycat
 	 */
 	private static String getMetaReadDataNode(SchemaConfig schema,
-			String table) {
+			String table,ServerConnection serverConnection) {
 		// Table名字被转化为大写的，存储在schema
 		table = table.toUpperCase();
 		String dataNode = null;
 		Map<String, TableConfig> tables = schema.getTables();
 		TableConfig tc;
 		if (tables != null && (tc = tables.get(table)) != null) {
-			dataNode = tc.getRandomDataNode();
+			if (serverConnection !=null && !serverConnection.isAutocommit()) {
+				dataNode = serverConnection.getInTransactionSingleRouteDataNode();
+				LOGGER.info("desc/create use last route datanode : " + dataNode);
+				if (dataNode == null)
+					dataNode = schema.getRandomDataNode();
+			}else {
+				dataNode = schema.getRandomDataNode();
+			}
 		}
 		return dataNode;
 	}

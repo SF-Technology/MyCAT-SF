@@ -156,7 +156,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 	 */
 	@Override
 	public RouteResultset analyseShowSQL(SchemaConfig schema,
-			RouteResultset rrs, String stmt) throws SQLSyntaxErrorException {
+			RouteResultset rrs, String stmt,ServerConnection serverConnection) throws SQLSyntaxErrorException {
 		
 		String upStmt = stmt.toUpperCase();
 		int tabInd = upStmt.indexOf(" TABLES");
@@ -173,7 +173,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
           String defaultNode=  schema.getDataNode();
             if(!Strings.isNullOrEmpty(defaultNode))
             {
-             return    RouterUtil.routeToSingleNode(rrs, defaultNode, stmt);
+             return RouterUtil.routeToSingleNode(rrs, defaultNode, stmt);
             }
 			return RouterUtil.routeToMultiNode(false, rrs, schema.getMetaDataNodes(), stmt);
 		}
@@ -196,8 +196,8 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 				repPos[1] = RouterUtil.getSpecEndPos(upStmt, indx2[0] + indx2[1]);
 
 			}
-			stmt = stmt.substring(0, indx[0]) + " FROM " + tableName + stmt.substring(repPos[1]);
-			RouterUtil.routeForTableMeta(rrs, schema, tableName, stmt);
+			stmt = stmt.substring(0,indx[0]) + " FROM " + tableName + stmt.substring(repPos[1]);
+			RouterUtil.routeForTableMeta(rrs, schema, tableName, stmt,serverConnection);
 			return rrs;
 
 		}
@@ -214,12 +214,26 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 				if (ind2 > 0) {
 					tableName = tableName.substring(ind2 + 1);
 				}
-				RouterUtil.routeForTableMeta(rrs, schema, tableName, stmt);
+				RouterUtil.routeForTableMeta(rrs, schema, tableName, stmt,serverConnection);
 				return rrs;
 			}
 		}
 
-		return RouterUtil.routeToSingleNode(rrs, schema.getRandomDataNode(), stmt);
+		String dataNode = null;
+		if (serverConnection !=null && !serverConnection.isAutocommit()) {
+
+			    dataNode = serverConnection.getInTransactionSingleRouteDataNode();
+				LOGGER.info("show sql user last route datanode : " +  dataNode);
+
+			if (dataNode == null)
+				dataNode = schema.getRandomDataNode();
+
+		}else {
+
+			dataNode = schema.getRandomDataNode();
+
+		}
+		return RouterUtil.routeToSingleNode(rrs,dataNode, stmt);
 	}
 	
 	
@@ -302,10 +316,10 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 //	}
 
 	public RouteResultset routeSystemInfo(SchemaConfig schema, int sqlType,
-			String stmt, RouteResultset rrs) throws SQLSyntaxErrorException {
+			String stmt, RouteResultset rrs,ServerConnection serverConnection) throws SQLSyntaxErrorException {
 		switch(sqlType){
 		case ServerParse.SHOW:// if origSQL is like show tables
-			return analyseShowSQL(schema, rrs, stmt);
+			return analyseShowSQL(schema, rrs, stmt,serverConnection);
 		case ServerParse.SELECT://if origSQL is like select @@
 			int index = stmt.indexOf("@@");
 			if(index > 0 && "SELECT".equals(stmt.substring(0, index).trim().toUpperCase())){
@@ -315,7 +329,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		case ServerParse.DESCRIBE:// if origSQL is meta SQL, such as describe table
 			int ind = stmt.indexOf(' ');
 			stmt = stmt.trim();
-			return analyseDescrSQL(schema, rrs, stmt, ind + 1);
+			return analyseDescrSQL(schema, rrs, stmt, ind + 1,serverConnection);
 		}
 		return null;
 	}
@@ -331,7 +345,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 	 * @author mycat
 	 */
 	private static RouteResultset analyseDescrSQL(SchemaConfig schema,
-			RouteResultset rrs, String stmt, int ind) {
+			RouteResultset rrs, String stmt, int ind,ServerConnection serverConnection) {
 		
 		final String MATCHED_FEATURE = "DESCRIBE ";
 		final String MATCHED2_FEATURE = "DESC ";
@@ -365,9 +379,8 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		ind = pos;		
 		int[] repPos = { ind, 0 };
 		String tableName = RouterUtil.getTableName(stmt, repPos);
-		
 		stmt = stmt.substring(0, ind) + tableName + stmt.substring(repPos[1]);
-		RouterUtil.routeForTableMeta(rrs, schema, tableName, stmt);
+		RouterUtil.routeForTableMeta(rrs,schema,tableName,stmt,serverConnection);
 		return rrs;
 	}
 	
@@ -388,6 +401,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		if (atSginInd > 0) {
 			return RouterUtil.routeToMultiNode(false, rrs, schema.getMetaDataNodes(), stmt);
 		}
+
 		return RouterUtil.routeToSingleNode(rrs, schema.getRandomDataNode(), stmt);
 	}
 }

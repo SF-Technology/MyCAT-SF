@@ -26,7 +26,7 @@ public abstract class AbstractRouteStrategy implements RouteStrategy {
 		/**
 		 * 处理一些路由之前的逻辑
 		 */
-		if ( beforeRouteProcess(schema, sqlType, origSQL, sc) )
+		if (beforeRouteProcess(schema, sqlType, origSQL, sc) )
 			return null;
 
 		/**
@@ -71,11 +71,12 @@ public abstract class AbstractRouteStrategy implements RouteStrategy {
 		if (schema.isNoSharding() && ServerParse.SHOW != sqlType) {
 			rrs = RouterUtil.routeToSingleNode(rrs, schema.getDataNode(), stmt);
 		} else {
-			RouteResultset returnedSet = routeSystemInfo(schema, sqlType, stmt, rrs);
+			RouteResultset returnedSet = routeSystemInfo(schema, sqlType, stmt, rrs,sc);
 			if (returnedSet == null) {
 				rrs = routeNormalSqlWithAST(schema, stmt, rrs, charset, cachePool,sc);
 			}
 		}
+
 
 		return rrs;
 	}
@@ -100,13 +101,13 @@ public abstract class AbstractRouteStrategy implements RouteStrategy {
 	/**
 	 * 路由信息指令, 如 SHOW、SELECT@@、DESCRIBE
 	 */
-	public abstract RouteResultset routeSystemInfo(SchemaConfig schema, int sqlType, String stmt, RouteResultset rrs)
+	public abstract RouteResultset routeSystemInfo(SchemaConfig schema, int sqlType, String stmt, RouteResultset rrs,ServerConnection serverConnection)
 			throws SQLSyntaxErrorException;
 
 	/**
 	 * 解析 Show 之类的语句
 	 */
-	public abstract RouteResultset analyseShowSQL(SchemaConfig schema, RouteResultset rrs, String stmt)
+	public abstract RouteResultset analyseShowSQL(SchemaConfig schema, RouteResultset rrs, String stmt,ServerConnection serverConnection)
 			throws SQLNonTransientException;
 
 }

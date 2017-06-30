@@ -7,7 +7,7 @@
 	<dataNode name="testdb3" dataHost="localhost" database="testdb3" />
 	<dataNode name="testdb4" dataHost="localhost" database="testdb4" />
 	
-	<dataHost name="localhost" maxCon="2000" minCon="10" balance="0" dbType="mysql" dbDriver="native" switchType="-1">
+	<dataHost name="localhost" maxCon="100" minCon="20" balance="0" dbType="mysql" dbDriver="native" switchType="-1">
 		<heartbeat>select user()</heartbeat>
 		<writeHost host="hostM1" url="localhost:3306" user="root" password="mysql">
 		</writeHost>

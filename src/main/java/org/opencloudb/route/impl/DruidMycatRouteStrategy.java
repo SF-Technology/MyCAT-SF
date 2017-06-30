@@ -323,7 +323,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		case ServerParse.SELECT://if origSQL is like select @@
 			int index = stmt.indexOf("@@");
 			if(index > 0 && "SELECT".equals(stmt.substring(0, index).trim().toUpperCase())){
-				return analyseDoubleAtSgin(schema, rrs, stmt);
+				return analyseDoubleAtSgin(schema, rrs, stmt,serverConnection);
 			}
 			break;
 		case ServerParse.DESCRIBE:// if origSQL is meta SQL, such as describe table
@@ -395,13 +395,21 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 	 * @author mycat
 	 */
 	private RouteResultset analyseDoubleAtSgin(SchemaConfig schema,
-			RouteResultset rrs, String stmt) throws SQLSyntaxErrorException {		
+			RouteResultset rrs, String stmt,ServerConnection serverConnection) throws SQLSyntaxErrorException {
 		String upStmt = stmt.toUpperCase();
 		int atSginInd = upStmt.indexOf(" @@");
 		if (atSginInd > 0) {
 			return RouterUtil.routeToMultiNode(false, rrs, schema.getMetaDataNodes(), stmt);
 		}
-
-		return RouterUtil.routeToSingleNode(rrs, schema.getRandomDataNode(), stmt);
+		String dataNode = null;
+		if (serverConnection !=null && !serverConnection.isAutocommit()) {
+			dataNode = serverConnection.getInTransactionSingleRouteDataNode();
+			LOGGER.info("select @@xxxx sql user last route datanode : " +  dataNode);
+			if (dataNode == null)
+				dataNode = schema.getRandomDataNode();
+		}else {
+			dataNode = schema.getRandomDataNode();
+		}
+		return RouterUtil.routeToSingleNode(rrs, dataNode, stmt);
 	}
 }

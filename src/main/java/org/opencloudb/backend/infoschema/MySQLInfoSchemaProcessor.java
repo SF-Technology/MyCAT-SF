@@ -10,7 +10,8 @@ import org.opencloudb.sqlengine.EngineCtx;
 import org.opencloudb.sqlengine.SQLQueryResultListener;
 
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -203,8 +204,8 @@ public class MySQLInfoSchemaProcessor implements AllJobFinishedListener {
                     }
 
                     if (END_FLAG_PACK == pack) {
-                        if (sqlQueryResultListener != null && !END_FLAG_PACK.isFailed()) {
-                            sqlQueryResultListener.onResult(mapHostData);
+                        if (sqlQueryResultListener != null) {
+                            sqlQueryResultListener.onResult(!END_FLAG_PACK.isFailed() ? mapHostData : null);
                         }
                         isExit = true;
                     }

@@ -54,11 +54,23 @@ public abstract class SQLQueryResultHandlerChain<T> implements SQLQueryResultLis
 	@Override
 	public void onResult(T result) {
 	    try {
+
+	    	if(result == null)
+			{
+				if (this.frontend != null) {
+					frontend.writeErrMessage(ErrorCode.ERR_FOUND_EXCEPION,"check table structure consistency error,backend error.");
+				} else {
+					LOGGER.error("check table structure consistency error, backend error.");
+				}
+				return;
+			}
+
 	        processResult(result);
 	        SQLQueryResultHandlerChain<T> next = next();
 	        if (next != null) {
 	            next.handle();
 	        }
+
 	    } catch (Throwable e) {
 	        handleError(e);
 	    }

@@ -1,4 +1,3 @@
-
 # [MyCAT](http://mycat.io/)
 [![GitHub issues](https://img.shields.io/github/issues/MyCATApache/Mycat-Server.svg)](https://github.com/MyCATApache/Mycat-Server/issues)
 [![GitHub forks](https://img.shields.io/github/forks/MyCATApache/Mycat-Server.svg)](https://github.com/MyCATApache/Mycat-Server/network)
@@ -44,5 +43,4 @@ Mycat’s target is to smoothly migrate the current stand-alone database and app
 There are some compiled binary installation packages in Mycat-download project on github at  [Mycat-download](https://github.com/MyCATApache/Mycat-download).
 
 ## Document
-
 There are some documents in Mycat-doc project on github at [Mycat-doc](https://github.com/MyCATApache/Mycat-doc).

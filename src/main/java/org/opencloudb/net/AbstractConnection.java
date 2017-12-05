@@ -444,13 +444,13 @@ public abstract class AbstractConnection implements NIOConnection {
 	public void close(String reason) {
 		if (!isClosed.get()) {
 			closeSocket();
-			isClosed.set(true);
 			if (processor != null) {
 				processor.removeConnection(this);
 			}
 			this.cleanup();
 			isSupportCompress=false;
-
+			//修改Got packet 1156错误码
+			isClosed.set(true);
 			//ignore null information
 			if (Strings.isNullOrEmpty(reason)) {
 				return;

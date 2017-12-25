@@ -11,6 +11,7 @@ import org.opencloudb.manager.response.ListDataHosts;
 import org.opencloudb.manager.response.ListDataNodes;
 import org.opencloudb.manager.response.ListFunctions;
 import org.opencloudb.manager.response.ListMapFiles;
+import org.opencloudb.manager.response.ListProcedures;
 import org.opencloudb.manager.response.ListRules;
 import org.opencloudb.manager.response.ListSchemas;
 import org.opencloudb.manager.response.ListTables;
@@ -69,6 +70,9 @@ public class MycatConfigListHandler {
 				case BACKUPS:
 					handleListBackups(c);
 					break;
+				case PROCEDURES:
+				    handleListProcedures(c);
+				    break;
 				default:
 					c.writeErrMessage(ErrorCode.ERR_NOT_SUPPORTED, "Unsupport statment : " + sql);
 					break;
@@ -119,5 +123,9 @@ public class MycatConfigListHandler {
 	
 	public static void handleListMapFiles(ManagerConnection c) {
 		ListMapFiles.response(c);
+	}
+	
+	public static void handleListProcedures(ManagerConnection c) {
+	    ListProcedures.response(c);
 	}
 }

@@ -1,6 +1,7 @@
 package org.opencloudb.route.impl;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.statement.SQLCallStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlReplaceStatement;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
@@ -94,7 +95,15 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		if ( rrs.isFinishedRoute() ) {
 			return rrs;
 		}
-
+		
+		/**
+		 * since 1.5.3 判断为存储过程调用
+		 */
+		if (statement instanceof SQLCallStatement) {
+			String procedureName = ((SQLCallStatement) statement).getProcedureName().getSimpleName();
+			return RouterUtil.routeToProcedureNode(rrs, procedureName, stmt, schema);
+		}
+		
 		/**
 		 * 没有from的select语句或其他
 		 */

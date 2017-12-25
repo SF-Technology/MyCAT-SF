@@ -38,6 +38,7 @@ public class SchemaConfig {
 	private final Random random = new Random();
 	private final String name;
 	private final Map<String, TableConfig> tables;
+	private final Map<String, ProcedureConfig> procedures;
 	private boolean noSharding;
 	private final String dataNode;
 	private final Set<String> metaDataNodes;
@@ -60,12 +61,13 @@ public class SchemaConfig {
 	private  Map<String,String> dataNodeDbTypeMap=new HashMap<>();
 
 	public SchemaConfig(String name, String dataNode,
-			Map<String, TableConfig> tables, int defaultMaxLimit,
+			Map<String, TableConfig> tables, Map<String, ProcedureConfig> procedures, int defaultMaxLimit,
 			boolean checkSQLschema) {
 		this.name = name;
 		this.dataNode = dataNode;
 		this.checkSQLSchema = checkSQLschema;
 		this.tables = tables;
+		this.procedures = procedures;
 		this.defaultMaxLimit = defaultMaxLimit;
 		buildJoinMap(tables);
 		this.noSharding = (tables == null || tables.isEmpty());
@@ -94,6 +96,7 @@ public class SchemaConfig {
 		this.defaultMaxLimit = sqlMaxLimit;
 		this.checkSQLSchema = checkSQLschema;
 		this.tables = new HashMap<String, TableConfig>();
+		this.procedures = new HashMap<String, ProcedureConfig>();
 		buildJoinMap(tables);
 		this.noSharding = (dataNode != null);
 //		if (noSharding && dataNode == null) {
@@ -180,6 +183,10 @@ public class SchemaConfig {
 
 	public Map<String, TableConfig> getTables() {
 		return tables;
+	}
+	
+	public Map<String, ProcedureConfig> getProcedures() {
+	    return procedures;
 	}
 
 	public boolean isNoSharding() {

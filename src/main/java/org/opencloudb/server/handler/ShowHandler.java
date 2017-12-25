@@ -40,25 +40,28 @@ public final class ShowHandler {
 		stmt = StringUtil.replaceChars(stmt, "`", null);
 
 		int type = ServerParseShow.parse(stmt, offset);
-		switch (type) {
-		case ServerParseShow.DATABASES:
-			ShowDatabases.response(c);
-			break;
-		case ServerParseShow.TABLES:
-			ShowTables.response(c, stmt,type);
-			break;
-            case ServerParseShow.FULLTABLES:
-                ShowFullTables.response(c, stmt,type);
+        switch (type) {
+            case ServerParseShow.DATABASES:
+                ShowDatabases.response(c);
                 break;
-		case ServerParseShow.MYCAT_STATUS:
-			ShowMyCatStatus.response(c);
-			break;
-		case ServerParseShow.MYCAT_CLUSTER:
-			ShowMyCATCluster.response(c);
-			break;
-		default:
-			c.execute(stmt, ServerParse.SHOW);
-		}
+            case ServerParseShow.TABLES:
+                ShowTables.response(c, stmt, type);
+                break;
+            case ServerParseShow.FULLTABLES:
+                ShowFullTables.response(c, stmt, type);
+                break;
+            case ServerParseShow.PROCEDURES:
+                ShowProcedures.response(c, stmt);
+                break;
+            case ServerParseShow.MYCAT_STATUS:
+                ShowMyCatStatus.response(c);
+                break;
+            case ServerParseShow.MYCAT_CLUSTER:
+                ShowMyCATCluster.response(c);
+                break;
+            default:
+                c.execute(stmt, ServerParse.SHOW);
+        }
 	}
 
 }

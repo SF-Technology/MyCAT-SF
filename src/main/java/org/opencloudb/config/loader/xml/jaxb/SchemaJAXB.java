@@ -16,6 +16,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.opencloudb.config.loader.xml.jaxb.SchemaJAXB.Schema.Table.ChildTable;
+import org.opencloudb.config.model.ProcedureConfig;
 import org.opencloudb.config.model.SchemaConfig;
 import org.opencloudb.config.model.TableConfig;
 
@@ -40,6 +41,8 @@ public class SchemaJAXB {
 		private String dataNode;
 		
 		private List<Table> table = new ArrayList<Table>();
+		@XmlElement(name = "procedure")
+		private List<Procedure> procedures = new ArrayList<Procedure>();
 		
 		public static Schema transferFrom(SchemaConfig schemaConf) {
 			Schema schema = new Schema();
@@ -86,7 +89,46 @@ public class SchemaJAXB {
 				}
 			}
 			
+			// 存储过程的处理
+			for (ProcedureConfig procConf : schemaConf.getProcedures().values()) {
+			    schema.getProcedures().add(Procedure.transferFrom(procConf));
+			}
+			
 			return schema;
+		}
+		
+		@XmlAccessorType(XmlAccessType.FIELD)
+        @XmlType(name = "procedure")
+		public static class Procedure {
+		    
+		    @XmlAttribute(required = true)
+		    private String name;
+		    @XmlAttribute(required = true)
+		    private String dataNode;
+		    
+		    public static Procedure transferFrom(ProcedureConfig procConf) {
+		        Procedure proc = new Procedure();
+		        proc.setName(procConf.getName().toLowerCase());
+		        proc.setDataNode(procConf.getDataNode());
+		        return proc;
+		    }
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            public String getDataNode() {
+                return dataNode;
+            }
+
+            public void setDataNode(String dataNode) {
+                this.dataNode = dataNode;
+            }
+		    
 		}
 		
 		@XmlAccessorType(XmlAccessType.FIELD)
@@ -322,6 +364,14 @@ public class SchemaJAXB {
 
 		public void setTables(List<Table> table) {
 			this.table = table;
+		}
+		
+		public List<Procedure> getProcedures() {
+		    return procedures;
+		}
+		
+		public void setProcedures(List<Procedure> procs) {
+		    this.procedures = procs;
 		}
 		
 	}

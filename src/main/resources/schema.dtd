@@ -16,7 +16,7 @@
 <!ELEMENT mycat:schema (schema*)>
 <!ATTLIST mycat:schema xmlns:mycat CDATA #FIXED "http://org.opencloudb/">
 
-<!ELEMENT schema (table*)>
+<!ELEMENT schema (table*,procedure*)>
 <!ATTLIST schema name NMTOKEN #REQUIRED>
 <!ATTLIST schema checkSQLschema NMTOKEN #IMPLIED>
 <!ATTLIST schema dataNode CDATA #IMPLIED>
@@ -33,10 +33,14 @@
 <!ATTLIST table needAddLimit NMTOKEN #IMPLIED>
 <!ATTLIST table type NMTOKEN #IMPLIED>
 
-
+<!ELEMENT procedure (property*)>
 <!ELEMENT childTable (property*,(childTable*))>
 <!ATTLIST childTable name NMTOKEN #REQUIRED>
 <!ATTLIST childTable joinKey NMTOKEN #REQUIRED>
 <!ATTLIST childTable parentKey NMTOKEN #REQUIRED>
 <!ATTLIST childTable primaryKey NMTOKEN #IMPLIED>
 <!ATTLIST childTable autoIncrement NMTOKEN #IMPLIED>
+
+
+<!ATTLIST procedure name NMTOKEN #REQUIRED>
+<!ATTLIST procedure dataNode CDATA #REQUIRED>

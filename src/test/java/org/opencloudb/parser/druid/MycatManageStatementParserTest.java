@@ -357,6 +357,16 @@ public class MycatManageStatementParserTest {
 	    testFailFromFile("dump_fail_test.txt");
 	}
 	
+	@Test
+	public void testParseCreateProcedure() {
+	    testSuccessFromFile("create_procedure_success_test.txt");
+	}
+	
+	@Test
+	public void testParseCreateProcedureFail() {
+	    testFailFromFile("create_procedure_fail_test.txt");
+	}
+	
 	private void testSuccessFromFile(String sqlFile) {
 		List<String> sqlList = SqlFileReader.readAndGetSql(sqlFile);
 		for(String sql1 : sqlList) {

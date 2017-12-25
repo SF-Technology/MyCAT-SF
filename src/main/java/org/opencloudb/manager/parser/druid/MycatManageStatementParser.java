@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.opencloudb.MycatServer;
-import org.opencloudb.manager.handler.MycatConfigBackupHandler;
 import org.opencloudb.manager.parser.druid.statement.MycatAlterUserStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatChecksumTableStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatConfigBackupStatement;
@@ -14,6 +13,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatConfigRollbackStatemen
 import org.opencloudb.manager.parser.druid.statement.MycatCheckTbStructConsistencyStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateFunctionStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatCreateProcedureStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatCreateUserStatement;
@@ -21,6 +21,7 @@ import org.opencloudb.manager.parser.druid.statement.MycatDropDataHostStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropDataNodeStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropFunctionStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropMapFileStatement;
+import org.opencloudb.manager.parser.druid.statement.MycatDropProcedureStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropRuleStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropSchemaStatement;
 import org.opencloudb.manager.parser.druid.statement.MycatDropTableStatement;
@@ -148,6 +149,9 @@ public class MycatManageStatementParser extends SQLStatementParser {
                 } else if(identifierEquals("MAPFILE")) {
                 	statementList.add(parseDropMapFile(false));
                 	continue;
+                } else if (lexer.token() == Token.PROCEDURE) {
+                    statementList.add(_parseDropProcedure(false));
+                    continue;
                 } else {
                     throw new ParserException("TODO " + lexer.token());
                 }
@@ -235,6 +239,10 @@ public class MycatManageStatementParser extends SQLStatementParser {
 			MycatCreateMapFileParser createMapFileParser = new MycatCreateMapFileParser(this.exprParser);
 			return createMapFileParser.parseCreateMapFile(false);
 			
+		} else if (token == Token.PROCEDURE) { // create procedure
+		    
+		    return parseCreateProcedure(false);
+		    
 		} else {
 			
 			throw new ParserException("Unsupport Statement : create " + token);
@@ -1019,6 +1027,9 @@ public class MycatManageStatementParser extends SQLStatementParser {
 		} else if(identifierEquals("BACKUPS")) {
 			stmt.setTarget(MycatListStatementTarget.BACKUPS);
 			lexer.nextToken();
+		} else if (identifierEquals("PROCEDURES")) {
+		    stmt.setTarget(MycatListStatementTarget.PROCEDURES);
+		    lexer.nextToken();
 		} else {
 			throw new ParserException("Unsupport Statement : list " + lexer.stringVal());
 		}
@@ -1114,6 +1125,47 @@ public class MycatManageStatementParser extends SQLStatementParser {
 	        stmt.setIntoFile(new SQLCharExpr(acceptNumAndStr()));
 	        stmt.setDumpIntoFile(true);
 	    }
+	    return stmt;
+	}
+	
+	public MycatCreateProcedureStatement parseCreateProcedure(boolean acceptCreate) {
+	    if (acceptCreate) {
+	        accept(Token.CREATE);
+	    }
+	    accept(Token.PROCEDURE);
+	    MycatCreateProcedureStatement stmt = new MycatCreateProcedureStatement();
+	    stmt.setProcedure(new SQLIdentifierExpr(acceptName()));
+	    if (lexer.token() == Token.IN) {
+	        accept(Token.IN);
+	        stmt.setSchema(new SQLIdentifierExpr(acceptName()));
+	    }
+	    for (;;) {
+	        
+	        if (identifierEquals("dataNode")) {
+	            acceptIdentifier("dataNode");
+	            accept(Token.EQ);
+	            stmt.setDataNodes(new SQLCharExpr(acceptStr()));
+	            continue;
+	        }
+	        
+	        break;
+	    }
+	    
+	    // 语义检查
+        if(stmt.getDataNodes() == null) {
+            throw new ParserException("procedure definition must provide dataNode property, eg: dataNode = ${dataNode}");
+        }
+	    
+	    return stmt;
+	}
+	
+	public MycatDropProcedureStatement _parseDropProcedure(boolean acceptDrop) {
+	    if (acceptDrop) {
+	        accept(Token.DROP);
+	    }
+	    accept(Token.PROCEDURE);
+	    MycatDropProcedureStatement stmt = new MycatDropProcedureStatement();
+	    stmt.setProcedure(new SQLIdentifierExpr(acceptName()));
 	    return stmt;
 	}
 	

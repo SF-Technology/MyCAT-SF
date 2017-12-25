@@ -1,0 +1,14 @@
+-- 没有提供proc命名的情况
+create procedure 
+dataNode = "dn1";
+
+-- 没有提供dataNode的情况
+create procedure proc1;
+
+-- 提供的proc命名带特殊字符的情况
+create procedure proc1-1
+dataNode = "dn1";
+
+-- 提供的dataNode没有带引号的情况
+create procedure proc1
+dataNode = dn1;

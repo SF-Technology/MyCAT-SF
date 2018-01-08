@@ -688,12 +688,9 @@ public class RouterUtil {
 		TableConfig tc;
 		if (tables != null && (tc = tables.get(table)) != null) {
 			if (serverConnection !=null && !serverConnection.isAutocommit()) {
-				dataNode = serverConnection.getInTransactionSingleRouteDataNode();
-				LOGGER.info("desc/create use last route datanode : " + dataNode);
-				if (dataNode == null)
-					dataNode = schema.getRandomDataNode();
+					dataNode = tc.getRandomDataNode();
 			}else {
-				dataNode = schema.getRandomDataNode();
+				dataNode = tc.getRandomDataNode();
 			}
 		}
 		return dataNode;

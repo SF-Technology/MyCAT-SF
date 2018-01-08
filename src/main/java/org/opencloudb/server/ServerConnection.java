@@ -307,10 +307,10 @@ public class ServerConnection extends FrontendConnection {
 
 		if (rrs != null) {
 			// session执行
-			if (/**(type == ServerParse.SELECT ||
+			if ((type == ServerParse.SELECT ||
 				type == ServerParse.UPDATE ||
 				type == ServerParse.INSERT ||
-				type == ServerParse.DELETE) && */!isAutocommit()) {
+				type == ServerParse.DELETE) && !isAutocommit()) {
 				setInTransactionSingleRouteDataNode(rrs.getNodes()[0].getName());
 			}
 			session.execute(rrs, type);

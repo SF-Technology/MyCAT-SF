@@ -229,7 +229,8 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		}
 
 		String dataNode = null;
-		if (serverConnection !=null && !serverConnection.isAutocommit()) {
+		if (serverConnection !=null && !serverConnection.isAutocommit()&&
+				upStmt.equalsIgnoreCase("SHOW WARNINGS")) {
 
 			    dataNode = serverConnection.getInTransactionSingleRouteDataNode();
 				LOGGER.info("show sql user last route datanode : " +  dataNode);

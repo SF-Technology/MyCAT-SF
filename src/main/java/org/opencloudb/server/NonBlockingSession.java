@@ -138,7 +138,9 @@ public class NonBlockingSession implements Session {
 			        singleNodeCallHandler.execute();
 			    } else {
     			    singleNodeHandler = new SingleNodeHandler(rrs, this);
-    				if (initCount > 1) {
+					//如果target里面的大于1并且是DML语句并且target里面不存在当前的分片信息就进去判断事务
+    				if ((type == ServerParse.DELETE || type == ServerParse.INSERT
+						|| type == ServerParse.UPDATE)&&initCount >= 1&&target.get(nodes[0])==null) {
     					checkDistriTransaxAndExecute(rrs, 1, autocommit);
     				} else {
     					singleNodeHandler.execute();
@@ -161,8 +163,9 @@ public class NonBlockingSession implements Session {
 	                } else {
 	                    multiNodeHandler = new MultiNodeQueryHandler(type, rrs, autocommit, this);
 	                }
-	                
-	                if (((type == ServerParse.DELETE || type == ServerParse.INSERT || type == ServerParse.UPDATE) && !rrs.isGlobalTable() && nodes.length > 1) || initCount > 1) {
+	                //多个分片节点 是执行的DML  然后不是全局表 节点个数大于1 或者 target里面大于等于1 (保证除DQL语句只能执行一个执行全局表)
+	                if ((type == ServerParse.DELETE || type == ServerParse.INSERT
+						|| type == ServerParse.UPDATE)&&((!rrs.isGlobalTable()&& nodes.length > 1)|| (initCount >= 1))) {
 	                    checkDistriTransaxAndExecute(rrs, 2, autocommit);
 	                } else {
 	                    multiNodeHandler.execute();
@@ -179,9 +182,16 @@ public class NonBlockingSession implements Session {
 	private void checkDistriTransaxAndExecute(RouteResultset rrs, int type ,boolean autocommit) throws Exception {
 		switch(MycatServer.getInstance().getConfig().getSystem().getHandleDistributedTransactions()) {
 			case 1:
-				source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!");
+				RouteResultsetNode preResultsetNode = null;
+				if(target.size()>0){
+					preResultsetNode = (RouteResultsetNode)target.keySet().toArray()[0];
+				}
+				String errorMes = "Distributed transaction is disabled!" + "previous sql is "+
+						(preResultsetNode == null? rrs.getStatement():preResultsetNode.getStatement());
+				LOGGER.error(errorMes);
+				source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND,errorMes);
 				if(!autocommit){
-					source.setTxInterrupt("Distributed transaction is disabled!");
+					source.setTxInterrupt(errorMes);
 				}
 				break;
 			case 2:
@@ -242,7 +252,7 @@ public class NonBlockingSession implements Session {
 				LOGGER.debug("multi node commit to send ,total " + initCount);
 			}
 		}
-		target.clear();
+		//target.clear();
 	}
 
 	private boolean isALLGlobal(){
@@ -270,7 +280,7 @@ public class NonBlockingSession implements Session {
 		}
 		rollbackHandler = new RollbackNodeHandler(this);
 		rollbackHandler.rollback();
-		target.clear();
+		//target.clear();
 	}
 
 	@Override

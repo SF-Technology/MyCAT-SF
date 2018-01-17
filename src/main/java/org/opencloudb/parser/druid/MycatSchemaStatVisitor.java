@@ -270,11 +270,22 @@ public class MycatSchemaStatVisitor extends MySqlSchemaStatVisitor {
                 handleCondition(x.getLeft(), x.getOperator().name, x.getRight());
                 handleCondition(x.getRight(), x.getOperator().name, x.getLeft());
                 handleRelationship(x.getLeft(), x.getOperator().name, x.getRight());
-                break;
-			case BooleanAnd:
-                if(x.getRight() instanceof  SQLBinaryOpExpr){
-                  WhereUnit whereUnit = new WhereUnit((SQLBinaryOpExpr)x.getRight());
-                  whereUnits.add(whereUnit);
+				
+				//判断Or条件如果存在进行补充防止 and 后面还有条件
+                if(whereUnits.size()>0 && conditions.size() > 0) {
+                  WhereUnit oldWhereUnit = whereUnits.get(0);
+                  if(oldWhereUnit.isFinishedParse()){
+                    //原先存在的
+                    oldWhereUnit.getOutConditions().clear();
+                    oldWhereUnit.addOutConditions(getConditions());
+                  }else{
+                    WhereUnit whereUnit = new WhereUnit();
+                    whereUnit.setFinishedParse(true);
+                    whereUnit.addOutConditions(getConditions());
+                    WhereUnit innerWhereUnit = new WhereUnit(oldWhereUnit.getWhereExpr());
+                    whereUnit.addSubWhereUnit(innerWhereUnit);
+                    whereUnits.set(0,whereUnit);
+                  }
                 }
                 break;
             case BooleanOr:

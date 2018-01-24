@@ -1,0 +1,14 @@
+create childtable orders
+parent = "customers"
+primaryKey = "ID"
+joinKey = "PID";
+
+create childtable orders
+parentKey = "ID"
+parent = "customers"
+primaryKey = "ID";
+
+create childtable orders
+parentKey = "ID"
+primaryKey = "ID"
+joinKey = "PID";

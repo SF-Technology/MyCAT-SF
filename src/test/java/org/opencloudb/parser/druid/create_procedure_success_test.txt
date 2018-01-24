@@ -1,0 +1,14 @@
+create procedure `proc1`
+dataNode = 'dn1';
+
+create procedure proc2
+dataNode = 'dn1, dn2';
+
+create procedure proc3
+dataNode = 'dn$1-3';
+
+create procedure proc4 in `testdb`
+dataNode = 'dn1';
+
+create procedure proc5 in testdb
+dataNode = 'dn$1-3';

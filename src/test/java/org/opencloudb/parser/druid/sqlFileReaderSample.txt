@@ -1,0 +1,13 @@
+create table tb1 (
+	id int primary key,
+	col1 varchar(20)
+);
+
+--这是注释
+select * from tb1;
+
+update tb1 set col1 = 'ddd' where id = 1;
+
+truncate table tb1;
+
+drop table tb1;

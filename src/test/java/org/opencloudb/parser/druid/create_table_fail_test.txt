@@ -1,0 +1,15 @@
+-- 分片表,没有提供rule
+create table shard_tb1 in db1
+primaryKey = 'id'
+dataNode = 'dn1,dn2,dn3'
+global = false;
+
+-- 全局表但是提供了rule
+create table global_tb1 in db1
+dataNode = 'dn1,dn2'
+global = true
+primaryKey = 'id'
+rule = 'mod2';
+
+-- 没有提供dataNode配置的情况
+create table tb1 in db1;

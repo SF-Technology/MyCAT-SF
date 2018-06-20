@@ -1,0 +1,24 @@
+-- 没有提供datahost命名
+create datahost
+minCon = 5;
+
+-- minCon取了非数字值
+create datahost dh1
+minCon = "fds"
+maxCon = 1000
+with writeHosts ({
+	host = "w1"
+	url = "192.168.0.1:3306"
+	user = "user01"
+	password = "33r3#ddd@ifdsf"
+});
+
+-- 没有提供writeHosts
+create datahost dh1
+minCon = 10
+maxCon = 1000;
+
+-- writeHost属性没有提供
+create datahost dh1
+with writeHosts ({
+});

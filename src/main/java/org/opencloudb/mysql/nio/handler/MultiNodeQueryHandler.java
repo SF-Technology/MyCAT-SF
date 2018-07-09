@@ -24,6 +24,19 @@
 package org.opencloudb.mysql.nio.handler;
 
 
+import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE;
+import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE_ROW;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
@@ -31,27 +44,24 @@ import org.opencloudb.backend.BackendConnection;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.cache.LayerCachePool;
 import org.opencloudb.memory.unsafe.row.UnsafeRow;
-import org.opencloudb.mpp.*;
+import org.opencloudb.monitor.SQLRecord;
+import org.opencloudb.mpp.AbstractDataNodeMerge;
+import org.opencloudb.mpp.ColMeta;
+import org.opencloudb.mpp.DataMergeService;
+import org.opencloudb.mpp.DataNodeMergeManager;
+import org.opencloudb.mpp.MergeCol;
 import org.opencloudb.mysql.LoadDataUtil;
-import org.opencloudb.net.mysql.*;
+import org.opencloudb.net.mysql.FieldPacket;
+import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.net.mysql.ResultSetHeaderPacket;
+import org.opencloudb.net.mysql.RowDataPacket;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.server.NonBlockingSession;
 import org.opencloudb.server.ServerConnection;
 import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.sqlfw.SQLFirewallServer;
-import org.opencloudb.monitor.SQLRecord;
-import org.opencloudb.stat.QueryResult;
-import org.opencloudb.stat.QueryResultDispatcher;
-
-import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE;
-import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE_ROW;
+import org.opencloudb.trace.SqlTraceDispatcher;
 
 /**
  * @author mycat
@@ -319,7 +329,7 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 
 	@Override
 	public void rowEofResponse(final byte[] eof, BackendConnection conn) {
-
+		SqlTraceDispatcher.traceBackendConn(session.getSource(), conn, "rowEofResponse");
 		/**并发查询信号量释放*/
 		if (limitsqlExecute != null) {
 			limitsqlExecute.release();

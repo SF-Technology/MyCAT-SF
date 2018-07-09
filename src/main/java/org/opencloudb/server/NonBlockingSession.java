@@ -31,17 +31,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
 import org.opencloudb.backend.BackendConnection;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.config.ErrorCode;
-import org.opencloudb.config.model.SystemConfig;
 import org.opencloudb.mysql.nio.handler.CommitNodeHandler;
 import org.opencloudb.mysql.nio.handler.GlobalTableMultiNodeQueryHandler;
 import org.opencloudb.mysql.nio.handler.KillConnectionHandler;
+import org.opencloudb.mysql.nio.handler.LockTablesHandler;
+import org.opencloudb.mysql.nio.handler.MultiNodeCallHandler;
 import org.opencloudb.mysql.nio.handler.MultiNodeCoordinator;
 import org.opencloudb.mysql.nio.handler.MultiNodeQueryHandler;
 import org.opencloudb.mysql.nio.handler.RollbackNodeHandler;
@@ -49,14 +49,13 @@ import org.opencloudb.mysql.nio.handler.RollbackReleaseHandler;
 import org.opencloudb.mysql.nio.handler.SingleNodeCallHandler;
 import org.opencloudb.mysql.nio.handler.SingleNodeHandler;
 import org.opencloudb.mysql.nio.handler.UnLockTablesHandler;
-import org.opencloudb.mysql.nio.handler.LockTablesHandler;
-import org.opencloudb.mysql.nio.handler.MultiNodeCallHandler;
 import org.opencloudb.net.FrontendConnection;
 import org.opencloudb.net.mysql.OkPacket;
 import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.sqlcmd.SQLCmdConstant;
+import org.opencloudb.trace.SqlTraceDispatcher;
 
 /**
  * @author mycat
@@ -375,6 +374,8 @@ public class NonBlockingSession implements Session {
 	 * @return previous bound connection
 	 */
 	public BackendConnection bindConnection(RouteResultsetNode key,BackendConnection conn) {
+		// sql 跟踪
+		SqlTraceDispatcher.bindBackendConn(source, conn);
 		return target.put(key, conn);
 	}
 	

@@ -23,21 +23,6 @@
  */
 package org.opencloudb.net;
 
-import org.apache.log4j.Logger;
-import org.opencloudb.MycatServer;
-import org.opencloudb.config.Capabilities;
-import org.opencloudb.config.ErrorCode;
-import org.opencloudb.config.Versions;
-import org.opencloudb.mysql.CharsetUtil;
-import org.opencloudb.mysql.MySQLMessage;
-import org.opencloudb.net.handler.*;
-import org.opencloudb.net.mysql.ErrorPacket;
-import org.opencloudb.net.mysql.HandshakePacket;
-import org.opencloudb.net.mysql.MySQLPacket;
-import org.opencloudb.net.mysql.OkPacket;
-import org.opencloudb.util.CompressUtil;
-import org.opencloudb.util.RandomUtil;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
@@ -46,6 +31,25 @@ import java.nio.channels.NetworkChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Set;
+import org.apache.log4j.Logger;
+import org.opencloudb.MycatServer;
+import org.opencloudb.config.Capabilities;
+import org.opencloudb.config.ErrorCode;
+import org.opencloudb.config.Versions;
+import org.opencloudb.mysql.CharsetUtil;
+import org.opencloudb.mysql.MySQLMessage;
+import org.opencloudb.net.handler.FrontendAuthenticator;
+import org.opencloudb.net.handler.FrontendPrepareHandler;
+import org.opencloudb.net.handler.FrontendPrivileges;
+import org.opencloudb.net.handler.FrontendQueryHandler;
+import org.opencloudb.net.handler.LoadDataInfileHandler;
+import org.opencloudb.net.mysql.ErrorPacket;
+import org.opencloudb.net.mysql.HandshakePacket;
+import org.opencloudb.net.mysql.MySQLPacket;
+import org.opencloudb.net.mysql.OkPacket;
+import org.opencloudb.trace.SqlTraceDispatcher;
+import org.opencloudb.util.CompressUtil;
+import org.opencloudb.util.RandomUtil;
 
 /**
  * @author mycat
@@ -302,6 +306,9 @@ public abstract class FrontendConnection extends AbstractConnection {
 			
 			// 记录SQL
 			this.setExecuteSql(sql);
+
+			// sql 跟踪
+			SqlTraceDispatcher.traceFrontConn(this, null);
 
 			// 执行查询
 			queryHandler.setReadOnly(privileges.isReadOnly(user));

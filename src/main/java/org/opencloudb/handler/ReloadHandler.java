@@ -31,6 +31,7 @@ import org.opencloudb.response.ReloadConfig;
 import org.opencloudb.response.ReloadQueryCf;
 import org.opencloudb.response.ReloadSqlSlowTime;
 import org.opencloudb.response.ReloadSqlStat;
+import org.opencloudb.response.ReloadSqlTrace;
 import org.opencloudb.response.ReloadUser;
 import org.opencloudb.response.ReloadUserStat;
 
@@ -70,8 +71,12 @@ public final class ReloadHandler
             case ManagerParseReload.QUERY_CF:            	
             	String filted = ParseUtil.parseString(stmt) ;
             	ReloadQueryCf.execute(c, filted);
-            	break;                
-            default:
+            	break;
+            case ManagerParseReload.SQL_TRACE:
+              String trace = ParseUtil.parseString(stmt) ;
+              ReloadSqlTrace.execute(c, trace);
+            break;
+          default:
                 c.writeErrMessage(ErrorCode.ER_YES, "Unsupported statement");
         }
     }

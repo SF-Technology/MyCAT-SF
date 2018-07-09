@@ -23,11 +23,12 @@
  */
 package org.opencloudb.mysql.nio.handler;
 
+import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE;
+
+import com.google.common.base.Strings;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
-
-import com.google.common.base.Strings;
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatConfig;
 import org.opencloudb.MycatServer;
@@ -35,6 +36,7 @@ import org.opencloudb.backend.BackendConnection;
 import org.opencloudb.backend.PhysicalDBNode;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.config.model.SchemaConfig;
+import org.opencloudb.monitor.SQLRecord;
 import org.opencloudb.mysql.LoadDataUtil;
 import org.opencloudb.net.mysql.ErrorPacket;
 import org.opencloudb.net.mysql.OkPacket;
@@ -43,22 +45,13 @@ import org.opencloudb.route.RouteResultset;
 import org.opencloudb.route.RouteResultsetNode;
 import org.opencloudb.server.NonBlockingSession;
 import org.opencloudb.server.ServerConnection;
-
 import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.server.parser.ServerParseShow;
 import org.opencloudb.server.response.ShowFullTables;
 import org.opencloudb.server.response.ShowTables;
-
-import org.opencloudb.sqlfw.SQLBlackList;
 import org.opencloudb.sqlfw.SQLFirewallServer;
-import org.opencloudb.monitor.SQLRecord;
-import org.opencloudb.stat.QueryResult;
-import org.opencloudb.stat.QueryResultDispatcher;
-
+import org.opencloudb.trace.SqlTraceDispatcher;
 import org.opencloudb.util.StringUtil;
-
-import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE;
-import static org.opencloudb.sqlfw.SQLFirewallServer.OP_UPATE_ROW;
 /**
  * @author mycat
  */
@@ -220,6 +213,7 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 
 	@Override
 	public void errorResponse(byte[] data, BackendConnection conn) {
+		SqlTraceDispatcher.traceBackendConn(session.getSource(), conn, "errorResponse");
 		ErrorPacket err = new ErrorPacket();
 		err.read(data);
 		err.packetId = ++packetId;
@@ -248,7 +242,8 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 
 
 	@Override
-	public void okResponse(byte[] data, BackendConnection conn) {        
+	public void okResponse(byte[] data, BackendConnection conn) {
+		SqlTraceDispatcher.traceBackendConn(session.getSource(), conn, "okResponse");
 		boolean executeResponse = conn.syncAndExcute();		
 		if (executeResponse) {
 			ServerConnection source = session.getSource();
@@ -295,6 +290,7 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable,
 
 	@Override
 	public void rowEofResponse(byte[] eof, BackendConnection conn) {
+		SqlTraceDispatcher.traceBackendConn(session.getSource(), conn, "rowEofResponse");
 		ServerConnection source = session.getSource();
 		/**
 		 * TODO select 统计SQL执行次数

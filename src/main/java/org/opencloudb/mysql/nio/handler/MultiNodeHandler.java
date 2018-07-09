@@ -25,12 +25,12 @@ package org.opencloudb.mysql.nio.handler;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.apache.log4j.Logger;
 import org.opencloudb.backend.BackendConnection;
 import org.opencloudb.config.ErrorCode;
 import org.opencloudb.net.mysql.ErrorPacket;
 import org.opencloudb.server.NonBlockingSession;
+import org.opencloudb.trace.SqlTraceDispatcher;
 import org.opencloudb.util.StringUtil;
 
 /**
@@ -126,6 +126,7 @@ abstract class MultiNodeHandler implements ResponseHandler, Terminatable {
 	}
 
 	public void errorResponse(byte[] data, BackendConnection conn) {
+		SqlTraceDispatcher.traceBackendConn(session.getSource(), conn, "errorResponse");
 		session.releaseConnectionIfSafe(conn, LOGGER.isDebugEnabled(), false);
 		ErrorPacket err = new ErrorPacket();
 		err.read(data);

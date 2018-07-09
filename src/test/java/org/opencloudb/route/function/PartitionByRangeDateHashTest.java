@@ -24,7 +24,7 @@ import java.util.Map;
 public class PartitionByRangeDateHashTest
 {
 
-    @Test
+    //@Test
     public void test() throws ParseException
     {
         PartitionByRangeDateHash partition = new PartitionByRangeDateHash();
@@ -78,7 +78,7 @@ public class PartitionByRangeDateHashTest
         schemaMap = schemaLoader.getSchemas();
     }
 
-    @Test
+    //@Test
     public void testRange() throws SQLNonTransientException
     {
         String sql = "select * from offer1  where col_date between '2014-01-01 00:00:00'  and '2014-01-03 23:59:59'     order by id desc limit 100";

@@ -153,7 +153,7 @@ public final class SystemConfig {
     //慢SQL的时间阀值
 	private  long SQL_SLOW_TIME = 1000;
 	//处理分布式事务开关，默认为不过滤分布式事务
-	private int handleDistributedTransactions = 0;
+	private int handleDistributedTransactions = 1;
 	// 是否开启sqlstat统计功能, 0表示关闭, 1表示打开, 默认为关闭状态
 	private int useSqlStat = 0;
 	/**

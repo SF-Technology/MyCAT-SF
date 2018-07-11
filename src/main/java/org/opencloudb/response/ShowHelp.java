@@ -182,6 +182,11 @@ public final class ShowHelp {
         helps.put("offline", "Change MyCat status to OFF");
         helps.put("online", "Change MyCat status to ON");
 
+        //open/close sql track
+        helps.put("reload @@sqltrace=open", "Open MyCat Sql Trace analyzer");
+        helps.put("reload @@sqltrace=close", "Close MyCat Sql Trace analyzer");
+
+
         // clear
         helps.put("clear @@slow where schema = ?", "Clear slow sql by schema");
         helps.put("clear @@slow where datanode = ?", "Clear slow sql by datanode");

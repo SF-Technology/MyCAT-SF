@@ -32,10 +32,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
-
 import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.net.factory.FrontendConnectionFactory;
+import org.opencloudb.trace.SqlTraceDispatcher;
 
 /**
  * @author mycat
@@ -108,6 +108,8 @@ public final class NIOAcceptor extends Thread  implements SocketAcceptor{
 			channel = serverChannel.accept();
 			channel.configureBlocking(false);
 			FrontendConnection c = factory.make(channel);
+			//前端连接进来打印
+			SqlTraceDispatcher.traceFrontConn(c, null);
 			c.setAccepted(true);
 			c.setId(ID_GENERATOR.getId());
 			NIOProcessor processor = (NIOProcessor) MycatServer.getInstance()

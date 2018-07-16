@@ -17,7 +17,7 @@ import java.sql.*;
 public class H2DBManager {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(H2DBManager.class);
-    private static final String h2dbURI = "jdbc:h2:"+SystemConfig.getHomePath()+"/h2db/db_sqlfw";// H2 database;
+    private static final String h2dbURI = "jdbc:h2:mem:db_sqlfw";// H2 database;
     private static final String dbName = "db_sqlfw";
     private static  final String sqlRecordTableName = "t_sqlrecord";
     private static  final String sqlBackListTableName = "sql_blacklist";

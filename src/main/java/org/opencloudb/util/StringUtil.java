@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.security.SecureRandom;
 import java.util.Random;
 
 /**
@@ -38,7 +39,7 @@ public class StringUtil {
 	public static final String TABLE_COLUMN_SEPARATOR = ".";
     private static final Logger LOGGER = LoggerFactory.getLogger(StringUtil.class);
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-	private static final Random RANDOM = new Random();
+	private static final SecureRandom RANDOM = new SecureRandom();
 	private static final char[] CHARS = { '1', '2', '3', '4', '5', '6', '7',
 			'8', '9', '0', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
 			'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v',
@@ -98,6 +99,7 @@ public class StringUtil {
 		StringBuilder s = new StringBuilder(size);
 		int len = CHARS.length;
 		for (int i = 0; i < size; i++) {
+
 			int x = RANDOM.nextInt();
 			s.append(CHARS[(x < 0 ? -x : x) % len]);
 		}

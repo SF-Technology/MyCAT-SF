@@ -50,7 +50,7 @@ import com.google.common.base.Strings;
  */
 public class MycatConfigDumper {
     
-    private static final String LINE_SEP = System.getProperty("line.separator");
+    private static final String LINE_SEP = System.lineSeparator();
     
     public static void dumpAll(Appendable out) throws IOException {
         MycatConfig mycatConfig = MycatServer.getInstance().getConfig();

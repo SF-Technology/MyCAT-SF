@@ -239,7 +239,7 @@ public final class BufferPool {
                 long threadId = Thread.currentThread().getId();
                 if (memoryUsage.containsKey(threadId)) {
                     memoryUsage.put(threadId, memoryUsage.get(threadId) + this.chunkSize);
-                    LOGGER.error("allocte : " + memoryUsage.get(threadId));
+                    //LOGGER.error("allocte : " + memoryUsage.get(threadId));
                 } else {
                     memoryUsage.put(threadId, (long) this.chunkSize);
                 }

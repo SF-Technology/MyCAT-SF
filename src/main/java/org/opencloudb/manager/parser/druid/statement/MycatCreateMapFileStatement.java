@@ -8,9 +8,13 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 import org.opencloudb.manager.parser.druid.MycatASTVisitor;
 
 import com.alibaba.druid.sql.ast.statement.SQLDDLStatement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * create mapfile 语句的解析结果
@@ -18,44 +22,30 @@ import com.alibaba.druid.sql.ast.statement.SQLDDLStatement;
  * @version 2017年4月12日 上午10:49:49 
  */
 public class MycatCreateMapFileStatement extends MycatStatementImpl implements SQLDDLStatement {
-	private String fileName;
-	private List<String> lines;
-	
-	@Override
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MycatCreateMapFileStatement.class);
+
+    private String fileName;
+    private List<String> lines;
+
+    @Override
     public void accept0(MycatASTVisitor visitor) {
         visitor.visit(this);
         visitor.endVisit(this);
     }
 
     public static MycatCreateMapFileStatement from(File mapFile) {
-	    MycatCreateMapFileStatement stmt = new MycatCreateMapFileStatement();
-	    stmt.setFileName(mapFile.getName());
-	    stmt.setLines(getLinesFromMapFile(mapFile));
-	    return stmt;
-	}
-	
-	private static List<String> getLinesFromMapFile(File mapFile) {
-	    List<String> _lines = new ArrayList<String>();
-        BufferedReader reader = null;
+        MycatCreateMapFileStatement stmt = new MycatCreateMapFileStatement();
+        List<String> fileContents = new ArrayList<>();
+        stmt.setFileName(mapFile.getName());
         try {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(mapFile)));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                _lines.add(line);
-            }
+            fileContents = Files.readLines(mapFile, Charsets.UTF_8);
         } catch (IOException e) {
-            
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // escape
-                }
-            }
+            LOGGER.error("read file:{}/{} exception:{}!", mapFile.getPath(), mapFile.getName(), e.getMessage());
         }
-        return _lines;
-	}
+        stmt.setLines(fileContents);
+        return stmt;
+    }
 	
 	public String getFileName() {
 		return fileName;

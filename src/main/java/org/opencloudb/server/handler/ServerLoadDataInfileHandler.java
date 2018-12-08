@@ -556,45 +556,44 @@ public final class ServerLoadDataInfileHandler implements LoadDataInfileHandler
         return rrs;
     }
 
-
-    private String makeSimpleInsert(List<SQLExpr> columns, String[] fields, String table, boolean isAddEncose)
-    {
-        StringBuilder sb = new StringBuilder();
-        sb.append(LoadData.loadDataHint).append("insert into ").append(table.toUpperCase());
-        if (columns != null && columns.size() > 0)
-        {
-            sb.append("(");
-            for (int i = 0, columnsSize = columns.size(); i < columnsSize; i++)
-            {
-                SQLExpr column = columns.get(i);
-                sb.append(column.toString());
-                if (i != columnsSize - 1)
-                {
-                    sb.append(",");
+    private String makeSimpleInsert(List<SQLExpr> cols, String[] fields, String tb, boolean isAddEncose) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(LoadData.loadDataHint).append("insert into ").append(tb.toUpperCase());
+        if (cols != null && cols.size() > 0) {
+            stringBuilder.append("(");
+            for (int i = 0, columnsSize = cols.size(); i < columnsSize; i++) {
+                SQLExpr col = cols.get(i);
+                stringBuilder.append(col.toString());
+                if (i != columnsSize - 1) {
+                    stringBuilder.append(",");
                 }
             }
-            sb.append(") ");
+            stringBuilder.append(") ");
+        }
+        for (int i = 0, columnsSize = fields.length; i < columnsSize; i++) {
+
+            if (i == 0) {
+                stringBuilder.append(" values").append(" (");
+            }
+
+            String column = fields[i];
+            if (isAddEncose) {
+                stringBuilder.append("'").append(parseFieldString(column, loadData.getEnclose())).append("'");
+            } else {
+                stringBuilder.append(column);
+            }
+            if (i != columnsSize - 1) {
+                stringBuilder.append(",");
+            }
+
+            if (i == columnsSize - 1) {
+                stringBuilder.append(")");
+            }
         }
 
-        sb.append(" values (");
-        for (int i = 0, columnsSize = fields.length; i < columnsSize; i++)
-        {
-            String column = fields[i];
-            if (isAddEncose)
-            {
-                sb.append("'").append(parseFieldString(column, loadData.getEnclose())).append("'");
-            } else
-            {
-                sb.append(column);
-            }
-            if (i != columnsSize - 1)
-            {
-                sb.append(",");
-            }
-        }
-        sb.append(")");
-        return sb.toString();
+        return stringBuilder.toString();
     }
+
 
     private String parseFieldString(String value, String encose)
     {

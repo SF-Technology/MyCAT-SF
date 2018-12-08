@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.apache.commons.io.IOUtils;
 import org.kamranzafar.jtar.TarEntry;
 import org.kamranzafar.jtar.TarInputStream;
 import org.kamranzafar.jtar.TarOutputStream;
@@ -92,37 +94,36 @@ public class ConfigTar {
 		
 	}
 
-	/**
-	 * 根据指定id找到相应的备份文件，然后覆盖到classpath下
-	 * 
-	 * @param index 备份文件的下标
-	 * @return
-	 * @throws IOException
-	 */
-	public static boolean untarConfig(int index) throws IOException {
-		lock.lock();
-		
-		try {
-			if (!backupFileMap.containsIndex(index)) {
-				return false;
-			}
+    /**
+     * 根据指定id找到相应的备份文件，然后覆盖到classpath下
+     *
+     * @param index 备份文件的下标
+     * @return
+     * @throws IOException
+     */
+    public static boolean untarConfig(int index) throws IOException {
+        lock.lock();
+        TarInputStream tis = null;
+        try {
+            if (!backupFileMap.containsIndex(index)) {
+                return false;
+            }
 
-			TarInputStream tis = new TarInputStream(
-					new BufferedInputStream(new FileInputStream(backupFileMap.acquireFile(index).getFile()))); // 取出最近一次备份
+            tis = new TarInputStream(
+                    new BufferedInputStream(new FileInputStream(backupFileMap.acquireFile(index).getFile()))); // 取出最近一次备份
 
-			deleteMapfiles(); // 删除mapfile
-
-			untar(tis, classPath); // 将备份解压到classpath下
-
-			tis.close();
-
-			return true;
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			lock.unlock();
-		}
-	}
+            deleteMapfiles(); // 删除mapfile
+            untar(tis, classPath); // 将备份解压到classpath下
+            return true;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (tis != null) {
+                tis.close();
+            }
+            lock.unlock();
+        }
+    }
 	
 	
 
@@ -141,108 +142,91 @@ public class ConfigTar {
 		}
 	}
 
-	/**
-	 * 递归地将指定文件或文件夹输出到tar文件的输出流中
-	 * 
-	 * @param parent
-	 *            上一级的目录
-	 * @param file
-	 *            被压缩的文件或文件夹
-	 * @param out
-	 *            tar文件的输出流
-	 * @throws IOException
-	 */
-	private static void tar(String parent, File file, TarOutputStream out) throws IOException {
-		BufferedInputStream origin = null;
-		String files[] = file.list();
+    /**
+     * 递归地将指定文件或文件夹输出到tar文件的输出流中
+     *
+     * @param parent 上一级的目录
+     * @param file   被压缩的文件或文件夹
+     * @param out    tar文件的输出流
+     * @throws IOException
+     */
+    private static void tar(String parent, File file, TarOutputStream out) throws IOException {
+        String files[] = file.list();
 
-		// is file
-		if (files == null) {
-			files = new String[1];
-			files[0] = file.getName();
-		}
+        // is file
+        if (files == null) {
+            files = new String[1];
+            files[0] = file.getName();
+        }
 
-		parent = ((parent == null) ? (file.isFile()) ? "" : file.getName() + "/" : parent + file.getName() + "/");
+        parent = ((parent == null) ? (file.isFile()) ? "" : file.getName() + "/" : parent + file.getName() + "/");
 
-		if (files == null || files.length == 0) {
-			TarEntry entry = new TarEntry(file, parent);
-			out.putNextEntry(entry);
-		}
-		
-		for (int i = 0; i < files.length; i++) {
-			File fe = file;
-			byte data[] = new byte[BUFFER];
+        if (files == null || files.length == 0) {
+            TarEntry entry = new TarEntry(file, parent);
+            out.putNextEntry(entry);
+        }
 
-			if (file.isDirectory()) {
-				fe = new File(file, files[i]);
-			}
+        for (int i = 0; i < files.length; i++) {
+            File fe = file;
+            if (file.isDirectory()) {
+                fe = new File(file, files[i]);
+            }
 
-			if (fe.isDirectory()) {
-				String[] fl = fe.list();
-				if (fl != null && fl.length != 0) {
-					tar(parent, fe, out);
-				} else {
-					TarEntry entry = new TarEntry(fe, parent + files[i] + "/");
-					out.putNextEntry(entry);
-				}
-				continue;
-			}
+            if (fe.isDirectory()) {
+                String[] fl = fe.list();
+                if (fl != null && fl.length != 0) {
+                    tar(parent, fe, out);
+                } else {
+                    TarEntry entry = new TarEntry(fe, parent + files[i] + "/");
+                    out.putNextEntry(entry);
+                }
+                continue;
+            }
 
-			FileInputStream fi = new FileInputStream(fe);
-			origin = new BufferedInputStream(fi);
-			TarEntry entry = new TarEntry(fe, parent + files[i]);
-			out.putNextEntry(entry);
+            FileInputStream fi = new FileInputStream(fe);
+            BufferedInputStream origin = new BufferedInputStream(fi);
+            TarEntry entry = new TarEntry(fe, parent + files[i]);
+            out.putNextEntry(entry);
+            try {
+                IOUtils.writeChunked(IOUtils.toByteArray(origin), out);
+            } finally {
+                out.flush();
+                origin.close();
+            }
 
-			int count;
+        }
+    }
 
-			while ((count = origin.read(data)) != -1) {
-				out.write(data, 0, count);
-			}
+    /**
+     * 从指定tar文件的输入流输入到指定的文件夹下
+     *
+     * @param tis        tar文件的输入流
+     * @param destFolder 目标文件夹（最终解压到此文件夹）
+     * @throws IOException
+     */
+    private static void untar(TarInputStream tis, File destFolder) throws IOException {
 
-			out.flush();
-
-			origin.close();
-		}
-	}
-
-	/**
-	 * 从指定tar文件的输入流输入到指定的文件夹下
-	 * 
-	 * @param tis
-	 *            tar文件的输入流
-	 * @param destFolder
-	 *            目标文件夹（最终解压到此文件夹）
-	 * @throws IOException
-	 */
-	private static void untar(TarInputStream tis, File destFolder) throws IOException {
-		BufferedOutputStream dest = null;
-
-		TarEntry entry;
-		while ((entry = tis.getNextEntry()) != null) {
-			int count;
-			byte data[] = new byte[BUFFER];
-
-			if (entry.isDirectory()) {
-				new File(destFolder.getAbsolutePath(), entry.getName()).mkdirs();
-				continue;
-			} else {
-				int di = entry.getName().lastIndexOf('/');
-				if (di != -1) {
-					new File(destFolder.getAbsolutePath(), entry.getName().substring(0, di)).mkdirs();
-				}
-			}
-
-			FileOutputStream fos = new FileOutputStream(new File(destFolder.getAbsolutePath(), entry.getName()));
-			dest = new BufferedOutputStream(fos);
-
-			while ((count = tis.read(data)) != -1) {
-				dest.write(data, 0, count);
-			}
-
-			dest.flush();
-			dest.close();
-		}
-	}
+        TarEntry entry;
+        while ((entry = tis.getNextEntry()) != null) {
+            if (entry.isDirectory()) {
+                new File(destFolder.getAbsolutePath(), entry.getName()).mkdirs();
+                continue;
+            } else {
+                int di = entry.getName().lastIndexOf('/');
+                if (di != -1) {
+                    new File(destFolder.getAbsolutePath(), entry.getName().substring(0, di)).mkdirs();
+                }
+            }
+            FileOutputStream fos = new FileOutputStream(new File(destFolder.getAbsolutePath(), entry.getName()));
+            final BufferedOutputStream dest = new BufferedOutputStream(fos);
+            try {
+                IOUtils.writeChunked(IOUtils.toByteArray(tis), dest);
+            } finally {
+                dest.flush();
+                dest.close();
+            }
+        }
+    }
 
 	/**
 	 * 获得tar文件的文件名

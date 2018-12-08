@@ -1,6 +1,8 @@
 package org.opencloudb.classloader;
 
 
+import org.apache.commons.io.IOUtils;
+
 import java.util.jar.*;
 import java.lang.reflect.*;
 import java.net.URL;
@@ -28,11 +30,7 @@ public class JarLoader {
 	            }
 	            OutputStream out = new FileOutputStream(file);
 	            try {
-	              byte[] buffer = new byte[8192];
-	              int i;
-	              while ((i = in.read(buffer)) != -1) {
-	                out.write(buffer, 0, i);
-	              }
+	            	IOUtils.writeChunked(IOUtils.toByteArray(in), out);
 	            } finally {
 	              out.close();
 	            }

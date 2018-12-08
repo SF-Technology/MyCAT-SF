@@ -23,6 +23,7 @@
  */
 package org.opencloudb.config.model;
 
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,7 +36,7 @@ import org.opencloudb.config.util.ConfigException;
  * @author mycat
  */
 public class SchemaConfig {
-	private final Random random = new Random();
+	private final SecureRandom random = new SecureRandom();
 	private final String name;
 	private final Map<String, TableConfig> tables;
 	private final Map<String, ProcedureConfig> procedures;

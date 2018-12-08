@@ -23,6 +23,7 @@
  */
 package org.opencloudb.backend;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -68,8 +69,8 @@ public class PhysicalDBPool {
 	private final Collection<PhysicalDatasource> allDs;
 	private final int banlance;
 	private final int writeType;
-	private final Random random = new Random();
-	private final Random wnrandom = new Random();
+	private final SecureRandom random = new SecureRandom();
+	private final SecureRandom wnrandom = new SecureRandom();
 	private String[] schemas;
 	private final DataHostConfig dataHostConfig;
 

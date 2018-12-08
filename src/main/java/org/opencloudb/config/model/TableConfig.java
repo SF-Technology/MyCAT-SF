@@ -22,6 +22,7 @@
  *
  */
 package org.opencloudb.config.model;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Set;
@@ -54,7 +55,7 @@ public class TableConfig {
 	// only has one level of parent
 	private final boolean secondLevel;
 	private final boolean partionKeyIsPrimaryKey;
-	private final Random rand = new Random();
+	private final SecureRandom rand = new SecureRandom();
 	
 	private final String dataNode;
 

@@ -1,5 +1,6 @@
 package org.opencloudb.mpp.tmp;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -83,7 +84,7 @@ public class IntMinHeap {
     public static void main(String[] args) {
         Set<Integer> set = new HashSet<Integer>();
         int dataCount = 30;
-        Random rd = new Random();
+        SecureRandom rd = new SecureRandom();
         int bound = dataCount * 3;
         while (set.size() < dataCount) {
             set.add(rd.nextInt(bound));

@@ -124,10 +124,9 @@ public class FrontendAuthenticator implements NIOHandler {
     }
 
     protected boolean checkPassword(byte[] password, String user) {
-        String pass = source.getPrivileges().getPassword(user);
-
-        // check null
-        if (pass == null || pass.length() == 0) {
+        FrontendPrivileges frontendPrivileges = source.getPrivileges();
+       // String pass = source.getPrivileges().getPassword(user);
+        if (frontendPrivileges.getPassword(user) == null || frontendPrivileges.getPassword(user).length() == 0) {
             if (password == null || password.length == 0) {
                 return true;
             } else {
@@ -141,7 +140,7 @@ public class FrontendAuthenticator implements NIOHandler {
         // encrypt
         byte[] encryptPass = null;
         try {
-            encryptPass = SecurityUtil.scramble411(pass.getBytes(), source.getSeed());
+            encryptPass = SecurityUtil.scramble411(frontendPrivileges.getPassword(user).getBytes(), source.getSeed());
         } catch (NoSuchAlgorithmException e) {
             LOGGER.warn(source.toString(), e);
             return false;

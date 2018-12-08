@@ -58,8 +58,7 @@ public class AlterUserHandler {
 			newUser.setSchemas(new HashSet<String>(user.getSchemas()));
 			
 			if(stmt.isAlterPassword()) {
-				String newPassword = ((SQLCharExpr)stmt.getPassword()).getText();
-				newUser.setPassword(newPassword);
+				newUser.setPassword(((SQLCharExpr)stmt.getPassword()).getText());
 			}
 			
 			if(stmt.isAlterSchemas()) {

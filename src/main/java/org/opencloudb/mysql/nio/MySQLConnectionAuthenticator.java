@@ -147,10 +147,9 @@ public class MySQLConnectionAuthenticator implements NIOHandler {
 		// 发送323响应认证数据包
 		Reply323Packet r323 = new Reply323Packet();
 		r323.packetId = ++packetId;
-		String pass = source.getPassword();
-		if (pass != null && pass.length() > 0) {
+		if (source.getPassword() != null && source.getPassword().length() > 0) {
 			byte[] seed = source.getHandshake().seed;
-			r323.seed = SecurityUtil.scramble323(pass, new String(seed))
+			r323.seed = SecurityUtil.scramble323(source.getPassword(), new String(seed))
 					.getBytes();
 		}
 		r323.write(source);

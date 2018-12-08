@@ -2,6 +2,7 @@ package org.opencloudb.classloader;
 
 
 import org.apache.commons.io.IOUtils;
+import org.opencloudb.util.ObjectUtils;
 
 import java.util.jar.*;
 import java.lang.reflect.*;
@@ -68,6 +69,9 @@ public class JarLoader {
 		    mainClassName = mainClassName.replaceAll("/", ".");
 
 		    File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+	        if (ObjectUtils.isEmpty(tmpDir)) {
+	            throw new IOException("create object null :" + fileName);
+	        }
 		    tmpDir.mkdirs();
 		    if (!tmpDir.isDirectory()) { 
 		    	System.out.println("Mkdirs failed to create " + tmpDir);

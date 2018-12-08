@@ -53,11 +53,11 @@ public class SecurityUtil {
         }
         byte b;
         double d;
-        long[] pw = hash(seed);
+        long[] passWord = hash(seed);
         long[] msg = hash(pass);
         long max = 0x3fffffffL;
-        long seed1 = (pw[0] ^ msg[0]) % max;
-        long seed2 = (pw[1] ^ msg[1]) % max;
+        long seed1 = (passWord[0] ^ msg[0]) % max;
+        long seed2 = (passWord[1] ^ msg[1]) % max;
         char[] chars = new char[seed.length()];
         for (int i = 0; i < seed.length(); i++) {
             seed1 = ((seed1 * 3) + seed2) % max;

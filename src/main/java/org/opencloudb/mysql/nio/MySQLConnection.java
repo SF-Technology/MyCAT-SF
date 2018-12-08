@@ -23,7 +23,6 @@
  */
 package org.opencloudb.mysql.nio;
 
-import org.apache.log4j.Logger;
 import org.opencloudb.MycatServer;
 import org.opencloudb.config.Capabilities;
 import org.opencloudb.config.Isolations;
@@ -38,6 +37,8 @@ import org.opencloudb.server.ServerConnection;
 import org.opencloudb.server.parser.ServerParse;
 import org.opencloudb.util.StringUtils;
 import org.opencloudb.util.TimeUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.channels.NetworkChannel;
@@ -49,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author mycat
  */
 public class MySQLConnection extends BackendAIOConnection {
-    private static final Logger LOGGER = Logger
+    private static final Logger LOGGER = LoggerFactory
             .getLogger(MySQLConnection.class);
     private static final long CLIENT_FLAGS = initClientFlags();
     private volatile long lastTime;
@@ -583,7 +584,7 @@ public class MySQLConnection extends BackendAIOConnection {
             respHandler = queryHandler;
             return true;
         } else if (queryHandler != null) {
-            LOGGER.warn("set not MySQLConnectionHandler " + queryHandler.getClass().getCanonicalName());
+            LOGGER.warn("setResponseHandler not set  MySQLConnectionHandler{}", queryHandler.getClass().getName());
         }
         return false;
     }

@@ -77,12 +77,11 @@ public final class XMLUserLoader {
 //                }
                 UserConfig user = new UserConfig();
                 Map<String, Object> props = ConfigUtil.loadElements(e);
-                String password = (String)props.get("password");
                 String usingDecrypt = (String)props.get("usingDecrypt");
-                String passwordDecrypt = DecryptUtil.mycatDecrypt(usingDecrypt,name,password);
+                String passwordDecrypt = DecryptUtil.mycatDecrypt(usingDecrypt,name,(String)props.get("password"));
                 user.setName(name);
                 user.setPassword(passwordDecrypt);
-                user.setEncryptPassword(password);
+                user.setEncryptPassword((String)props.get("password"));
 				
 				String benchmark = (String) props.get("benchmark");
 				if(null != benchmark) {

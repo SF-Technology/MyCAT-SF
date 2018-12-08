@@ -37,6 +37,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.opencloudb.config.Isolations;
+import org.opencloudb.util.StringUtils;
 
 
 /**
@@ -46,10 +47,10 @@ import org.opencloudb.config.Isolations;
  */
 public final class SystemConfig {
 
-	private static final String DEFAULT_ROOT_USER = "root";
-	private static final String DEFAULT_ROOT_PASSWORD = "sf123456";
-	private String rootUser = DEFAULT_ROOT_USER;
-	private String rootPassword = DEFAULT_ROOT_PASSWORD;
+    private static final String DEFAULT_ROOT_USER = "root";
+    private static final String DEFAULT_ROOT_PASSWORD = "123456";
+    private String rootUser = DEFAULT_ROOT_USER;
+    private String rootPwd = DEFAULT_ROOT_PASSWORD;
 	
 	public static final String SYS_HOME = "MYCAT_HOME";
 	private static final int DEFAULT_PORT = 8066;
@@ -136,7 +137,7 @@ public final class SystemConfig {
 	private int sequnceHandlerType = SEQUENCEHANDLER_LOCALFILE;
 	private String sqlInterceptor = "org.opencloudb.interceptor.impl.DefaultSqlInterceptor";
 	private String sqlInterceptorType = "select";
-	private String sqlInterceptorFile = System.getProperty("user.dir")+"/logs/sql.txt";
+    private String sqlInterceptorFile = null;
 	public static final int MUTINODELIMIT_SMALL_DATA = 0;
 	public static final int MUTINODELIMIT_LAR_DATA = 1;
 	private int mutiNodeLimitType = MUTINODELIMIT_SMALL_DATA;
@@ -314,8 +315,18 @@ public final class SystemConfig {
 		this.spillsFileBufferSize = SPILLS_FILE_BUFFER_SIZE;
 		this.useStreamOutput = 0;
 		this.systemReserveMemorySize = RESERVED_SYSTEM_MEMORY_BYTES;
-		this.dataNodeSortedTempDir = System.getProperty("user.dir");
-		this.SQL_SLOW_TIME=1000;
+
+        String dataTempDir = System.getProperty("user.dir");
+        if (!StringUtils.isEmpty(dataTempDir)) {
+            this.dataNodeSortedTempDir = dataTempDir;
+        }
+
+        this.SQL_SLOW_TIME = 1000;
+
+        String sqlInterceptorFile = System.getProperty("user.dir") + "/logs/sql.txt";
+        if (!StringUtils.isEmpty(sqlInterceptorFile)) {
+            this.sqlInterceptorFile = sqlInterceptorFile;
+        }
 
 		/**
 		 * SQL 防火墙配置默认配置
@@ -668,7 +679,13 @@ public final class SystemConfig {
 	}
 
 	public static String getHomePath() {
-		String home = System.getProperty(SystemConfig.SYS_HOME);
+        String home = null;
+        try {
+            String path = new File(SystemConfig.SYS_HOME).getCanonicalPath();
+            home = System.getProperty(path);
+        } catch (IOException e) {
+            // 如出错，则忽略。
+        }
 		if (home != null) {
 			if (home.endsWith(File.pathSeparator)) {
 				home = home.substring(0, home.length() - 1);
@@ -1111,13 +1128,13 @@ public final class SystemConfig {
 		this.rootUser = rootUser;
 	}
 
-	public String getRootPassword() {
-		return rootPassword;
-	}
+    public String getRootPassword() {
+        return rootPwd;
+    }
 
-	public void setRootPassword(String rootPassword) {
-		this.rootPassword = rootPassword;
-	}
+    public void setRootPassword(String rootPwd) {
+        this.rootPwd = rootPwd;
+    }
 
 	public static String getMapFileFolder() {
 		return MAP_FILE_FOLDER;

@@ -35,9 +35,9 @@ public class StreamUtil {
     private static final long NULL_LENGTH = -1;
     private static final byte[] EMPTY_BYTES = new byte[0];
 
-    public static final void read(InputStream in, byte[] b, int offset, int length) throws IOException {
+    public static final void read(InputStream in, byte[] dataBuffer, int offset, int length) throws IOException {
         for (int got = 0; length > 0;) {
-            got = in.read(b, offset, length);
+            got = in.read(dataBuffer, offset, length);
             if (got < 0) {
                 throw new EOFException();
             }

@@ -46,7 +46,7 @@ public class HeartbeatConfigForTest {
     //
     // private static DataSourceConfig[] getOfferDataSource(String schema) {
     // DataSourceConfig ds1 = new DataSourceConfig();
-    // ds1.host = "10.20.132.17";
+    // ds1.host = "192.168.0.100";
     // ds1.port = 3306;
     // ds1.schema = schema;
     // ds1.user = "offer";
@@ -76,7 +76,7 @@ public class HeartbeatConfigForTest {
     //
     // // 数据源2（端口错误）
     // DataSourceConfig ds2 = new DataSourceConfig();
-    // ds2.host = "10.20.132.17";
+    // ds2.host = "192.168.0.100";
     // ds2.port = 3316;
     // ds2.schema = "offer1";
     // ds2.user = "offer";
@@ -85,7 +85,7 @@ public class HeartbeatConfigForTest {
     //
     // // 数据源3（SCHEMA错误）
     // DataSourceConfig ds3 = new DataSourceConfig();
-    // ds3.host = "10.20.132.17";
+    // ds3.host = "192.168.0.100";
     // ds3.port = 3306;
     // ds3.schema = "offer1_x";
     // ds3.user = "offer";
@@ -94,7 +94,7 @@ public class HeartbeatConfigForTest {
     //
     // // 数据源4（用户错误）
     // DataSourceConfig ds4 = new DataSourceConfig();
-    // ds4.host = "10.20.132.17";
+    // ds4.host = "192.168.0.100";
     // ds4.port = 3306;
     // ds4.schema = "offer1";
     // ds4.user = "offer_x";
@@ -103,7 +103,7 @@ public class HeartbeatConfigForTest {
     //
     // // 数据源5（密码错误）
     // DataSourceConfig ds5 = new DataSourceConfig();
-    // ds5.host = "10.20.132.17";
+    // ds5.host = "192.168.0.100";
     // ds5.port = 3306;
     // ds5.schema = "offer1";
     // ds5.user = "offer";
@@ -112,7 +112,7 @@ public class HeartbeatConfigForTest {
     //
     // // 数据源6（语句错误）
     // DataSourceConfig ds6 = new DataSourceConfig();
-    // ds6.host = "10.20.132.17";
+    // ds6.host = "192.168.0.100";
     // ds6.port = 3306;
     // ds6.schema = "offer1";
     // ds6.user = "offer";
@@ -121,7 +121,7 @@ public class HeartbeatConfigForTest {
     //
     // // 数据源（正确配置）
     // DataSourceConfig ds = new DataSourceConfig();
-    // ds.host = "10.20.132.17";
+    // ds.host = "192.168.0.100";
     // ds.port = 3306;
     // ds.schema = "offer1";
     // ds.user = "offer";

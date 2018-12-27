@@ -16,7 +16,7 @@
 	</user>
 	
 	<user name="sfdba">
-		<property name="password">sf123456</property>
+		<property name="password">123456</property>
 		<property name="schemas">testdb</property>
 	</user>
 	

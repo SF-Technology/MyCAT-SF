@@ -51,12 +51,12 @@ public class CreateUserHandler {
 				return ;
 			}
 			
-			String password = ((SQLCharExpr)stmt.getPassword()).getText();
+			//String password = ((SQLCharExpr)stmt.getPassword()).getText();
 			String schemas = ((SQLCharExpr)stmt.getSchemas()).getText();
 			
 			UserConfig newUserConf = new UserConfig();
 			newUserConf.setName(newUserName);
-			newUserConf.setPassword(password);
+			newUserConf.setPassword(((SQLCharExpr)stmt.getPassword()).getText());
 			newUserConf.setReadOnly(stmt.isReadOnly());
 			
 			

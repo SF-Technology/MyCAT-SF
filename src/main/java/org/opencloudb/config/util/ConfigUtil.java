@@ -52,7 +52,8 @@ import org.xml.sax.SAXParseException;
 public class ConfigUtil {
 
     public static String filter(String text) {
-        return filter(text, System.getProperties());
+        Properties properties = System.getProperties();
+        return filter(text,properties);
     }
 
     public static String filter(String text, Properties properties) {

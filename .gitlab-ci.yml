@@ -1,0 +1,32 @@
+# This file is a template, and might need editing before it works on your project.
+# Official Java image. Look for the different tagged releases at
+# https://hub.docker.com/r/library/java/tags/ . A Java image is not required
+# but an image with a JVM speeds up the build a bit.
+# image: java:7
+
+before_script:
+  # Enable the usage of sources over https
+  # apt-get update -yqq
+  # apt-get install apt-transport-https -yqq
+  # Add keyserver for SBT
+  - echo "deb http://dl.bintray.com/sbt/debian /"
+  # apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 642AC823
+  # Install SBT
+  # apt-get update -yqq
+  # apt-get install sbt -yqq
+  # Log the sbt version
+  # sbt sbt-version
+
+test:
+  script:
+    # Execute your project's tests
+    #- mvn surefire-report:report
+    - mvn clean install
+    - ls -la
+    #- /home/gitlab-runner/mycat/mycat/bin/mycat stop
+    #- rm /home/gitlab-runner/mycat -rf 
+    #- mkdir -p /home/gitlab-runner/mycat
+    #- cp /home/gitlab-runner/builds/4e269bda/0/root/sf-mycat/target/Mycat-server-1.5.2-RELEASE-*-linux.tar.gz /home/gitlab-runner/mycat/
+    #- tar xvf /home/gitlab-runner/mycat/Mycat-server-1.5.2-RELEASE-*-linux.tar.gz -C /home/gitlab-runner/mycat/
+    #- /home/gitlab-runner/mycat/mycat/bin/mycat start
+    #- cd /home/gitlab-runner/mycat-test/ && mvn clean install 

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- - - Licensed under the Apache License, Version 2.0 (the "License"); 
+	- you may not use this file except in compliance with the License. - You 
+	may obtain a copy of the License at - - http://www.apache.org/licenses/LICENSE-2.0 
+	- - Unless required by applicable law or agreed to in writing, software - 
+	distributed under the License is distributed on an "AS IS" BASIS, - WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. - See the 
+	License for the specific language governing permissions and - limitations 
+	under the License. -->
+<!DOCTYPE mycat:rule SYSTEM "rule.dtd">
+<mycat:rule xmlns:mycat="http://org.opencloudb/">
+
+	<tableRule name="offerRule">
+		<rule>
+			<columns>member_id</columns>
+			<algorithm>func</algorithm>
+		</rule>
+	</tableRule>
+	
+	<tableRule name="offerRule_one_node">
+		<rule>
+			<columns>member_id</columns>
+			<algorithm>func_one_node</algorithm>
+		</rule>
+	</tableRule>
+	
+	<tableRule name="dateRule">
+		<rule>
+			<columns>col_date</columns>
+			<algorithm>by-date</algorithm>
+		</rule>
+	</tableRule>
+
+	<tableRule name="offerDetailRule">
+		<rule>
+			<columns>offer_id</columns>
+			<algorithm>func2</algorithm>
+		</rule>
+	</tableRule>
+	<tableRule name="sharding-by-intfile">
+		<rule>
+			<columns>sharding_id</columns>
+			<algorithm>func1</algorithm>
+		</rule>
+	</tableRule>
+	<tableRule name="auto-sharding-long-2">
+		<rule>
+			<columns>id</columns>
+			<algorithm>rang-long-2</algorithm>
+		</rule>
+	</tableRule>
+	<tableRule name="auto-sharding-long-3">
+		<rule>
+			<columns>id</columns>
+			<algorithm>rang-long-3</algorithm>
+		</rule>
+	</tableRule>
+
+    <tableRule name="auto-sharding-rang-mod">
+        <rule>
+            <columns>id</columns>
+            <algorithm>rang-mod</algorithm>
+        </rule>
+    </tableRule>
+    <tableRule name="rangeDateHash">
+        <rule>
+            <columns>col_date</columns>
+            <algorithm>range-date-hash</algorithm>
+        </rule>
+    </tableRule>
+	<function name="func1"
+		class="org.opencloudb.route.function.PartitionByFileMap">
+		<property name="defaultNode">0</property>
+		<property name="mapFile">sharding.txt</property>
+	</function>
+	<function name="func"
+		class="org.opencloudb.route.function.PartitionByString">
+		<property name="partitionCount">128</property>
+		<property name="partitionLength">8</property>
+		<property name="hashSlice">:8</property>
+	</function>
+	<!-- 只有一个分片的PartitionByString算法 -->
+	<function name="func_one_node"
+		class="org.opencloudb.route.function.PartitionByString">
+		<property name="partitionCount">1</property>
+		<property name="partitionLength">1024</property>
+		<property name="hashSlice">:8</property>
+	</function>
+	<function name="func2" class="org.opencloudb.route.function.PartitionByLong">
+		<property name="partitionCount">128</property>
+		<property name="partitionLength">8</property>
+	</function>
+	<function name="rang-long-2"
+		class="org.opencloudb.route.function.AutoPartitionByLong">
+		<property name="mapFile">autopartition-long-2.txt</property>
+	</function>
+	<function name="rang-long-3"
+		class="org.opencloudb.route.function.AutoPartitionByLong">
+		<property name="mapFile">autopartition-long-3.txt</property>
+	</function>
+	<function name="by-date"
+		class="org.opencloudb.route.function.PartitionByDate">                            
+		<property name="sBeginDate">2014-01-01</property>
+		<property name="sPartionDay">10</property>
+		<property name="dateFormat">yyyy-MM-dd</property>
+	</function>
+
+    <function name="rang-mod"
+              class="org.opencloudb.route.function.PartitionByRangeMod">
+        <property name="mapFile">partition-range-mod.txt</property>
+    </function>
+
+    <function name="range-date-hash"
+              class="org.opencloudb.route.function.PartitionByRangeDateHash">
+        <property name="sBeginDate">2014-01-01 00:00:00</property>
+        <property name="sPartionDay">3</property>
+        <property name="dateFormat">yyyy-MM-dd HH:mm:ss</property>
+        <property name="groupPartionSize">6</property>
+    </function>
+</mycat:rule>

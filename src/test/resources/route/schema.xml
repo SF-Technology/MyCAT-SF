@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- - - Licensed under the Apache License, Version 2.0 (the "License"); 
+	- you may not use this file except in compliance with the License. - You 
+	may obtain a copy of the License at - - http://www.apache.org/licenses/LICENSE-2.0 
+	- - Unless required by applicable law or agreed to in writing, software - 
+	distributed under the License is distributed on an "AS IS" BASIS, - WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. - See the 
+	License for the specific language governing permissions and - limitations 
+	under the License. -->
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://org.opencloudb/">
+
+	<schema name="cndb" checkSQLschema="true" >
+		<table name="offer" dataNode="offer_dn$0-127" rule="offerRule" />
+		<table name="offer_detail" dataNode="detail_dn0,detail_dn$1-127"
+			rule="offerDetailRule" ruleRequired="false" />
+		<table name="offer_date" dataNode="detail_dn0,detail_dn$1-127"
+			rule="dateRule" ruleRequired="false" />
+
+		<table name="independent" dataNode="independent_dn$0-126,independent_dn127" />
+	</schema>
+	<schema name="dubbo" dataNode="dubbo_dn" />
+    <schema name="dubbo2" >
+        <table name="company" type="global" dataNode="dn1,dn2,dn3" />
+        <table name="goods" type="global" dataNode="dn1,dn2,dn3" />
+            </schema>
+	<schema name="ignoreSchemaTest" dataNode="cndb_dn" checkSQLschema="true"/>
+	<schema name="config">
+		<table name="offer" dataNode="offer_dn$0-127" rule="offerRule"
+			ruleRequired="true" />
+	</schema>
+	<schema name="none_node_test">
+		<table name="offer" dataNode="offer_dn$0-127" rule="offerRule"
+			ruleRequired="true" />
+	</schema>
+	<schema name="solo1" dataNode="solo1" />
+
+	<schema name="TESTDB"  sqlMaxLimit="100">
+		<table name="travelrecord" dataNode="dn1,dn2,dn3" rule="auto-sharding-long-3" />
+		<!-- global table is auto cloned to all defined data nodes ,so can join 
+			with any table whose sharding node is in the same data node -->
+		<table name="company" type="global" dataNode="dn1,dn2,dn3" />
+		<table name="goods" type="global" dataNode="dn1,dn2,dn3" />
+		<table name="notpartionTable"  dataNode="dn1" />
+		<table name="area" primaryKey="ID" type="global" dataNode="dn1,dn2,dn3" />
+		<table name="employee" primaryKey="id" dataNode="dn1,dn2"
+			rule="sharding-by-intfile" />
+		<table name="customer" dataNode="dn1,dn2" rule="auto-sharding-long-2">
+			<childTable name="orders" joinKey="customer_id" parentKey="id">
+				<childTable name="order_items" joinKey="order_id"
+					parentKey="id" />
+			</childTable>
+			<childTable name="customer_addr" joinKey="customer_id"
+				parentKey="id" />
+		</table>
+		<table name="globalsn" primaryKey="ID" type="global" dataNode="dn1" />
+        <table name="offer" primaryKey="id" dataNode="offer_dn$1-20"
+               rule="auto-sharding-rang-mod" />
+
+        <table name="offer1" primaryKey="id" dataNode="offer_dn$1-36"
+               rule="rangeDateHash" />
+	</schema>
+
+    <schema name="mysqldb"  sqlMaxLimit="100">
+        <table name="offer" dataNode="dn1,dn2" rule="offerRule_one_node" />
+        <table name="offer1" dataNode="dn1" rule="offerRule_one_node" />
+    </schema>
+    <schema name="oracledb"  sqlMaxLimit="100">
+        <table name="offer" dataNode="d_oracle1,d_oracle2" rule="offerRule_one_node" />
+        <table name="offer1" dataNode="d_oracle1" rule="offerRule_one_node" />
+    </schema>
+
+	<schema name="db2db"  sqlMaxLimit="100">
+		<table name="offer" dataNode="db2_1,db2_2" rule="offerRule_one_node" />
+		<table name="offer1" dataNode="db2_1" rule="offerRule_one_node" />
+	</schema>
+
+
+	<schema name="sqlserverdb"  sqlMaxLimit="100">
+		<table name="offer" dataNode="sqlserver_1,sqlserver_2" rule="offerRule_one_node" />
+		<table name="offer1" dataNode="sqlserver_1" rule="offerRule_one_node" />
+	</schema>
+
+
+	<schema name="pgdb"  sqlMaxLimit="100">
+		<table name="offer" dataNode="pg_1,pg_2" rule="offerRule_one_node" />
+		<table name="offer1" dataNode="pg_1" rule="offerRule_one_node" />
+	</schema>
+
+
+
+</mycat:schema>

@@ -145,23 +145,6 @@ public class MultiNodeQueryHandler extends MultiNodeHandler implements
 				LOGGER.debug("has data merge logic ");
 			}
 		}
-		if (MycatServer.getInstance().getConfig().
-				getSystem().getLimitConcurrentQuery() == 1) {
-			int dataNodes = rrs.getNodes().length;
-			int cores = Runtime.getRuntime().availableProcessors()*2;
-			int processors = MycatServer.getInstance().
-					getConfig().getSystem().getProcessors();
-			cores = Math.min(cores,processors);
-			if (dataNodes >= cores){
-				/**最大并发度为cores*/
-				double processorsRatio = MycatServer.getInstance().
-						getConfig().getSystem().getProcessorsRatio();
-				int  maxPermits = (int) (Math.round(cores*processorsRatio));
-
-				LOGGER.info("Max Concurrent Query Threads :" + maxPermits + " processors Ratio :" + processorsRatio);
-				limitsqlExecute = new Semaphore(maxPermits);
-			}
-		}
 	}
 
 	protected void reset(int initCount) {

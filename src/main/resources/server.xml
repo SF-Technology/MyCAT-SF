@@ -59,10 +59,6 @@
 		<property name="topSqlExecuteCountN">100</property>
 		<!--每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位-->
 		<property name="sqlRecordInDiskPeriod">7</property>
-		<!--限制并发查询，控制CPU消耗 1开启,0关闭-->
-		<property name="limitConcurrentQuery">0</property>
-		<!-- 大sql查询时,配置processor使用比例 -->
-		<property name="processorsRatio">0.5</property>
 	</system>
 
 	<!-- 定义迁移到 user.xml -->

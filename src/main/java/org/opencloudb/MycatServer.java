@@ -77,11 +77,11 @@ import org.opencloudb.util.TimeUtil;
  */
 public class MycatServer {
 
-	public static final String NAME = "MyCat";
+	public static final String NAME = "MyCAT-SF";
 	private static final long LOG_WATCH_DELAY = 60000L;
 	private static final long TIME_UPDATE_PERIOD = 20L;
 	private static final MycatServer INSTANCE = new MycatServer();
-	private static final Logger LOGGER = Logger.getLogger("MycatServer");
+	private static final Logger LOGGER = Logger.getLogger("MyCAT-SF");
 	private final RouteService routerService;
 	private final CacheService cacheService;
 	private SQLFirewallServer sqlFirewallServer;

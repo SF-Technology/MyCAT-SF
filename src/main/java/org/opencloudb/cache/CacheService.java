@@ -73,8 +73,8 @@ public class CacheService {
 		for (String key : keys) {
 
 			if (key.startsWith(poolFactoryPref)) {
-				createPoolFactory(key.substring(poolFactoryPref.length()),
-						(String) props.get(key));
+                String value = (String) props.get(key);
+                createPoolFactory(key.substring(poolFactoryPref.length()), value);
 			} else if (key.startsWith(poolKeyPref)) {
 				String cacheName = key.substring(poolKeyPref.length());
 				String value = (String) props.get(key);

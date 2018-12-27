@@ -50,7 +50,7 @@ public final class SystemConfig {
     private static final String DEFAULT_ROOT_USER = "root";
     private static final String DEFAULT_ROOT_PASSWORD = "123456";
     private String rootUser = DEFAULT_ROOT_USER;
-    private String rootPwd = DEFAULT_ROOT_PASSWORD;
+	private String rootPassword = DEFAULT_ROOT_PASSWORD;
 	
 	public static final String SYS_HOME = "MYCAT_HOME";
 	private static final int DEFAULT_PORT = 8066;
@@ -243,11 +243,6 @@ public final class SystemConfig {
 	 * 每隔sqlRecordInDiskPeriod天从磁盘删除过期的sql,以天为单位
 	 */
 	public long sqlRecordInDiskPeriod;
-
-	/**限制并发查询度，控制cpu的消耗*/
-	public int limitConcurrentQuery;
-	/**大sql查询时,配置processor使用比例*/
-	public double processorsRatio;
 	
 	/**在对配置信息进行备份时维护的备份数量*/
 	private int confBackupSize = CONF_BACKUP_SIZE;
@@ -399,8 +394,6 @@ public final class SystemConfig {
 		this.topSqlExecuteTimeN = 100;
 		this.topSqlExecuteCountN = 100;
 		this.sqlRecordInDiskPeriod = 7; //7 day
-		this.limitConcurrentQuery = 0;
-		this.processorsRatio = 0.5;
 	}
 	
 	/**
@@ -478,22 +471,6 @@ public final class SystemConfig {
 		return fields;
 	}
 
-
-	public double getProcessorsRatio() {
-		return processorsRatio;
-	}
-
-	public void setProcessorsRatio(double processorRatio) {
-		this.processorsRatio = processorRatio;
-	}
-
-	public int getLimitConcurrentQuery() {
-		return limitConcurrentQuery;
-	}
-
-	public void setLimitConcurrentQuery(int limitConcurrentQuery) {
-		this.limitConcurrentQuery = limitConcurrentQuery;
-	}
 	public long getSqlRecordInDiskPeriod() {
 		return sqlRecordInDiskPeriod;
 	}
@@ -1129,11 +1106,11 @@ public final class SystemConfig {
 	}
 
     public String getRootPassword() {
-        return rootPwd;
+        return rootPassword;
     }
 
     public void setRootPassword(String rootPwd) {
-        this.rootPwd = rootPwd;
+        this.rootPassword = rootPwd;
     }
 
 	public static String getMapFileFolder() {

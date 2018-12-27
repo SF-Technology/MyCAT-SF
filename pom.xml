@@ -3,11 +3,11 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.opencloudb.mycat</groupId>
-	<artifactId>Mycat-server</artifactId>
-	<version>1.5.3.1-RELEASE</version>
+	<artifactId>MyCAT-SF</artifactId>
+	<version>1.5.3-RELEASE</version>
 	<packaging>jar</packaging>
-	<name>Mycat-server</name>
-	<description>The project of Mycat-server</description>
+	<name>MyCAT-SF</name>
+	<description>The project of MyCAT-SF</description>
 	<url>http://org.opencloudb</url>
 
 
@@ -163,7 +163,7 @@
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
-			<version>1.2.7</version>
+			<version>1.2.31</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>

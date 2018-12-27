@@ -1,48 +1,126 @@
+  **MyCAT-SF是在开源社区版本基础上对易用性，稳定性等方面进行大量优化的分布式数据库中间件产品。其核心功能是分库分表功能，通过MyCAT-SF对外提供MySQL数据库统一访问接口，使业务系统数据操作具有可扩展性，支持高并发，海量存储的能力。**
 
-# [MyCAT](http://mycat.io/)
-[![GitHub issues](https://img.shields.io/github/issues/MyCATApache/Mycat-Server.svg)](https://github.com/MyCATApache/Mycat-Server/issues)
-[![GitHub forks](https://img.shields.io/github/forks/MyCATApache/Mycat-Server.svg)](https://github.com/MyCATApache/Mycat-Server/network)
-[![GitHub stars](https://img.shields.io/github/stars/MyCATApache/Mycat-Server.svg)](https://github.com/MyCATApache/Mycat-Server/stargazers)
-[![MyCAT](https://img.shields.io/badge/MyCAT-%E2%9D%A4%EF%B8%8F-%23ff69b4.svg)](http://mycat.io/)
 
-MyCAT is an Open-Source software, “a large database cluster” oriented to enterprises. MyCAT is an enforced database which is a replacement for MySQL and supports transaction and ACID. Regarded as MySQL cluster of enterprise database, MyCAT can take the place of expensive Oracle cluster. MyCAT is also a new type of database, which seems like a SQL Server integrated with the memory cache technology, NoSQL technology and HDFS big data. And as a new modern enterprise database product, MyCAT is combined with the traditional database and new distributed data warehouse. In a word, MyCAT is a fresh new middleware of database.
 
-Mycat’s target is to smoothly migrate the current stand-alone database and applications to cloud side with low cost and to solve the bottleneck problem caused by the rapid growth of data storage and business scale.
+#### 快速开始
 
-* [Getting Started](https://github.com/MyCATApache/Mycat-doc/tree/master/en)
-* [尝试 MyCAT](https://github.com/MyCATApache/Mycat-doc/blob/master/MyCat_In_Action_%E4%B8%AD%E6%96%87%E7%89%88.doc)
+####  1.1 环境准备
 
-## Features
+##### 1.1.1 install JDK
 
-* Supports SQL 92 standard
-* Supports MySQL cluster, used as a Proxy
-* Supports JDBC connection with ORACLE, DB2, SQL Server, simulated as normal MySQL Server connection
-* Supports MySQL cluster, percona cluster or mariadb cluster, providing high availability of data fragmentation clusters
-* Supports automatic failover and high availability
-* Supports separation of read and write, dual-master with multi-slave, single-master with multi-master of MySQL model
-* Supports global table, automatically fragment data into multiple nodes for efficient relational query
-* Supports the unique fragmentation strategy based on ER-relation for efficient relational query
-* Supports multiple platforms, easy deployment and implementation
+​	由于MyCAT-SF是通过JAVA语言开发实现的，所以需要JAVA的运行环境，推荐下载JDK8或更高版本。
+（下载地址：http://www.oracle.com/technetwork/java/javase/downloads）
 
-## Advantage
+##### 1.1.2 MySQL
 
-* Based on Alibaba's open-source project [Cobar](https://github.com/alibaba/cobar), whose stability, reliability, excellent architecture and performance, as well as many mature use-cases make MyCAT have a good starting. Standing on the shoulders of giants, MyCAT feels confident enough to go farther.
-* Extensively drawing on the best open-source projects and innovative ideas, which are integrated into the Mycat’s gene, make MyCAT be ahead of the other current similar open-source projects, even beyond some commercial products.
-* MyCAT behind a strong technical team whose participants are experienced more than five years including some senior software engineer, architect, DBA, etc. Excellent technical team to ensure the product quality of Mycat.
-* MyCAT does not rely on any commercial company. It’s unlike some open-source projects whose important features is enclosed in its commercial products and making open-source projects like a decoration.
+MyCAT-SF支持多种数据库的接入，这里主要推荐使用MySQL 5.6、MySQL 5.7。
+（下载地址：http://www.mysql.com/downloads）
 
-## Roadmap
 
-* On the basis of MySQL’s support, MyCAT add more support of commercial open-source database, including native support of PostgreSQL, FireBird and other open-source databases, as well as indirect support via JDBC of other non-open-source databases such as Oracle, DB2, SQL Server etc.
-* More intelligent self-regulating properties, such as automatic statistical analysis of SQL, automatic creating and adjusting indexes. Based on the frequency of read and write, MyCAT automatically optimizes caching and backup strategies
-* Achieve a more comprehensive monitoring and management
-* Integrated with HDFS, provide SQL commands, load databases into HDFS for rapid analysis
-* Integrated excellent open-source reporting tools to make MyCAT have data analysis capability 
 
-## Download
+#### 1.2 源码编译和打包
 
-There are some compiled binary installation packages in Mycat-download project on github at  [Mycat-download](https://github.com/MyCATApache/Mycat-download).
+​	MyCAT-SF项目采用maven进行管理，可以使用maven对源码进行编译打包。
 
-## Document
+##### 1.2.1 Maven的下载和安装
 
-There are some documents in Mycat-doc project on github at [Mycat-doc](https://github.com/MyCATApache/Mycat-doc).
+​	从官网http://maven.apache.org/download.cgi 可以下载maven的压缩包。解压压缩包，将bin的路径添加到PATH环境变量中。以windows为例，在cmd中输入mvn -v测试，若返回maven的版本信息，则说明配置成功。
+
+##### 1.2.2 使用Maven打包源码
+
+​	在项目源码的根目录下输入命令：mvn clean package。mvn会对项目源码进行编译、测试和打包，打包成功后会在源码的根目录下生成一个target文件夹。打开target文件夹可以找到多个压缩包，不同的压缩包对应不同的操作系统。
+
+##### 1.3 运行MyCAT-SF服务端
+
+​	这里的例子主要是在window环境下启动一个本地的MyCAT-SF服务端。
+
+##### 1.3.1 编辑配置文件
+
+​	以windows为例，解压压缩包，可以在目录conf下找到几个主要的配置文件。
+
+在schema.xml中配置逻辑库逻辑表
+
+```
+<schema name="logicdb" checkSQLschema="false" sqlMaxLimit="10000">
+	<table name="testtable" primaryKey="id" dataNode="node1, node2" ></table>
+</schema>
+```
+
+​	这里的逻辑库的名字为logicdb，逻辑表的名字为testtable，分片字段为id，逻辑表有两个分片，分别位于node1和node2这两dataNode上。
+
+在database.xml中配置分片信息
+
+```
+<dataNode name="node1" dataHost="localhost" database="db1" />
+<dataNode name="node2" dataHost="localhost" database="db2" />
+
+<dataHost name="localhost" maxCon="200" minCon="10" balance="0" dbType="mysql" dbDriver="native" switchType="-1">
+	<heartbeat>select user()</heartbeat>
+	<writeHost host="hostM1" url="127.0.0.1:3306" user="user" password="password"></writeHost>
+</dataHost>
+```
+
+​	其中，node1和node2对应schema.xml中配置的dataNode，其中dataHost代表dataNode所在的主机，database是实际的数据库名。在dataHost的配置中，url是主机地址及端口号，user和password是访问实际数据库的用户名和密码，这里配置的是本地的数据库。
+
+在user.xml中配置访问服务端的用户名和密码
+
+```
+<user name="test">
+	<property name="password">test</property>
+	<property name="schemas">logicdb</property>
+</user>
+```
+
+​	这里将用户名和密码都配置成test，另外还要配置逻辑库的名字logicdb。
+
+##### 1.3.2 创建分片数据库
+
+​	完成配置后，按照database.xml中配置的分片信息，分别在本地新建数据库
+
+```
+mysql> create database db1;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> create database db2;
+Query OK, 1 row affected (0.01 sec)
+```
+
+##### 1.3.3 运行服务端
+
+​	执行bin目录下的mycat脚本即可启动MyCAT-SF服务端
+
+##### 
+
+##### 1.4 使用MyCAT-SF服务
+
+​	完成MyCAT-SF服务端的配置和启动之后，就可以使用MyCAT-SF提供的服务。由于服务端实现了mysql协议，所以访问MyCAT-SF服务端的方式与访问mysql服务端相同。根据server.xml中配置的用户名和密码，在命令行窗口输入
+
+```
+>mysql.exe -utest -ptest -P8066
+Warning: Using a password on the command line interface can be insecure.
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1
+Server version: 5.5.8-mycat-1.5.3-RELEASE-20161025135147 MyCat Server (OpenCloundDB)
+
+Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+```
+
+成功登录本地的MyCAT-SF服务端。
+
+此时逻辑库中没有任何表，可以按照database.xml定义的逻辑表信息新建一个表：
+
+```
+mysql> create table testtable (
+    -> id int primary key,
+    -> name varchar(20)
+    -> ) engine = innodb default character set = 'utf8';
+Query OK, 0 rows affected (0.21 sec)
+```
+
+创建成功后就可以用正常的MySQL语句来操作MyCAT-SF了。

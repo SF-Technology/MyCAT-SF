@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- - - Licensed under the Apache License, Version 2.0 (the "License"); 
+	- you may not use this file except in compliance with the License. - You 
+	may obtain a copy of the License at - - http://www.apache.org/licenses/LICENSE-2.0 
+	- - Unless required by applicable law or agreed to in writing, software - 
+	distributed under the License is distributed on an "AS IS" BASIS, - WITHOUT 
+	WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. - See the 
+	License for the specific language governing permissions and - limitations 
+	under the License. -->
+<!DOCTYPE mycat:rule SYSTEM "rule.dtd">
+<mycat:rule xmlns:mycat="http://org.opencloudb/">
+	<tableRule name="hash-mod-4_id">
+		<rule>
+			<columns>id</columns>
+			<algorithm>hash-mod-4</algorithm>
+		</rule>
+	</tableRule>
+
+	<tableRule name="mod-4_id">
+		<rule>
+			<columns>id</columns>
+			<algorithm>mod-4</algorithm>
+		</rule>
+	</tableRule>
+	
+	<function name="hash-mod-4"
+		class="org.opencloudb.route.function.PartitionByHashMod">
+		<!-- how many data nodes -->
+		<property name="count">4</property>
+	</function>
+
+	<function name="mod-4" class="org.opencloudb.route.function.PartitionByMod">
+		<!-- how many data nodes -->
+		<property name="count">4</property>
+	</function>
+</mycat:rule>

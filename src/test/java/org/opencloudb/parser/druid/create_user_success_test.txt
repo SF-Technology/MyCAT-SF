@@ -1,0 +1,4 @@
+create user usr02
+readOnly = false
+schemas = 'testdb'
+password = 'abcdefg'

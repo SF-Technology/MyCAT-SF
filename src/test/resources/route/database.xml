@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<!DOCTYPE mycat:database SYSTEM "database.dtd">
+<mycat:database xmlns:mycat="http://org.opencloudb/">
+	<dataNode name="dn1" dataHost="localhost1" database="db1" />
+	<dataNode name="dn2" dataHost="localhost1" database="db2" />
+	<dataNode name="dn3" dataHost="localhost1" database="db3" />
+	<dataNode name="cndb_dn" dataHost="localhost1" database="db4" />
+	<dataNode name="offer_dn$0-127" dataHost="localhost1" database="db1$0-127" />
+	<dataNode name="detail_dn$0-127" dataHost="localhost1" database="db2$0-127" />
+    <dataNode name="test_wild1$1-3" dataHost="localhost$1-3" database="db1" />
+    <dataNode name="test_wild$1-6" dataHost="localhost$1-3" database="db1$1-2" />
+	<dataNode name="independent_dn$0-127" dataHost="localhost1"
+		database="db7_$0-127" />
+	<dataNode name="dubbo_dn" dataHost="localhost1" database="db8" />
+	<dataNode name="solo1" dataHost="localhost1" database="db9" />
+
+    <dataNode name="d_oracle1" dataHost="oracle1" database="base" />
+    <dataNode name="d_oracle2" dataHost="oracle2" database="bwg" />
+
+	<dataNode name="db2_1" dataHost="db21" database="base" />
+	<dataNode name="db2_2" dataHost="db22" database="test" />
+
+	<dataNode name="sqlserver_1" dataHost="ms1" database="base" />
+	<dataNode name="sqlserver_2" dataHost="ms2" database="test" />
+
+	<dataNode name="pg_1" dataHost="pg1" database="base" />
+	<dataNode name="pg_2" dataHost="pg2" database="test" />
+
+	<dataHost name="localhost1" maxCon="500" minCon="10" balance="0"
+		dbType="mysql" dbDriver="native">
+		<heartbeat>select user()</heartbeat>
+		<!-- can have multi write hosts -->
+		<writeHost host="hostM1" url="localhost:3306" user="root"
+			password="123456">
+			<!-- can have multi read hosts -->
+			<!-- <readHost host="hostS1" url="localhost:3307" user="root" password="123456" 
+				/> -->
+		</writeHost>
+	</dataHost>
+    <dataHost name="localhost2" maxCon="500" minCon="10" balance="0"
+              dbType="mysql" dbDriver="native">
+        <heartbeat>select user()</heartbeat>
+        <!-- can have multi write hosts -->
+        <writeHost host="hostM2" url="localhost:3306" user="root"
+                   password="123456">
+            <!-- can have multi read hosts -->
+            <!-- <readHost host="hostS1" url="localhost:3307" user="root" password="123456"
+                /> -->
+        </writeHost>
+    </dataHost>
+    <dataHost name="localhost3" maxCon="500" minCon="10" balance="0"
+              dbType="mysql" dbDriver="native">
+        <heartbeat>select user()</heartbeat>
+        <!-- can have multi write hosts -->
+        <writeHost host="hostM3" url="localhost:3306" user="root"
+                   password="123456">
+            <!-- can have multi read hosts -->
+            <!-- <readHost host="hostS1" url="localhost:3307" user="root" password="123456"
+                /> -->
+        </writeHost>
+    </dataHost>
+
+
+    <dataHost name="oracle1" maxCon="1000" minCon="1" balance="0" writeType="0" dbType="oracle" dbDriver="jdbc">
+        <heartbeat>select 1 from dual</heartbeat>
+        <connectionInitSql>alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss'</connectionInitSql>
+        <writeHost host="ohostM1" url="jdbc:oracle:thin:@127.0.0.1:1521:nange" user="base" password="123456" >
+        </writeHost>
+    </dataHost>
+
+    <dataHost name="oracle2" maxCon="1000" minCon="1" balance="0" writeType="0" dbType="oracle" dbDriver="jdbc">
+        <heartbeat>select 1 from dual</heartbeat>
+        <connectionInitSql>alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss'</connectionInitSql>
+        <writeHost host="ohostM2" url="jdbc:oracle:thin:@127.0.0.1:1521:nange" user="bwg" password="123456" >
+        </writeHost>
+    </dataHost>
+
+
+	<dataHost name="db21" maxCon="1000" minCon="1" balance="0" writeType="0" dbType="db2" dbDriver="jdbc">
+		<heartbeat>select 1 from SYSIBM.SYSDUMMY1</heartbeat>
+		<writeHost host="dhostM1" url="jdbc:db2://127.0.0.1:50000/base" user="db2inst1" password="123" >
+		</writeHost>
+	</dataHost>
+
+
+	<dataHost name="db22" maxCon="1000" minCon="1" balance="0" writeType="0" dbType="db2" dbDriver="jdbc">
+		<heartbeat>select 1 from SYSIBM.SYSDUMMY1</heartbeat>
+		<writeHost host="dhostM2" url="jdbc:db2://127.0.0.1:50000/test" user="db2inst1" password="123" >
+		</writeHost>
+	</dataHost>
+
+
+
+	<dataHost name="ms1" maxCon="1000" minCon="1" balance="0" writeType="0" dbType="sqlserver" dbDriver="jdbc">
+		<heartbeat>select 1 </heartbeat>
+		<writeHost host="mhostM1" url="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=base" user="base" password="123" >
+		</writeHost>
+	</dataHost>
+
+	<dataHost name="ms2" maxCon="1000" minCon="1" balance="0" writeType="0" dbType="sqlserver" dbDriver="jdbc">
+		<heartbeat>select 1 </heartbeat>
+		<writeHost host="mhostM2" url="jdbc:sqlserver://127.0.0.1:1433;DatabaseName=test" user="base" password="123" >
+		</writeHost>
+	</dataHost>
+	<dataHost name="pg1" maxCon="1000" minCon="1" balance="0" writeType="0" dbType="postgresql" dbDriver="jdbc">
+		<heartbeat>select 1</heartbeat>
+		<writeHost host="phostM1" url="jdbc:postgresql://127.0.0.1:5432/base" user="test" password="123" >
+		</writeHost>
+	</dataHost>
+
+	<dataHost name="pg2" maxCon="1000" minCon="1" balance="0" writeType="0" dbType="postgresql" dbDriver="jdbc">
+		<heartbeat>select 1 </heartbeat>
+		<writeHost host="phostM2" url="jdbc:postgresql://127.0.0.1:5432/test" user="test" password="123" >
+		</writeHost>
+	</dataHost>
+
+</mycat:database>

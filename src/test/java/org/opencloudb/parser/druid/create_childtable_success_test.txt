@@ -1,0 +1,11 @@
+create childtable orders in TESTDB
+parentKey = "ID"
+parent = "customers"
+primaryKey = "ID"
+joinKey = "PID";
+
+create childtable orders
+parentKey = "ID"
+parent = "customers"
+primaryKey = "ID"
+joinKey = "PID";

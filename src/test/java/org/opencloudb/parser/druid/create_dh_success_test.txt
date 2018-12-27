@@ -5,12 +5,12 @@ with writeHosts ({
 	host = "w1"
 	url = "192.168.0.1:3306"
 	user = "user01"
-	password = "33r3#ddd@ifdsf"
+	password = "123456"
 }, {
 	host = "w2"
 	url = "192.168.0.2:3306"
 	user = "user01"
-	password = "33r3#ddd@ifdsf"
+	password = "123456"
 });
 
 create datahost dh1
@@ -20,12 +20,12 @@ with writeHosts ({
 	host = "w1"
 	url = "192.168.0.1:3306"
 	user = "user01"
-	password = "33r3#ddd@ifdsf"
+	password = "123456"
 }, {
 	host = "w2"
 	url = "192.168.0.2:3306"
 	user = "user01"
-	password = "33r3#ddd@ifdsf"
+	password = "123456"
 })
 dbType = "mysql"
 switchType = -1;
@@ -37,7 +37,7 @@ with writeHosts ({
 	host = "w1"
 	url = "192.168.0.1:3306"
 	user = "user01"
-	password = "33r3#ddd@ifdsf"
+	password = "123456"
 	with readHosts ({
 		host = "r1"
 		url = "192.168.1.1:3306"
@@ -53,5 +53,5 @@ with writeHosts ({
 	host = "w2"
 	url = "192.168.0.2:3306"
 	user = "user01"
-	password = "33r3#ddd@ifdsf"
+	password = "123456"
 });

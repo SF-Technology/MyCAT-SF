@@ -2,8 +2,8 @@
  * Copyright (c) 2013, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
- * This code is free software;Designed and Developed mainly by many Chinese 
- * opensource volunteers. you can redistribute it and/or modify it under the 
+ * This code is free software;Designed and Developed mainly by many Chinese
+ * opensource volunteers. you can redistribute it and/or modify it under the
  * terms of the GNU General Public License version 2 only, as published by the
  * Free Software Foundation.
  *
@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License version
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- * 
- * Any questions about this component can be directed to it's project Web address 
+ *
+ * Any questions about this component can be directed to it's project Web address
  * https://code.google.com/p/opencloudb/.
  *
  */
@@ -35,30 +35,33 @@ import java.util.*;
 public class CharsetUtil {
     public static final Logger logger = LoggerFactory
             .getLogger(CharsetUtil.class);
-    private static final Map<Integer,String> INDEX_TO_CHARSET = new HashMap<>();
+    private static final Map<Integer, String> INDEX_TO_CHARSET = new HashMap<>();
     private static final Map<String, Integer> CHARSET_TO_INDEX = new HashMap<>();
+
     static {
 
         // index_to_charset.properties
-        INDEX_TO_CHARSET.put(1,"big5");
-        INDEX_TO_CHARSET.put(8,"latin1");
-        INDEX_TO_CHARSET.put(9,"latin2");
-        INDEX_TO_CHARSET.put(14,"cp1251");
-        INDEX_TO_CHARSET.put(28,"gbk");
-        INDEX_TO_CHARSET.put(24,"gb2312");
-        INDEX_TO_CHARSET.put(33,"utf8");
-        INDEX_TO_CHARSET.put(45,"utf8mb4");
+        INDEX_TO_CHARSET.put(1, "big5");
+        INDEX_TO_CHARSET.put(8, "latin1");
+        INDEX_TO_CHARSET.put(9, "latin2");
+        INDEX_TO_CHARSET.put(14, "cp1251");
+        INDEX_TO_CHARSET.put(28, "gbk");
+        INDEX_TO_CHARSET.put(24, "gb2312");
+        INDEX_TO_CHARSET.put(33, "utf8");
+        INDEX_TO_CHARSET.put(45, "utf8mb4");
 
-       String filePath = Thread.currentThread().getContextClassLoader()
+        String filePath = Thread.currentThread().getContextClassLoader()
                 .getResource("").getPath().replaceAll("%20", " ")
                 + "index_to_charset.properties";
         Properties prop = new Properties();
         try {
             prop.load(new FileInputStream(filePath));
-            for (Object index : prop.keySet())
-            {
-
-               INDEX_TO_CHARSET.put(Integer.parseInt((String) index), prop.getProperty((String) index));
+            for (Object index : prop.keySet()) {
+                String key = null;
+                if (null != index) {
+                    key = (String) index;
+                }
+                INDEX_TO_CHARSET.put(Integer.parseInt((String) index), prop.getProperty(key));
             }
 
         } catch (Exception e) {
@@ -89,7 +92,6 @@ public class CharsetUtil {
             return (i == null) ? 0 : i;
         }
     }
-
 
 
 }

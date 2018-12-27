@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.opencloudb.util.StringUtil;
+import org.opencloudb.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,12 +56,13 @@ public class ParameterMapping {
             Object value = obj;
             Class<?> cls = pd.getPropertyType();
             if (obj instanceof String) {
-                String string = (String) obj;
-                if (!StringUtil.isEmpty(string)) {
-                    string = ConfigUtil.filter(string);
+                String str = (String) obj;
+                String strObj = null;
+                if (!StringUtil.isEmpty(str)) {
+                    strObj = ConfigUtil.filter(str);
                 }
                 if (isPrimitiveType(cls)) {
-                    value = convert(cls, string);
+                    value = convert(cls, strObj);
                 }
             } else if (obj instanceof BeanConfig) {
                 value = createBean((BeanConfig) obj);
@@ -130,6 +132,9 @@ public class ParameterMapping {
     }
 
     private static Object convert(Class<?> cls, String string) {
+        if (StringUtils.isEmpty(string)) {
+            return null;
+        }
         Method method = null;
         Object value = null;
         if (cls.equals(String.class)) {

@@ -2,10 +2,7 @@ package org.opencloudb.manager.handler;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -119,11 +116,16 @@ public class CreateDataHostHandler {
 			PhysicalDBPool pool = createPool(stmt);
 			pool.setSchemas(new String[] {}); // 初始化的datahost没有datanode引用，所以为空数组
 
-			// 初始化datahost对应的连接池
-			String index = DnPropertyUtil.loadDnIndexProps().getProperty(pool.getHostName(), "0");
-			if (!"0".equals(index)) {
-				LOGGER.info("init datahost: " + pool.getHostName() + "  to use datasource index:" + index);
-			}
+            // 初始化datahost对应的连接池
+            Properties properties = DnPropertyUtil.loadDnIndexProps();
+            String index = "0";
+            if (properties != null) {
+                index = properties.getProperty(pool.getHostName(), "0");
+            }
+
+            if (!"0".equals(index)) {
+               // LOGGER.info("init datahost: " + pool.getHostName() + "  to use datasource index:" + index);
+            }
 
 			pool.init(Integer.valueOf(index));
 			pool.startHeartbeat();
@@ -240,9 +242,9 @@ public class CreateDataHostHandler {
 		String nodeHost = ((SQLCharExpr) host.getHost()).getText();
 		String nodeUrl = ((SQLCharExpr) host.getUrl()).getText();
 		String user = ((SQLCharExpr) host.getUser()).getText();
-		String password = ((SQLCharExpr) host.getPassword()).getText();
-		String usingDecrypt = "";
-		String passwordEncryty = DecryptUtil.DBHostDecrypt(usingDecrypt, nodeHost, user, password);
+        //String password = ((SQLCharExpr) host.getPassword()).getText();
+        String usingDecrypt = "";
+        String passwordEncryty = DecryptUtil.DBHostDecrypt(usingDecrypt, nodeHost, user, ((SQLCharExpr) host.getPassword()).getText());
 
 		int weight = DEFAULT_WEIGHT;
 
@@ -267,14 +269,14 @@ public class CreateDataHostHandler {
 			port = url.getPort();
 		}
 
-		DBHostConfig conf = new DBHostConfig(nodeHost, ip, port, nodeUrl, user, passwordEncryty, password);
-		conf.setDbType(dbType);
-		conf.setMaxCon(maxCon);
-		conf.setMinCon(minCon);
-		conf.setLogTime(logTime);
-		conf.setWeight(weight); // 新增权重
-		return conf;
-	}
+        DBHostConfig conf = new DBHostConfig(nodeHost, ip, port, nodeUrl, user, passwordEncryty, ((SQLCharExpr) host.getPassword()).getText());
+        conf.setDbType(dbType);
+        conf.setMaxCon(maxCon);
+        conf.setMinCon(minCon);
+        conf.setLogTime(logTime);
+        conf.setWeight(weight); // 新增权重
+        return conf;
+    }
 
 	private static boolean empty(String dnName) {
 		return dnName == null || dnName.length() == 0;

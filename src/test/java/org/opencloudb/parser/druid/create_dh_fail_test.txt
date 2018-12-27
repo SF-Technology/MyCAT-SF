@@ -10,7 +10,7 @@ with writeHosts ({
 	host = "w1"
 	url = "192.168.0.1:3306"
 	user = "user01"
-	password = "33r3#ddd@ifdsf"
+	password = "123456"
 });
 
 -- 没有提供writeHosts

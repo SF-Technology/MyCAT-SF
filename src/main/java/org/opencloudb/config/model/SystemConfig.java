@@ -50,7 +50,7 @@ public final class SystemConfig {
     private static final String DEFAULT_ROOT_USER = "root";
     private static final String DEFAULT_ROOT_PASSWORD = "123456";
     private String rootUser = DEFAULT_ROOT_USER;
-    private String rootPwd = DEFAULT_ROOT_PASSWORD;
+	private String rootPassword = DEFAULT_ROOT_PASSWORD;
 	
 	public static final String SYS_HOME = "MYCAT_HOME";
 	private static final int DEFAULT_PORT = 8066;
@@ -1129,11 +1129,11 @@ public final class SystemConfig {
 	}
 
     public String getRootPassword() {
-        return rootPwd;
+        return rootPassword;
     }
 
     public void setRootPassword(String rootPwd) {
-        this.rootPwd = rootPwd;
+        this.rootPassword = rootPwd;
     }
 
 	public static String getMapFileFolder() {
